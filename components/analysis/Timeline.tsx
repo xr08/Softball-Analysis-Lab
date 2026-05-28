@@ -33,6 +33,7 @@ export function Timeline({ events, onSeek, onNoteChange }: TimelineProps) {
                 Player: {event.playerName || "Unknown"} | Session:{" "}
                 {event.sessionName || "Unnamed"}
               </div>
+              <div className="mb-2 text-xs text-slate-600">Count: {event.countLabel}</div>
 
               <label className="flex flex-col gap-1 text-xs text-slate-700">
                 Note

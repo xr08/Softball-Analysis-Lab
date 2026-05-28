@@ -17,6 +17,9 @@ export type AnalysisEvent = {
   timestampLabel: string;
   playerName: string;
   sessionName: string;
+  countBalls: number;
+  countStrikes: number;
+  countLabel: string;
   tag: string;
   category: TagCategory;
   note: string;

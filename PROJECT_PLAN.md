@@ -36,7 +36,7 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Stage 1 — Local Video Batter Tagging MVP**
+Current stage: **Stage 2 — Structured Batter Context**
 
 The project must stay local-first.
 
@@ -127,6 +127,39 @@ Add:
 * contact quality selector
 * result selector
 * filters above the timeline
+
+### International/ISC Standards Matrix (Planned Coverage)
+
+The long-term tagging model must support high-performance national team workflows and ISC-aligned coding depth.
+
+#### Pitch Metrics and Trajectory
+
+* Pitch Type: Pure Riseball (backspin), Dot-Spin Riseball (bullet), Turnover Dropball, Peel Dropball, Flip Changeup, Stiff-Wrist Changeup, Chute Changeup, Curveball, Screwball, Fastball
+* Pitch Result: Ball, Strike Looking, Strike Swinging, Foul, Ball in Play
+* Location Zone: 9-hole strike zone grid plus 4 chase zones (High, Low, Inside, Outside)
+
+#### Batter Context and Spray
+
+* Batter Profile: Batter ID, Handedness (Right, Left, Slapper), Order Position (1-9)
+* Hit Trajectory: Grounder, Line Drive, Fly Ball, Pop Up, Flare, Bunt
+* Hit Spray Vector: Line 3, Hole 3-4, 4, Hole 4-6, 6, Hole 5-6, 5, Line 5
+
+#### Elite Slap-Hitter Matrix (Women's International Specific)
+
+* Slap Variant: Power Slap, Soft Slap, Chop Slap, Drag Bunt, Fake Slap-to-Swing
+* Footwork Style: Linear (forward attack) vs Lateral (deep box drop)
+* Legality Flag: Valid Contact vs Foot-Out-of-Box Illegal Contact
+
+#### Advanced Mechanics and Biomechanics
+
+* Pitcher Mechanical Markers: Rubber Initial Stance, Drive Leap Distance (m), K-Posture Frame, Arm Slot Angle, Plant Foot Angle (degrees), Front-Side Resistance Block (Firm/Soft)
+* Hitter Mechanical Markers: Temporal Load Frame-Count (Release to Toe-Touch), Hand Launch Separation, Vertical Bat Angle (VBA) at contact, Kinematic Sequence Order
+
+#### Delivery Staging
+
+* Stage 2 focus: count, pitch result, location zones, and initial batter context
+* Stage 3-4 focus: spray, trajectory filters, review workflows, report outputs
+* Stage 5+ focus: pitcher mode, advanced biomechanics, and expanded scouting detail
 
 ### Stage 3 — Review Mode
 

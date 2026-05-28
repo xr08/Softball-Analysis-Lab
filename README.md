@@ -6,9 +6,9 @@ The first use case is high-level batter analysis using pre-recorded video. The a
 
 ## Current Project Stage
 
-**Stage 1 — Local Video Batter Tagging MVP**
+**Stage 2 — Structured Batter Context**
 
-The first version is intentionally simple.
+The first production pass is intentionally simple and local-first.
 
 It should allow the user to:
 
@@ -23,6 +23,7 @@ It should allow the user to:
 * add or edit notes
 * export the session as CSV
 * export the session as JSON
+* capture count context (balls-strikes) per tag event
 
 ## Why This Project Exists
 
@@ -61,7 +62,7 @@ The video remains local. The tagged analysis data can be exported separately.
 
 ## What We Are Not Building Yet
 
-Do not add these features in Stage 1:
+Do not add these features in Stage 2:
 
 * Supabase
 * user login
@@ -77,6 +78,19 @@ Do not add these features in Stage 1:
 * payment/subscription features
 
 These may be added later, but only after the local batter tagging MVP works.
+
+## International/ISC Standards Target
+
+The long-term tagging matrix should support national-team and ISC-level analysis depth.
+
+Planned model coverage includes:
+
+* Pitch metrics and trajectory: pitch type taxonomy, pitch result, 9-zone grid plus 4 chase zones
+* Batter context and spray: batter profile, hit trajectory, hit spray vector
+* Elite slap-hitter matrix: slap variants, footwork style, legality flag
+* Advanced mechanics and biomechanics: pitcher and hitter marker sets for scouting/review
+
+These are being delivered progressively by stage rather than all at once.
 
 ## Project Files to Read First
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CountSelector } from "@/components/analysis/CountSelector";
 import { ExportButtons } from "@/components/analysis/ExportButtons";
 import { SessionDetails } from "@/components/analysis/SessionDetails";
 import { TagPanel } from "@/components/analysis/TagPanel";
@@ -82,6 +83,8 @@ export default function AnalysePage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [playerName, setPlayerName] = useState("");
   const [sessionName, setSessionName] = useState("");
+  const [countBalls, setCountBalls] = useState(0);
+  const [countStrikes, setCountStrikes] = useState(0);
   const [videoFileName, setVideoFileName] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [events, setEvents] = useState<AnalysisEvent[]>([]);
@@ -154,12 +157,16 @@ export default function AnalysePage() {
     }
 
     const timestampSeconds = videoRef.current.currentTime;
+    const countLabel = `${countBalls}-${countStrikes}`;
     const newEvent: AnalysisEvent = {
       id: crypto.randomUUID(),
       timestampSeconds,
       timestampLabel: formatTimestampLabel(timestampSeconds),
       playerName: playerName.trim(),
       sessionName: sessionName.trim(),
+      countBalls,
+      countStrikes,
+      countLabel,
       tag: tag.tag,
       category: tag.category,
       note: "",
@@ -258,7 +265,7 @@ export default function AnalysePage() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
       <h1 className="text-2xl font-bold text-slate-900">
-        Stage 1: Local Video Batter Tagging
+        Stage 2: Structured Batter Context
       </h1>
 
       <SessionDetails
@@ -266,6 +273,12 @@ export default function AnalysePage() {
         sessionName={sessionName}
         onPlayerNameChange={setPlayerName}
         onSessionNameChange={setSessionName}
+      />
+      <CountSelector
+        balls={countBalls}
+        strikes={countStrikes}
+        onBallsChange={setCountBalls}
+        onStrikesChange={setCountStrikes}
       />
 
       <VideoPlayer
