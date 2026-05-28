@@ -8,6 +8,10 @@ Stage 1 — Local Video Batter Tagging MVP
 
 Create the first working local video coding screen.
 
+## next task:
+Fix CSV/JSON export reliability in in-app browser
+
+
 ## Build This Now
 
 Create `/analyse` with:
