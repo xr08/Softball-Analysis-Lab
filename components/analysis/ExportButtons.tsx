@@ -3,12 +3,10 @@ type ExportButtonsProps = {
   onExportJson: () => void;
   onSaveCsvToProject: () => void;
   onSaveJsonToProject: () => void;
+  onOpenCsv: () => void;
+  onOpenJson: () => void;
   onCopyCsv: () => void;
   onCopyJson: () => void;
-  csvUrl: string | null;
-  jsonUrl: string | null;
-  csvFileName: string;
-  jsonFileName: string;
   csvContent: string;
   jsonContent: string;
   exportMessage: string;
@@ -20,12 +18,10 @@ export function ExportButtons({
   onExportJson,
   onSaveCsvToProject,
   onSaveJsonToProject,
+  onOpenCsv,
+  onOpenJson,
   onCopyCsv,
   onCopyJson,
-  csvUrl,
-  jsonUrl,
-  csvFileName,
-  jsonFileName,
   csvContent,
   jsonContent,
   exportMessage,
@@ -90,25 +86,21 @@ export function ExportButtons({
       {!disabled ? (
         <div className="mt-3 space-y-1 text-sm">
           <p className="text-slate-700">Fallback links (if download button is blocked):</p>
-          <a
-            href={csvUrl ?? "#"}
-            download={csvFileName}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={onOpenCsv}
             className="mr-4 text-emerald-700 underline"
           >
             Open CSV
-          </a>
+          </button>
           <span className="mr-4 text-slate-400">|</span>
-          <a
-            href={jsonUrl ?? "#"}
-            download={jsonFileName}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={onOpenJson}
             className="text-emerald-700 underline"
           >
             Open JSON
-          </a>
+          </button>
         </div>
       ) : null}
       {!disabled ? (

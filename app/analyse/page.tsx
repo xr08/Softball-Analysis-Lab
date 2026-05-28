@@ -88,8 +88,6 @@ export default function AnalysePage() {
   const [videoFileName, setVideoFileName] = useState("");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [events, setEvents] = useState<AnalysisEvent[]>([]);
-  const [csvUrl, setCsvUrl] = useState<string | null>(null);
-  const [jsonUrl, setJsonUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
 
   useEffect(() => {
@@ -113,28 +111,6 @@ export default function AnalysePage() {
   const jsonFileName = `${sessionLabel}-events.json`;
   const csvContent = useMemo(() => `\uFEFF${toCsv(sortedEvents)}`, [sortedEvents]);
   const jsonContent = useMemo(() => toJson(sortedEvents), [sortedEvents]);
-
-  useEffect(() => {
-    if (sortedEvents.length === 0) {
-      setCsvUrl(null);
-      setJsonUrl(null);
-      return;
-    }
-
-    const nextCsvUrl = URL.createObjectURL(
-      new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    );
-    const nextJsonUrl = URL.createObjectURL(
-      new Blob([jsonContent], { type: "application/json;charset=utf-8;" })
-    );
-    setCsvUrl(nextCsvUrl);
-    setJsonUrl(nextJsonUrl);
-
-    return () => {
-      URL.revokeObjectURL(nextCsvUrl);
-      URL.revokeObjectURL(nextJsonUrl);
-    };
-  }, [csvContent, jsonContent, sortedEvents.length]);
 
   function handleSelectFile(file: File | null): void {
     if (videoUrl) {
@@ -211,21 +187,67 @@ export default function AnalysePage() {
   }
 
   async function handleCopyCsv(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(csvContent);
+    const copied = await copyToClipboard(csvContent);
+    if (copied) {
       setExportMessage("CSV copied to clipboard.");
-    } catch {
-      setExportMessage("Could not copy CSV. Use Open CSV link as fallback.");
+      return;
     }
+    setExportMessage("Could not copy CSV automatically. Use manual fallback text area.");
   }
 
   async function handleCopyJson(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(jsonContent);
+    const copied = await copyToClipboard(jsonContent);
+    if (copied) {
       setExportMessage("JSON copied to clipboard.");
-    } catch {
-      setExportMessage("Could not copy JSON. Use Open JSON link as fallback.");
+      return;
     }
+    setExportMessage("Could not copy JSON automatically. Use manual fallback text area.");
+  }
+
+  async function copyToClipboard(value: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      return copyToClipboardFallback(value);
+    }
+  }
+
+  function copyToClipboardFallback(value: string): boolean {
+    const textArea = document.createElement("textarea");
+    textArea.value = value;
+    textArea.setAttribute("readonly", "true");
+    textArea.style.position = "fixed";
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, textArea.value.length);
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textArea);
+    return copied;
+  }
+
+  function openContent(content: string, type: string): void {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!openedWindow) {
+      window.location.href = url;
+    }
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
+
+  function handleOpenCsv(): void {
+    openContent(csvContent, "text/csv;charset=utf-8;");
+    setExportMessage("Opened CSV view.");
+  }
+
+  function handleOpenJson(): void {
+    openContent(jsonContent, "application/json;charset=utf-8;");
+    setExportMessage("Opened JSON view.");
   }
 
   async function saveToProject(
@@ -297,12 +319,10 @@ export default function AnalysePage() {
         onExportJson={() => void handleExportJson()}
         onSaveCsvToProject={() => void handleSaveCsvToProject()}
         onSaveJsonToProject={() => void handleSaveJsonToProject()}
+        onOpenCsv={handleOpenCsv}
+        onOpenJson={handleOpenJson}
         onCopyCsv={() => void handleCopyCsv()}
         onCopyJson={() => void handleCopyJson()}
-        csvUrl={csvUrl}
-        jsonUrl={jsonUrl}
-        csvFileName={csvFileName}
-        jsonFileName={jsonFileName}
         csvContent={csvContent}
         jsonContent={jsonContent}
         exportMessage={exportMessage}
