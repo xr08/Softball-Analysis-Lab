@@ -6,9 +6,6 @@ Stage 1 — Local Video Batter Tagging MVP
 
 ## Current Task
 
-Create the first working local video coding screen.
-
-## next task:
 Fix CSV/JSON export reliability in in-app browser
 
 
