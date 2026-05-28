@@ -1,0 +1,4 @@
+﻿id,timestampSeconds,timestampLabel,playerName,sessionName,tag,category,note,createdAt
+"a75b4bae-0267-4506-9b99-cbaf6032f813","57.988696","00:57","jack","tesy","At-bat start","Plate Appearance","ok","2026-05-28T15:08:37.413Z"
+"1136fbee-c8ae-4e77-8e3e-40d0798b3981","195.760098","03:15","jack","tesy","Pitch seen","Pitch Tracking","","2026-05-28T15:08:40.188Z"
+"992d1fbd-4a7a-4251-acd5-87efd285e2fa","304.426657","05:04","jack","tesy","Weak contact","Contact Type","","2026-05-28T15:08:42.303Z"

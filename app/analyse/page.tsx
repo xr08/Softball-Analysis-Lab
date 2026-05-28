@@ -71,6 +71,13 @@ async function saveFile(
   downloadFile(content, fileName, type);
 }
 
+type SaveToProjectResult = {
+  success: boolean;
+  savedFile: string;
+  savedFolder: string;
+  savedPath: string;
+};
+
 export default function AnalysePage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [playerName, setPlayerName] = useState("");
@@ -214,6 +221,40 @@ export default function AnalysePage() {
     }
   }
 
+  async function saveToProject(
+    format: "csv" | "json",
+    fileName: string,
+    content: string
+  ): Promise<void> {
+    try {
+      const response = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format, fileName, content })
+      });
+
+      if (!response.ok) {
+        setExportMessage(`Could not save ${format.toUpperCase()} to project folder.`);
+        return;
+      }
+
+      const result = (await response.json()) as SaveToProjectResult;
+      setExportMessage(
+        `${format.toUpperCase()} saved to ${result.savedFolder}\\${result.savedFile}`
+      );
+    } catch {
+      setExportMessage(`Could not save ${format.toUpperCase()} to project folder.`);
+    }
+  }
+
+  async function handleSaveCsvToProject(): Promise<void> {
+    await saveToProject("csv", csvFileName, csvContent);
+  }
+
+  async function handleSaveJsonToProject(): Promise<void> {
+    await saveToProject("json", jsonFileName, jsonContent);
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
       <h1 className="text-2xl font-bold text-slate-900">
@@ -241,6 +282,8 @@ export default function AnalysePage() {
       <ExportButtons
         onExportCsv={() => void handleExportCsv()}
         onExportJson={() => void handleExportJson()}
+        onSaveCsvToProject={() => void handleSaveCsvToProject()}
+        onSaveJsonToProject={() => void handleSaveJsonToProject()}
         onCopyCsv={() => void handleCopyCsv()}
         onCopyJson={() => void handleCopyJson()}
         csvUrl={csvUrl}

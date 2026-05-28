@@ -1,0 +1,35 @@
+[
+  {
+    "id": "a75b4bae-0267-4506-9b99-cbaf6032f813",
+    "timestampSeconds": 57.988696,
+    "timestampLabel": "00:57",
+    "playerName": "jack",
+    "sessionName": "tesy",
+    "tag": "At-bat start",
+    "category": "Plate Appearance",
+    "note": "ok",
+    "createdAt": "2026-05-28T15:08:37.413Z"
+  },
+  {
+    "id": "1136fbee-c8ae-4e77-8e3e-40d0798b3981",
+    "timestampSeconds": 195.760098,
+    "timestampLabel": "03:15",
+    "playerName": "jack",
+    "sessionName": "tesy",
+    "tag": "Pitch seen",
+    "category": "Pitch Tracking",
+    "note": "",
+    "createdAt": "2026-05-28T15:08:40.188Z"
+  },
+  {
+    "id": "992d1fbd-4a7a-4251-acd5-87efd285e2fa",
+    "timestampSeconds": 304.426657,
+    "timestampLabel": "05:04",
+    "playerName": "jack",
+    "sessionName": "tesy",
+    "tag": "Weak contact",
+    "category": "Contact Type",
+    "note": "",
+    "createdAt": "2026-05-28T15:08:42.303Z"
+  }
+]
