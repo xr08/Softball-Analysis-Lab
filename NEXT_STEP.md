@@ -2,11 +2,11 @@
 
 ## Current Stage
 
-Stage 1 — Local Video Batter Tagging MVP
+Stage 2 — Structured Batter Context
 
 ## Current Task
 
-Fix CSV/JSON export reliability in in-app browser
+Add count selector (balls-strikes) and include count in saved events, timeline, CSV, and JSON
 
 
 ## Build This Now
