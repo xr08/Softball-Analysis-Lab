@@ -1,24 +1,34 @@
-import { AnalysisEvent } from "./types";
+import { AnalysisEvent, ExportedSession, SessionMetadata } from "./types";
 
-function escapeCsvValue(value: string): string {
-  const escaped = value.replaceAll("\"", "\"\"");
+function escapeCsvValue(value: string | null | undefined): string {
+  if (value === null || value === undefined) {
+    return '""';
+  }
+  const escaped = String(value).replaceAll("\"", "\"\"");
   return `"${escaped}"`;
 }
 
-export function toCsv(events: AnalysisEvent[]): string {
+export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string {
   const headers = [
-    "id",
+    "eventId",
     "timestampSeconds",
     "timestampLabel",
-    "playerName",
-    "sessionName",
-    "countBalls",
-    "countStrikes",
-    "countLabel",
-    "tag",
+    "tagId",
+    "tagLabel",
     "category",
     "note",
-    "createdAt"
+    "count",
+    "pitchLocation",
+    "contactDirection",
+    "contactQuality",
+    "result",
+    "createdAt",
+    "sessionId",
+    "sessionName",
+    "sessionDate",
+    "playerName",
+    "opponent",
+    "videoFileName"
   ];
 
   const rows = events.map((event) =>
@@ -26,15 +36,22 @@ export function toCsv(events: AnalysisEvent[]): string {
       event.id,
       event.timestampSeconds.toString(),
       event.timestampLabel,
-      event.playerName,
-      event.sessionName,
-      event.countBalls.toString(),
-      event.countStrikes.toString(),
-      event.countLabel,
-      event.tag,
+      event.tagId,
+      event.tagLabel,
       event.category,
       event.note,
-      event.createdAt
+      event.count,
+      event.pitchLocation,
+      event.contactDirection,
+      event.contactQuality,
+      event.result,
+      event.createdAt,
+      session.sessionId,
+      session.sessionName,
+      session.sessionDate,
+      session.playerName,
+      session.opponent,
+      session.videoFileName
     ]
       .map(escapeCsvValue)
       .join(",")
@@ -43,6 +60,31 @@ export function toCsv(events: AnalysisEvent[]): string {
   return [headers.join(","), ...rows].join("\n");
 }
 
-export function toJson(events: AnalysisEvent[]): string {
-  return JSON.stringify(events, null, 2);
+export function toJson(session: SessionMetadata, events: AnalysisEvent[]): string {
+  const exportedData: ExportedSession = {
+    schemaVersion: "1.0",
+    exportedAt: new Date().toISOString(),
+    session,
+    events
+  };
+  return JSON.stringify(exportedData, null, 2);
 }
+
+export function parseImportedSession(text: string): ExportedSession {
+  const parsed = JSON.parse(text);
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Invalid session format");
+  }
+  if (parsed.schemaVersion !== "1.0") {
+    throw new Error(`Unsupported schema version: ${parsed.schemaVersion || "none"}`);
+  }
+  if (!parsed.session || typeof parsed.session !== "object") {
+    throw new Error("Missing session metadata");
+  }
+  if (!Array.isArray(parsed.events)) {
+    throw new Error("Missing or invalid events array");
+  }
+  return parsed as ExportedSession;
+}
+
+

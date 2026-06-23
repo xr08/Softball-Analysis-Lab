@@ -1,8 +1,8 @@
 type CountSelectorProps = {
-  balls: number;
-  strikes: number;
-  onBallsChange: (value: number) => void;
-  onStrikesChange: (value: number) => void;
+  balls: number | null;
+  strikes: number | null;
+  onBallsChange: (value: number | null) => void;
+  onStrikesChange: (value: number | null) => void;
 };
 
 export function CountSelector({
@@ -18,11 +18,14 @@ export function CountSelector({
         <label className="flex flex-col gap-1 text-sm text-slate-700">
           Balls
           <select
-            value={balls}
-            onChange={(event) => onBallsChange(Number(event.target.value))}
+            value={balls === null ? "" : balls}
+            onChange={(event) =>
+              onBallsChange(event.target.value === "" ? null : Number(event.target.value))
+            }
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
-            {[0, 1, 2, 3].map((value) => (
+            <option value="">Unknown</option>
+            {[0, 1, 2, 3, 4].map((value) => (
               <option key={value} value={value}>
                 {value}
               </option>
@@ -32,11 +35,14 @@ export function CountSelector({
         <label className="flex flex-col gap-1 text-sm text-slate-700">
           Strikes
           <select
-            value={strikes}
-            onChange={(event) => onStrikesChange(Number(event.target.value))}
+            value={strikes === null ? "" : strikes}
+            onChange={(event) =>
+              onStrikesChange(event.target.value === "" ? null : Number(event.target.value))
+            }
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
-            {[0, 1, 2].map((value) => (
+            <option value="">Unknown</option>
+            {[0, 1, 2, 3].map((value) => (
               <option key={value} value={value}>
                 {value}
               </option>
@@ -45,7 +51,7 @@ export function CountSelector({
         </label>
       </div>
       <p className="mt-3 text-sm text-slate-700">
-        Current count: {balls}-{strikes}
+        Current count: {balls !== null && strikes !== null ? `${balls}-${strikes}` : "Unknown"}
       </p>
     </section>
   );

@@ -13,13 +13,13 @@ export function TagPanel({ onTagClick, disabled = false }: TagPanelProps) {
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {STAGE_1_TAGS.map((tag) => (
           <button
-            key={tag.tag}
+            key={tag.id}
             type="button"
             disabled={disabled}
             onClick={() => onTagClick(tag)}
             className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-left text-sm text-slate-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <div className="font-medium">{tag.tag}</div>
+            <div className="font-medium">{tag.label}</div>
             <div className="text-xs text-slate-600">{tag.category}</div>
           </button>
         ))}

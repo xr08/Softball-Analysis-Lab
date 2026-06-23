@@ -36,15 +36,15 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Stage 2 — Structured Batter Context**
+Current stage: **Stage 3 — Structured Batter Context (VT-2)**
 
 The project must stay local-first.
 
 The video should stay on the user's local hard drive and should be selected through a browser file input.
 
-## Stage 1 Scope
+## Stage 1 Scope (VT-1)
 
-Stage 1 must include:
+Stage 1 is complete and includes:
 
 * local video file selection
 * browser video playback
@@ -57,6 +57,9 @@ Stage 1 must include:
 * editable notes
 * CSV export
 * JSON export
+* Local storage recovery for unfinished sessions
+* Persistent tag IDs for stability
+* Type-safe models with schema validation
 
 ## Stage 1 Initial Batter Tags
 
@@ -85,7 +88,7 @@ Use these initial tags:
 
 ## Do Not Build Yet
 
-Do not add these until Stage 1 is complete and tested:
+Do not add these until later stages:
 
 * Supabase
 * login/authentication
@@ -101,23 +104,9 @@ Do not add these until Stage 1 is complete and tested:
 * public sharing
 * payment/subscription features
 
-## Stage 1 Success Criteria
-
-Stage 1 is only complete when:
-
-* a local MP4 can be selected and played
-* player name and session name can be entered
-* tag buttons save accurate video timestamps
-* timeline events appear in time order
-* clicking a timeline event jumps back to that moment in the video
-* notes can be added or edited
-* CSV export works
-* JSON export works
-* exported CSV opens cleanly in Excel or Google Sheets
-
 ## Future Stages
 
-### Stage 2 — Structured Batter Context
+### Stage 2 — Structured Batter Context (Deferred to VT-2/Stage 3)
 
 Add:
 
