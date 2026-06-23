@@ -1,13 +1,14 @@
 import { AnalysisEvent } from "@/lib/analysis/types";
+import { TimelineEventItem } from "./TimelineEventItem";
 
 type TimelineProps = {
   events: AnalysisEvent[];
   onSeek: (timestampSeconds: number) => void;
-  onNoteChange: (id: string, note: string) => void;
+  onUpdateEvent: (updatedEvent: AnalysisEvent) => void;
   onDeleteEvent: (id: string) => void;
 };
 
-export function Timeline({ events, onSeek, onNoteChange, onDeleteEvent }: TimelineProps) {
+export function Timeline({ events, onSeek, onUpdateEvent, onDeleteEvent }: TimelineProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="mb-3 text-lg font-semibold text-slate-900">Timeline</h2>
@@ -17,39 +18,13 @@ export function Timeline({ events, onSeek, onNoteChange, onDeleteEvent }: Timeli
       ) : (
         <ul className="space-y-3">
           {events.map((event) => (
-            <li key={event.id} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onSeek(event.timestampSeconds)}
-                  className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
-                >
-                  {event.timestampLabel}
-                </button>
-                <span className="text-sm font-medium text-slate-900">{event.tagLabel}</span>
-                <span className="text-xs text-slate-600">{event.category}</span>
-                <button
-                  type="button"
-                  onClick={() => onDeleteEvent(event.id)}
-                  className="ml-auto rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
-
-              <div className="mb-2 text-xs text-slate-600">Count: {event.count ?? "Unknown"}</div>
-
-              <label className="flex flex-col gap-1 text-xs text-slate-700">
-                Note
-                <input
-                  type="text"
-                  value={event.note}
-                  onChange={(inputEvent) => onNoteChange(event.id, inputEvent.target.value)}
-                  placeholder="Add coaching note..."
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
-                />
-              </label>
-            </li>
+            <TimelineEventItem
+              key={event.id}
+              event={event}
+              onSeek={onSeek}
+              onUpdateEvent={onUpdateEvent}
+              onDeleteEvent={onDeleteEvent}
+            />
           ))}
         </ul>
       )}

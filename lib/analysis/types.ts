@@ -23,10 +23,13 @@ export type AnalysisEvent = {
 
   // Explicitly nullable structured context
   count: string | null;
-  pitchLocation: string | null;
-  contactDirection: string | null;
-  contactQuality: string | null;
-  result: string | null;
+  pitchResult: "called_strike" | "swinging_strike" | "foul" | "ball" | "ball_in_play" | "hit_by_pitch" | null;
+  pitchLocationZone: "zone_1" | "zone_2" | "zone_3" | "zone_4" | "zone_5" | "zone_6" | "zone_7" | "zone_8" | "zone_9" | "high" | "low" | "inside" | "outside" | null;
+  pitchLocationLabel: string | null;
+  batterHandedness: "right" | "left" | null;
+  contactDirection: "pull" | "middle" | "opposite" | null;
+  contactQuality: "hard" | "medium" | "weak" | null;
+  result: "single" | "double" | "triple" | "home_run" | "walk" | "strikeout" | "field_out" | "fielders_choice" | "reached_on_error" | "sacrifice" | "hit_by_pitch" | null;
 
   createdAt: string;
 };
@@ -38,12 +41,13 @@ export type SessionMetadata = {
   sessionDate: string;
   opponent: string;
   videoFileName: string | null;
+  batterHandedness: "right" | "left" | null;
   createdAt: string;
   updatedAt: string;
 };
 
 export type ExportedSession = {
-  schemaVersion: "1.0";
+  schemaVersion: "1.0" | "1.1";
   exportedAt: string;
   session: SessionMetadata;
   events: AnalysisEvent[];

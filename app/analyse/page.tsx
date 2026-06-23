@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ContactContextSelector } from "@/components/analysis/ContactContextSelector";
 import { CountSelector } from "@/components/analysis/CountSelector";
 import { ExportButtons } from "@/components/analysis/ExportButtons";
+import { PitchLocationSelector } from "@/components/analysis/PitchLocationSelector";
+import { PitchResultSelector } from "@/components/analysis/PitchResultSelector";
 import { SessionDetails } from "@/components/analysis/SessionDetails";
 import { TagPanel } from "@/components/analysis/TagPanel";
 import { Timeline } from "@/components/analysis/Timeline";
@@ -93,6 +96,7 @@ export default function AnalysePage() {
     sessionDate: "",
     opponent: "",
     videoFileName: null,
+    batterHandedness: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   });
@@ -100,6 +104,13 @@ export default function AnalysePage() {
   const [events, setEvents] = useState<AnalysisEvent[]>([]);
   const [countBalls, setCountBalls] = useState<number | null>(null);
   const [countStrikes, setCountStrikes] = useState<number | null>(null);
+  
+  const [currentPitchResult, setCurrentPitchResult] = useState<AnalysisEvent["pitchResult"]>(null);
+  const [currentPitchLocationZone, setCurrentPitchLocationZone] = useState<AnalysisEvent["pitchLocationZone"]>(null);
+  const [currentPitchLocationLabel, setCurrentPitchLocationLabel] = useState<string | null>(null);
+  const [currentContactDirection, setCurrentContactDirection] = useState<AnalysisEvent["contactDirection"]>(null);
+  const [currentContactQuality, setCurrentContactQuality] = useState<AnalysisEvent["contactQuality"]>(null);
+  const [currentResult, setCurrentResult] = useState<AnalysisEvent["result"]>(null);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
@@ -213,10 +224,13 @@ export default function AnalysePage() {
       category: tag.category,
       note: "",
       count: countLabel,
-      pitchLocation: null,
-      contactDirection: null,
-      contactQuality: null,
-      result: null,
+      pitchResult: currentPitchResult,
+      pitchLocationZone: currentPitchLocationZone,
+      pitchLocationLabel: currentPitchLocationLabel,
+      batterHandedness: session.batterHandedness,
+      contactDirection: currentContactDirection,
+      contactQuality: currentContactQuality,
+      result: currentResult,
       createdAt: new Date().toISOString()
     };
 
@@ -232,9 +246,9 @@ export default function AnalysePage() {
     videoRef.current.focus();
   }
 
-  function handleNoteChange(id: string, note: string): void {
+  function handleUpdateEvent(updatedEvent: AnalysisEvent): void {
     setEvents((previous) =>
-      previous.map((event) => (event.id === id ? { ...event, note } : event))
+      previous.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
     );
     setIsDirty(true);
   }
@@ -426,17 +440,45 @@ export default function AnalysePage() {
         sessionName={session.sessionName}
         sessionDate={session.sessionDate}
         opponent={session.opponent}
+        batterHandedness={session.batterHandedness}
         onPlayerNameChange={(v) => updateSession({ playerName: v })}
         onSessionNameChange={(v) => updateSession({ sessionName: v })}
         onSessionDateChange={(v) => updateSession({ sessionDate: v })}
         onOpponentChange={(v) => updateSession({ opponent: v })}
+        onBatterHandednessChange={(v) => updateSession({ batterHandedness: v })}
       />
-      <CountSelector
-        balls={countBalls}
-        strikes={countStrikes}
-        onBallsChange={setCountBalls}
-        onStrikesChange={setCountStrikes}
-      />
+      
+      <div className="grid gap-4 md:grid-cols-2">
+        <CountSelector
+          balls={countBalls}
+          strikes={countStrikes}
+          onBallsChange={setCountBalls}
+          onStrikesChange={setCountStrikes}
+        />
+        <PitchResultSelector 
+          value={currentPitchResult}
+          onChange={setCurrentPitchResult}
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PitchLocationSelector
+          value={currentPitchLocationZone}
+          batterHandedness={session.batterHandedness}
+          onChange={(zoneId, label) => {
+            setCurrentPitchLocationZone(zoneId);
+            setCurrentPitchLocationLabel(label);
+          }}
+        />
+        <ContactContextSelector
+          contactDirection={currentContactDirection}
+          contactQuality={currentContactQuality}
+          result={currentResult}
+          onContactDirectionChange={setCurrentContactDirection}
+          onContactQualityChange={setCurrentContactQuality}
+          onResultChange={setCurrentResult}
+        />
+      </div>
 
       <VideoPlayer
         videoRef={videoRef}
@@ -449,7 +491,7 @@ export default function AnalysePage() {
 
       <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} />
 
-      <Timeline events={sortedEvents} onSeek={handleSeek} onNoteChange={handleNoteChange} onDeleteEvent={handleDeleteEvent} />
+      <Timeline events={sortedEvents} onSeek={handleSeek} onUpdateEvent={handleUpdateEvent} onDeleteEvent={handleDeleteEvent} />
 
       <ExportButtons
         onExportCsv={() => void handleExportCsv()}
