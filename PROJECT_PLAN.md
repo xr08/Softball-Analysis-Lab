@@ -36,9 +36,9 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Stage 4 — Reports (VT-4 pending)**
+Current stage: **Stage 5 — Pitcher Mode (VT-5 pending)**
 
-VT-3 (Review Mode and Filtered Playback) is now complete.
+VT-4 (Reports and Comparison) is now complete.
 
 The project must stay local-first.
 
@@ -169,14 +169,16 @@ Delivered:
 * **`__tests__/review.test.ts`** — 67 tests covering all filter, navigation, boundary, summary, and preset cases
 * No schema change (stays at 1.1); no review state written to the exported session or recovery payload
 
-### Stage 4 — Reports
+### Stage 4 — Reports (VT-4) ✅ Complete
 
-Add:
+Delivered:
 
-* session summary
-* player trend summary
-* coach note summary
-* exportable report content
+* **Session Report** — auto-generates comprehensive metrics (event overview, swing decisions, pitch results, zone heatmaps, and coding completeness) for a session.
+* **Comparison Mode** — allows loading a secondary "Session B" for side-by-side metric comparison, calculating absolute and percentage-point differences.
+* **Pure Reporting Logic** — report calculation is decoupled from React, fully tested with deterministic warnings for low sample sizes or completeness issues.
+* **Filter Inheritance** — comparison reports inherit review filters correctly, enabling "apples-to-apples" analysis.
+* **Exports** — exports to CSV (which now includes `reportFormat` distinction) and Report JSON (with filters and report generation metadata, excluding video paths for privacy).
+* **UI Components** — `SessionReport`, `ComparisonReport`, `ZoneHeatmap` and a master `ReportsPanel` implemented with strict CSS and no external charting libraries.
 
 ### Stage 5 — Pitcher Mode
 

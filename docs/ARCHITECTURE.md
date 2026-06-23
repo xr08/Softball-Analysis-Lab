@@ -48,3 +48,20 @@ VT-3 clip playback uses the video element's `timeupdate` event as the primary bo
 
 VT-3 playlist mode is implemented as a sequential `async` loop (not a timer chain). Each clip must reach its endpoint before the next begins. The playlist is cancelled (and listeners cleaned up) on: filter change, mode change, video replacement, manual stop, session import/restore, or component unmount.
 
+## VT-4 Reports Architecture
+
+VT-4 introduces Session Reports and Comparisons with a strict functional separation between data processing and UI rendering.
+
+### Pure Reporting Logic
+
+All calculations for reports (e.g., `buildSessionReport`, `summarisePitchResults`, `buildComparisonWarnings`) are implemented as pure functions in `lib/analysis/reports.ts`. These functions:
+- Never mutate the input `events` array or `session` metadata.
+- Require explicit denominators for all percentage calculations, returning `null` when the denominator is zero (to prevent misleading `0%` metrics).
+- Do not make HTTP calls or depend on external APIs/DOM.
+
+### In-Memory Comparison State
+
+Comparison logic ("Session B") is treated as an ephemeral overlay within `AnalysePage` React state.
+- It is cleared explicitly when a new main session is imported, restored, or manually closed.
+- It inherits filters from Review Mode automatically, ensuring equivalent subsets are compared.
+- Comparison metrics are not saved back into the original `ExportedSession`. Only the final generated report can be exported as a distinct `Report JSON`.

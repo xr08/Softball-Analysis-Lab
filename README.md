@@ -8,7 +8,7 @@ The first use case is high-level batter analysis using pre-recorded video. The a
 
 ## Current Project Stage
 
-**Stage 3 — Review Mode and Filtered Playback (VT-3)**
+**Stage 4 — Reports and Comparison (VT-4)**
 
 The app now allows a coach or analyst to:
 
@@ -21,10 +21,14 @@ The app now allows a coach or analyst to:
 * add or edit notes inline
 * export the session as CSV and JSON
 * **switch to Review Mode to filter and step through tagged events**
-* **filter by tag, pitch result, location, count, handedness, contact, result, or text**
-* **navigate previous/next matching events with keyboard shortcuts**
-* **play a pre-roll/post-roll clip for any single event**
-* **run a playlist through all matching events automatically**
+* filter by tag, pitch result, location, count, handedness, contact, result, or text
+* navigate previous/next matching events with keyboard shortcuts
+* play a pre-roll/post-roll clip for any single event
+* run a playlist through all matching events automatically
+* **switch to Reports Mode to view comprehensive session metrics**
+* view automatic swing decisions, contact rates, zone heatmaps, and coding completeness
+* load a secondary "Session B" to compare against the current session
+* see absolute and percentage-point differences with deterministic warnings for low sample size
 
 ## Why This Project Exists
 
@@ -156,6 +160,14 @@ These are being delivered progressively by stage rather than all at once.
 * Late swing
 * Good decision
 * Coach note
+
+## Features Added in Stage 4 (Reports)
+
+Stage 4 delivered:
+* **Session Report** — auto-generates comprehensive metrics (event overview, swing decisions, pitch results, zone heatmaps, and coding completeness) for a session.
+* **Comparison Mode** — allows loading a secondary "Session B" for side-by-side metric comparison, calculating absolute and percentage-point differences.
+* **Filter Inheritance** — comparison reports inherit review filters correctly, enabling "apples-to-apples" analysis.
+* **Exports** — exports to CSV (which now includes `reportFormat` distinction) and Report JSON (with filters and report generation metadata, excluding video paths for privacy).
 
 ## Stage 1 Success Criteria
 
