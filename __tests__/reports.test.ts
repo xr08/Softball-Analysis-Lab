@@ -15,6 +15,7 @@ import {
   toReportCsv,
   toComparisonCsv,
   toReportJson,
+  toComparisonReportJson,
   safePercent,
   diffDirectionLabel,
   NOT_SET_KEY,
@@ -435,19 +436,32 @@ describe("summariseSwingDecision", () => {
     expect(result.takeEvents).toBe(1);
   });
 
-  it("calculates swing-and-miss pct correctly", () => {
+  it("calculates swing-and-miss pct correctly (1 swing, 1 miss -> 50%)", () => {
     const events = [
-      makeEvent({ tagId: "swing" }),
       makeEvent({ tagId: "swing" }),
       makeEvent({ tagId: "swing_and_miss" }),
     ];
     const result = summariseSwingDecision(events);
-    // swingAndMissEvents = 1, swingEvents = 2 -> 50%
+    // swingAndMissEvents = 1, swingEvents = 1, total = 2 -> 50%
     expect(result.swingAndMissPctOfSwings).toBe(50);
   });
 
-  it("returns null pct when no swing events", () => {
-    const result = summariseSwingDecision([]);
+  it("calculates swing-and-miss pct correctly (0 swing, 2 miss -> 100%)", () => {
+    const events = [
+      makeEvent({ tagId: "swing_and_miss" }),
+      makeEvent({ tagId: "swing_and_miss" }),
+    ];
+    const result = summariseSwingDecision(events);
+    // swingAndMissEvents = 2, swingEvents = 0, total = 2 -> 100%
+    expect(result.swingAndMissPctOfSwings).toBe(100);
+  });
+
+  it("returns null pct when no swing or swing-and-miss events", () => {
+    const events = [
+      makeEvent({ tagId: "take" }),
+      makeEvent({ tagId: "foul" }),
+    ];
+    const result = summariseSwingDecision(events);
     expect(result.swingAndMissPctOfSwings).toBeNull();
   });
 
@@ -819,5 +833,56 @@ describe("canonical session data unchanged", () => {
     compareReports(reportA, reportB);
     expect(session.sessionId).toBe("test-session-a");
     expect(sessionB.sessionId).toBe("b");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Report JSON shape (Comparison)
+// ---------------------------------------------------------------------------
+
+describe("toComparisonReportJson", () => {
+  it("exports full comparison report including both sessions and differences", () => {
+    const sessionA = makeSession({ sessionId: "a", videoFileName: "a.mp4" });
+    const sessionB = makeSession({ sessionId: "b", videoFileName: "b.mp4" });
+    const reportA = buildSessionReport(sessionA, [], "2026-06-01T10:00:00.000Z");
+    const reportB = buildSessionReport(sessionB, [makeEvent()], "2026-06-01T11:00:00.000Z");
+    const comp = compareReports(reportA, reportB);
+    
+    const jsonStr = toComparisonReportJson(comp);
+    const json = JSON.parse(jsonStr);
+
+    expect(json.reportFormat).toBe("comparison-report");
+    expect(json.reportType).toBe("session-comparison");
+    expect(json.sessionA.session.sessionId).toBe("a");
+    expect(json.sessionB.session.sessionId).toBe("b");
+    expect(json.sessionA.session.videoFileName).toBeUndefined();
+    expect(json.sessionB.session.videoFileName).toBeUndefined();
+    expect(json.warnings).toBeDefined();
+    expect(json.pitchResults).toBeDefined();
+    expect(json.totalEvents.diff).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Zero-event Session A handling in Comparison
+// ---------------------------------------------------------------------------
+
+describe("compareReports — zero-event handling", () => {
+  it("produces valid comparison model when Session A has zero events", () => {
+    const sessionA = makeSession({ sessionId: "a" });
+    const sessionB = makeSession({ sessionId: "b" });
+    
+    // Session A is empty, Session B has 1 event
+    const reportA = buildSessionReport(sessionA, [], "2026-06-01T10:00:00.000Z");
+    const reportB = buildSessionReport(sessionB, [makeEvent()], "2026-06-01T11:00:00.000Z");
+    
+    const comp = compareReports(reportA, reportB);
+    
+    expect(comp.totalEvents.aValue).toBe(0);
+    expect(comp.totalEvents.bValue).toBe(1);
+    expect(comp.totalEvents.diff).toBe(1);
+    
+    // Warning about zero events should be present
+    expect(comp.warnings.some(w => w.code === "zero_events")).toBe(true);
   });
 });

@@ -443,8 +443,9 @@ export function summariseSwingDecision(events: AnalysisEvent[]): SwingDecisionSu
     if (e.pitchResult === "ball_in_play") ballsInPlay++;
   }
 
+  const swingDenominator = swingEvents + swingAndMissEvents;
   const swingAndMissPctOfSwings =
-    swingEvents > 0 ? safePercent(swingAndMissEvents, swingEvents) : null;
+    swingDenominator > 0 ? safePercent(swingAndMissEvents, swingDenominator) : null;
 
   return {
     swingEvents,
@@ -454,7 +455,7 @@ export function summariseSwingDecision(events: AnalysisEvent[]): SwingDecisionSu
     ballsInPlay,
     swingAndMissPctOfSwings,
     denominatorNote:
-      "Swing-and-miss % is calculated as a percentage of coded swing events (tag: Swing), not all pitches.",
+      "Swing-and-miss events as a percentage of tagged swings (Swing + Swing & Miss).",
   };
 }
 
@@ -890,6 +891,40 @@ export function toReportJson(report: SessionReport): string {
     swingDecision: report.swingDecision,
     tagCategories: report.tagCategories,
     codingCompleteness: report.codingCompleteness,
+  };
+  return JSON.stringify(output, null, 2);
+}
+
+/**
+ * Exports a comparison report as a derived Comparison Report JSON.
+ * This is NOT importable as a session.
+ */
+export function toComparisonReportJson(comp: ComparisonReport): string {
+  const sanitizeSession = (session: SessionMetadata) => ({
+    sessionId: session.sessionId,
+    sessionName: session.sessionName,
+    playerName: session.playerName,
+    sessionDate: session.sessionDate,
+    opponent: session.opponent,
+  });
+
+  const sanitizeReport = (report: SessionReport) => ({
+    ...report,
+    session: sanitizeSession(report.session),
+  });
+
+  const output = {
+    reportFormat: "comparison-report",
+    reportType: comp.reportType,
+    sessionA: sanitizeReport(comp.sessionA),
+    sessionB: sanitizeReport(comp.sessionB),
+    warnings: comp.warnings,
+    pitchResults: comp.pitchResults,
+    locations: comp.locations,
+    contactDirections: comp.contactDirections,
+    contactQuality: comp.contactQuality,
+    atBatResults: comp.atBatResults,
+    totalEvents: comp.totalEvents,
   };
   return JSON.stringify(output, null, 2);
 }

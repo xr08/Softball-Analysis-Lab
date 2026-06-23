@@ -8,6 +8,7 @@ import {
   toReportCsv,
   toComparisonCsv,
   toReportJson,
+  toComparisonReportJson,
   SessionReport as SessionReportType,
 } from "@/lib/analysis/reports";
 import { ReviewFilters as ReviewFiltersType, hasActiveFilters, filterAndSortEvents } from "@/lib/analysis/review";
@@ -125,11 +126,20 @@ export function ReportsPanel({
   }
 
   function handleExportReportJson() {
-    downloadFile(
-      toReportJson(sessionReport),
-      `${sessionLabel}-report.json`,
-      "application/json;charset=utf-8;"
-    );
+    if (view === "compare" && comparison) {
+      const bLabel = comparison.sessionB.session.sessionName.trim() || "session";
+      downloadFile(
+        toComparisonReportJson(comparison),
+        `${sessionLabel}-vs-${bLabel}.comparison-report.json`,
+        "application/json;charset=utf-8;"
+      );
+    } else {
+      downloadFile(
+        toReportJson(sessionReport),
+        `${sessionLabel}-report.json`,
+        "application/json;charset=utf-8;"
+      );
+    }
   }
 
   function handlePrint() {
@@ -251,7 +261,7 @@ export function ReportsPanel({
       )}
 
       {/* ── Report content ───────────────────────────────────────────── */}
-      {allEvents.length === 0 ? (
+      {view === "single" && allEvents.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
           No events in this session yet. Add tagged events in Tagging mode to generate a report.
         </div>
