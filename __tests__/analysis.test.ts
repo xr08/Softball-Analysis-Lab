@@ -47,6 +47,7 @@ describe("JSON Export and Import", () => {
     sessionDate: "2026-06-23",
     opponent: "Red Sox",
     videoFileName: "video.mp4",
+    batterHandedness: "right",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -61,7 +62,10 @@ describe("JSON Export and Import", () => {
       category: "Swing Decision",
       note: "Good swing",
       count: "1-2",
-      pitchLocation: null,
+      pitchResult: "swinging_strike",
+      pitchLocationZone: "zone_2",
+      pitchLocationLabel: "Zone 2",
+      batterHandedness: "right",
       contactDirection: null,
       contactQuality: null,
       result: null,
@@ -69,15 +73,61 @@ describe("JSON Export and Import", () => {
     }
   ];
 
-  it("round trips JSON successfully", () => {
+  it("round trips JSON 1.1 successfully", () => {
     const jsonStr = toJson(session, events);
     const parsed = parseImportedSession(jsonStr);
 
-    expect(parsed.schemaVersion).toBe("1.0");
+    expect(parsed.schemaVersion).toBe("1.1");
     expect(parsed.session.sessionId).toBe(session.sessionId);
     expect(parsed.events.length).toBe(1);
     expect(parsed.events[0].count).toBe("1-2");
-    expect(parsed.events[0].pitchLocation).toBeNull();
+    expect(parsed.events[0].pitchResult).toBe("swinging_strike");
+    expect(parsed.events[0].pitchLocationZone).toBe("zone_2");
+    expect(parsed.events[0].pitchLocationLabel).toBe("Zone 2");
+    expect(parsed.events[0].batterHandedness).toBe("right");
+  });
+
+  it("migrates schema 1.0 to 1.1", () => {
+    // Schema 1.0 JSON representation
+    const oldSchemaJson = JSON.stringify({
+      schemaVersion: "1.0",
+      exportedAt: new Date().toISOString(),
+      session: {
+        sessionId: "s123",
+        sessionName: "Old Session",
+        playerName: "Player A",
+        sessionDate: "2026-06-23",
+        opponent: "Red Sox",
+        videoFileName: "video.mp4",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      events: [
+        {
+          id: "e1",
+          timestampSeconds: 12.34,
+          timestampLabel: "00:12.340",
+          tagId: "swing",
+          tagLabel: "Swing",
+          category: "Swing Decision",
+          note: "Old event",
+          count: "1-2",
+          pitchLocation: null,
+          contactDirection: null,
+          contactQuality: null,
+          result: null,
+          createdAt: new Date().toISOString()
+        }
+      ]
+    });
+
+    const parsed = parseImportedSession(oldSchemaJson);
+
+    expect(parsed.schemaVersion).toBe("1.1");
+    expect(parsed.session.batterHandedness).toBeNull();
+    expect(parsed.events[0].pitchResult).toBeNull();
+    expect(parsed.events[0].pitchLocationZone).toBeNull();
+    expect(parsed.events[0].batterHandedness).toBeNull();
   });
 
   it("rejects malformed json", () => {
@@ -90,8 +140,8 @@ describe("JSON Export and Import", () => {
   });
 
   it("rejects missing session or events", () => {
-    expect(() => parseImportedSession(JSON.stringify({ schemaVersion: "1.0" }))).toThrow("Missing session metadata");
-    expect(() => parseImportedSession(JSON.stringify({ schemaVersion: "1.0", session: {} }))).toThrow("Missing or invalid events array");
+    expect(() => parseImportedSession(JSON.stringify({ schemaVersion: "1.1" }))).toThrow("Missing session metadata");
+    expect(() => parseImportedSession(JSON.stringify({ schemaVersion: "1.1", session: {} }))).toThrow("Missing or invalid events array");
   });
 });
 
@@ -103,6 +153,7 @@ describe("CSV Export", () => {
     sessionDate: "2026-06-23",
     opponent: "Red Sox",
     videoFileName: "video.mp4",
+    batterHandedness: "left",
     createdAt: "2026-06-23T00:00:00.000Z",
     updatedAt: "2026-06-23T00:00:00.000Z"
   };
@@ -116,11 +167,14 @@ describe("CSV Export", () => {
       tagLabel: "Swing",
       category: "Swing Decision",
       note: 'Note with a "quote", comma, and\nnewline',
-      count: "0-0",
-      pitchLocation: null,
+      count: "3-2",
+      pitchResult: "swinging_strike",
+      pitchLocationZone: "zone_9",
+      pitchLocationLabel: "Zone 9",
+      batterHandedness: "left",
       contactDirection: null,
       contactQuality: null,
-      result: null,
+      result: "strikeout",
       createdAt: "2026-06-23T00:00:00.000Z"
     }
   ];
@@ -131,10 +185,18 @@ describe("CSV Export", () => {
     expect(csv).toContain('""quote""');
   });
 
+  it("outputs balls and strikes columns correctly", () => {
+    const csv = toCsv(session, events);
+    // balls=3, strikes=2
+    // headers should include balls, strikes
+    expect(csv).toContain('balls,strikes');
+    // data row should contain the extracted values
+    expect(csv).toContain('"3","2"');
+  });
+
   it("outputs null fields as empty strings", () => {
     const csv = toCsv(session, events);
-    // Check if null values resulted in empty string outputs for those columns
-    // We expect several empty columns `...,"0-0","","","","",...`
+    // contactDirection and contactQuality are null, should be ""
     expect(csv).toContain('""');
   });
 });
