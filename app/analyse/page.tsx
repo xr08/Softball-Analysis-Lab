@@ -9,6 +9,7 @@ import { PitchResultSelector } from "@/components/analysis/PitchResultSelector";
 import { ReviewControls } from "@/components/analysis/ReviewControls";
 import { ReviewFilters } from "@/components/analysis/ReviewFilters";
 import { ReviewSummary } from "@/components/analysis/ReviewSummary";
+import { ReportsPanel } from "@/components/analysis/ReportsPanel";
 import { SessionDetails } from "@/components/analysis/SessionDetails";
 import { TagPanel } from "@/components/analysis/TagPanel";
 import { Timeline } from "@/components/analysis/Timeline";
@@ -38,7 +39,7 @@ const RECOVERY_KEY = "softball-analysis-lab:recovery:v1";
 const DEFAULT_PRE_ROLL = 2;
 const DEFAULT_POST_ROLL = 3;
 
-type AppMode = "tagging" | "review";
+type AppMode = "tagging" | "review" | "reports";
 
 // ---------------------------------------------------------------------------
 // File utilities
@@ -156,6 +157,9 @@ export default function AnalysePage() {
   const [selectedReviewEventId, setSelectedReviewEventId] = useState<string | null>(null);
   const [preRoll, setPreRoll] = useState(DEFAULT_PRE_ROLL);
   const [postRoll, setPostRoll] = useState(DEFAULT_POST_ROLL);
+
+  // Comparison session (in-memory only — not persisted, not written to recovery)
+  const [comparisonSession, setComparisonSession] = useState<ExportedSession | null>(null);
 
   // Playlist playback state
   const [isPlayingPlaylist, setIsPlayingPlaylist] = useState(false);
@@ -438,6 +442,7 @@ export default function AnalysePage() {
 
   function switchMode(newMode: AppMode): void {
     if (newMode === mode) return;
+    // Always stop playlist when switching modes
     stopPlaylist();
     if (newMode === "review") {
       // Clear stale selection on entering review
@@ -668,6 +673,8 @@ export default function AnalysePage() {
       setIsDirty(true);
       setSelectedReviewEventId(null);
       setReviewFilters(emptyFilters());
+      // Clear stale comparison session when active session changes
+      setComparisonSession(null);
       setExportMessage("Session restored. Select the original video file to resume playback and timestamp review.");
     }
     setHasRecoveryData(false);
@@ -694,6 +701,8 @@ export default function AnalysePage() {
         setIsDirty(false);
         setSelectedReviewEventId(null);
         setReviewFilters(emptyFilters());
+        // Clear stale comparison session when active session is replaced
+        setComparisonSession(null);
         stopPlaylist();
         setExportMessage(`Imported ${file.name}. Select the original video file (${parsed.session.videoFileName || "unknown"}) to resume playback.`);
       } catch (err: any) {
@@ -742,6 +751,7 @@ export default function AnalysePage() {
   // ---------------------------------------------------------------------------
 
   const showReview = mode === "review";
+  const showReports = mode === "reports";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
@@ -752,16 +762,18 @@ export default function AnalysePage() {
           {/* Mode toggle */}
           <div className="flex rounded-lg border border-slate-300 bg-white p-0.5 shadow-sm" role="tablist" aria-label="Application mode">
             <button
+              id="tab-tagging"
               role="tab"
-              aria-selected={!showReview}
+              aria-selected={mode === "tagging"}
               onClick={() => switchMode("tagging")}
               className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
-                !showReview ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                mode === "tagging" ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               Tagging
             </button>
             <button
+              id="tab-review"
               role="tab"
               aria-selected={showReview}
               onClick={() => switchMode("review")}
@@ -775,6 +787,17 @@ export default function AnalysePage() {
                   Filtered
                 </span>
               )}
+            </button>
+            <button
+              id="tab-reports"
+              role="tab"
+              aria-selected={showReports}
+              onClick={() => switchMode("reports")}
+              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                showReports ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              Reports
             </button>
           </div>
 
@@ -812,7 +835,7 @@ export default function AnalysePage() {
       {/* ================================================================ */}
       {/* TAGGING MODE                                                     */}
       {/* ================================================================ */}
-      {!showReview && (
+      {mode === "tagging" && (
         <>
           <div className="grid gap-4 md:grid-cols-2">
             <CountSelector
@@ -848,20 +871,22 @@ export default function AnalysePage() {
         </>
       )}
 
-      {/* Video Player — always visible */}
-      <VideoPlayer
-        videoRef={videoRef}
-        videoUrl={videoUrl}
-        selectedFileName={videoUrl ? (session.videoFileName || "") : null}
-        expectedVideoFileName={session.videoFileName}
-        videoMessage={videoMessage}
-        onSelectFile={handleSelectFile}
-      />
+      {/* Video Player — preserved in DOM to maintain state, hidden in reports */}
+      <div className={showReports ? "hidden" : "block"}>
+        <VideoPlayer
+          videoRef={videoRef}
+          videoUrl={videoUrl}
+          selectedFileName={videoUrl ? (session.videoFileName || "") : null}
+          expectedVideoFileName={session.videoFileName}
+          videoMessage={videoMessage}
+          onSelectFile={handleSelectFile}
+        />
+      </div>
 
       {/* ================================================================ */}
       {/* TAGGING MODE — Tag panel                                         */}
       {/* ================================================================ */}
-      {!showReview && (
+      {mode === "tagging" && (
         <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} />
       )}
 
@@ -896,33 +921,52 @@ export default function AnalysePage() {
       )}
 
       {/* ================================================================ */}
-      {/* TIMELINE — visible in both modes                                 */}
+      {/* REPORTS MODE                                                     */}
       {/* ================================================================ */}
-      <Timeline
-        events={showReview ? filteredReviewEvents : sortedEvents}
-        onSeek={handleSeek}
-        onUpdateEvent={handleUpdateEvent}
-        onDeleteEvent={handleDeleteEvent}
-        selectedReviewEventId={showReview ? selectedReviewEventId : null}
-        totalCount={sortedEvents.length}
-        filteredCount={showReview ? filteredReviewEvents.length : undefined}
-      />
+      {showReports && (
+        <ReportsPanel
+          session={session}
+          allEvents={sortedEvents}
+          filteredEvents={filteredReviewEvents}
+          reviewFilters={reviewFilters}
+          comparisonSession={comparisonSession}
+          onLoadComparisonSession={setComparisonSession}
+          onClearComparisonSession={() => setComparisonSession(null)}
+        />
+      )}
 
       {/* ================================================================ */}
-      {/* EXPORT — always visible                                          */}
+      {/* TIMELINE — visible in tagging and review modes                   */}
       {/* ================================================================ */}
-      <ExportButtons
-        onExportCsv={() => void handleExportCsv()}
-        onExportJson={() => void handleExportJson()}
-        onOpenCsv={handleOpenCsv}
-        onOpenJson={handleOpenJson}
-        onCopyCsv={() => void handleCopyCsv()}
-        onCopyJson={() => void handleCopyJson()}
-        csvContent={csvContent}
-        jsonContent={jsonContent}
-        exportMessage={exportMessage}
-        hasEvents={sortedEvents.length > 0}
-      />
+      {!showReports && (
+        <Timeline
+          events={showReview ? filteredReviewEvents : sortedEvents}
+          onSeek={handleSeek}
+          onUpdateEvent={handleUpdateEvent}
+          onDeleteEvent={handleDeleteEvent}
+          selectedReviewEventId={showReview ? selectedReviewEventId : null}
+          totalCount={sortedEvents.length}
+          filteredCount={showReview ? filteredReviewEvents.length : undefined}
+        />
+      )}
+
+      {/* ================================================================ */}
+      {/* EXPORT — visible in tagging and review modes                     */}
+      {/* ================================================================ */}
+      {!showReports && (
+        <ExportButtons
+          onExportCsv={() => void handleExportCsv()}
+          onExportJson={() => void handleExportJson()}
+          onOpenCsv={handleOpenCsv}
+          onOpenJson={handleOpenJson}
+          onCopyCsv={() => void handleCopyCsv()}
+          onCopyJson={() => void handleCopyJson()}
+          csvContent={csvContent}
+          jsonContent={jsonContent}
+          exportMessage={exportMessage}
+          hasEvents={sortedEvents.length > 0}
+        />
+      )}
     </main>
   );
 }

@@ -9,6 +9,7 @@ This project involves data for high-level athletes. We must ensure absolute cont
 - **Private Repository:** The GitHub repository must remain private in case sample exports or data are accidentally committed.
 - **Explicit Upload Consent:** Any future AI or cloud upload features require deliberate user action, and the destination must be visible beforehand.
 - **Data Deletion:** Future club-scale use must plan for deletion and export controls.
+- **Report Sharing Privacy:** VT-4 Report JSON exports intentionally strip the `videoFileName` property. This prevents local directory structures or internal video file names from leaking when reports are shared between coaches or teams.
 
 ## Gitignore enforcement
 Ensure `.gitignore` always excludes:

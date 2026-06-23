@@ -2,36 +2,34 @@
 
 ## Current Stage
 
-Stage 4 — Session Reports and Comparison Views (VT-4)
+Stage 5 — Pitcher Mode (VT-5)
 
-VT-3 (Review Mode and Filtered Playback) is complete.
+VT-4 (Reports and Comparison) is complete.
 
-## Build This Next — VT-4
+## Build This Next — VT-5
 
-Add a session report view that summarises a completed tagged session and can be exported or printed.
+Add a dedicated Pitcher Mode to allow coding and analyzing a pitcher's performance, complementing the existing batter analysis tools.
 
 ### Required outputs
 
-* **Session summary** — player, date, opponent, total events, event count by category
-* **Pitch result summary** — counts and percentages for each pitch result
-* **Count distribution** — how often events were tagged in each count
-* **Contact quality summary** — hard/medium/weak breakdown
-* **At-bat result summary** — outcome distribution
-* **Coach note export** — all tagged notes in one readable list
-* **Exportable HTML or printable page** — coach can print the summary
+* **Pitcher Mode Toggle** — allow switching between Batter Mode and Pitcher Mode on the analysis page.
+* **Pitcher-Specific Tags** — update the tagging interface to support pitcher-specific events and taxonomy.
+* **Pitcher Context Elements** — track metrics like arm slot, release point, velocity (if available manually), and pitch type (rise, drop, changeup, etc.).
+* **Pitcher Review & Filtering** — extend the Review mode to filter by pitcher-specific metrics.
+* **Pitcher Reports** — generate summary reports tailored to pitcher performance (e.g., strike percentage by pitch type, location heatmaps from pitcher's perspective).
 
 ### Expected pages and components
 
-* New page: `/analyse/report` — session report view
-* `components/analysis/ReportSection.tsx` — reusable report block
-* `lib/analysis/report.ts` — pure helper functions for generating summary data from events
+* Update `app/analyse/page.tsx` — add Pitcher Mode state and UI toggles.
+* Update `lib/analysis/types.ts` — add pitcher-specific fields to `AnalysisEvent`.
+* Update `components/analysis/ReportsPanel.tsx` — support pitcher report views.
+* Update `components/analysis/ZoneHeatmap.tsx` — support pitcher perspective (if needed).
 
 ### Notes
 
 * This is still local-first. No database, no Supabase, no AI.
-* Report data must be derived only from the exported JSON session or the current in-memory session.
-* The report page should be reachable from the analyse page with a "Generate Report" button.
-* All report functions must be unit-tested.
+* Pitcher data must be backward compatible or clearly separated from batter session schema (consider a `sessionType` field in session metadata).
+* All new pure functions must be unit-tested.
 
 ## Do Not Build Now
 
@@ -42,21 +40,20 @@ Do not add:
 * Google Drive API
 * cloud upload
 * AI analysis
-* pitcher mode
 * club dashboard
 * team mode
 * drawing tools
-* automatic highlight clips
-* multi-session comparison (later stage)
+* automatic video clipping
+* computer vision tracking
 
 ## Testing Checklist
 
-VT-4 is complete only when:
+VT-5 is complete only when:
 
-* Session report page is accessible from `/analyse`
-* All summary sections render correctly
-* Report data is derived from actual event data (no hard-coded values)
-* Exportable/printable version works
+* Pitcher mode can be selected during session setup or dynamically.
+* Pitcher-specific tags and context can be logged.
+* Review mode successfully filters pitcher events.
+* Pitcher reports render correctly.
 * `npm run typecheck` passes
 * `npm run test` passes
 * `npm run build` passes
@@ -65,6 +62,6 @@ VT-4 is complete only when:
 
 Commit in GitHub Desktop with this message:
 
-`feat: add VT-4 session report and summary view`
+`feat: add VT-5 pitcher mode`
 
 Then update this file to the next task.

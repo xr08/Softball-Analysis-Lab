@@ -95,6 +95,9 @@ export function parseImportedSession(text: string): ExportedSession {
   if (!parsed || typeof parsed !== "object") {
     throw new Error("Invalid session format");
   }
+  if (parsed.reportFormat) {
+    throw new Error("This is a Report JSON file, which cannot be imported as a session. Please select a Session JSON file.");
+  }
   if (parsed.schemaVersion !== "1.0" && parsed.schemaVersion !== "1.1") {
     throw new Error(`Unsupported schema version: ${parsed.schemaVersion || "none"}`);
   }
