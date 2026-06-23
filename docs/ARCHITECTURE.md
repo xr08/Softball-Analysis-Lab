@@ -30,3 +30,21 @@ We are following a staged architectural progression.
 
 ## Stage 6 — Computer vision
 - Heavy computer vision tasks (pitch-speed estimation, repeated swing alignment, tracking) must be handled by a separate worker/research area outside the main Next.js UI.
+
+## VT-3 Review State Architecture
+
+Review state (filters, selected event, playlist index, playback status, pre/post-roll) is **ephemeral UI state** only.
+
+- It is NOT written to `localStorage` under the session recovery key.
+- It is NOT included in the JSON export (`ExportedSession` schema stays at version 1.1).
+- It is NOT considered part of the canonical event/session data.
+- If stored at all in the future, it must be under a separate, clearly-named preference key (not the session key).
+
+### Playback boundary enforcement
+
+VT-3 clip playback uses the video element's `timeupdate` event as the primary boundary signal, not a timer. A fallback `setTimeout` fires only if `timeupdate` is delayed (e.g., during buffering). Only one clip controller can be active at a time.
+
+### Playlist state machine
+
+VT-3 playlist mode is implemented as a sequential `async` loop (not a timer chain). Each clip must reach its endpoint before the next begins. The playlist is cancelled (and listeners cleaned up) on: filter change, mode change, video replacement, manual stop, session import/restore, or component unmount.
+

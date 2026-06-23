@@ -36,7 +36,9 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Stage 3 — Structured Batter Context (VT-2)**
+Current stage: **Stage 4 — Reports (VT-4 pending)**
+
+VT-3 (Review Mode and Filtered Playback) is now complete.
 
 The project must stay local-first.
 
@@ -150,16 +152,22 @@ The long-term tagging model must support high-performance national team workflow
 * Stage 3-4 focus: spray, trajectory filters, review workflows, report outputs
 * Stage 5+ focus: pitcher mode, advanced biomechanics, and expanded scouting detail
 
-### Stage 3 — Review Mode
+### Stage 3 — Review Mode (VT-3) ✅ Complete
 
-Add:
+Delivered:
 
-* filter by tag
-* filter by count
-* filter by result
-* previous tagged event
-* next tagged event
-* simple review playlist behaviour
+* **Tagging/Review mode toggle** on the analysis page
+* **Review Filters panel** — filter by tag (all 20 from registry), pitch result, location zone, count, batter handedness, contact direction/quality, at-bat result, text search
+* **AND across groups, OR within group** filter logic, tested in 67 pure-function tests
+* **Quick presets** — All Swings, Balls in Play, Hard Contact, Two-Strike Pitches, Hits, Outs (all using stable registry IDs and VT-2 values)
+* **Previous/Next navigation** with keyboard shortcuts (← →, Space) — review-mode only, suppressed in form elements
+* **Clip playback** using `timeupdate` as the boundary source of truth (fallback timer for buffering)
+* **Playlist mode** — single state machine advances only after each clip finishes; cancels cleanly on stop, filter change, mode change, video replacement, or unmount
+* **Timeline** updated: selected event highlighted, filtered/total count shown
+* **ReviewSummary** panel with breakdown bars for pitch results, contact quality, and at-bat results
+* **`lib/analysis/review.ts`** — 11 pure helper functions, fully tested
+* **`__tests__/review.test.ts`** — 67 tests covering all filter, navigation, boundary, summary, and preset cases
+* No schema change (stays at 1.1); no review state written to the exported session or recovery payload
 
 ### Stage 4 — Reports
 
