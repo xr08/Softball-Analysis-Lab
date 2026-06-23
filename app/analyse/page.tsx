@@ -7,9 +7,12 @@ import { SessionDetails } from "@/components/analysis/SessionDetails";
 import { TagPanel } from "@/components/analysis/TagPanel";
 import { Timeline } from "@/components/analysis/Timeline";
 import { VideoPlayer } from "@/components/analysis/VideoPlayer";
-import { toCsv, toJson } from "@/lib/analysis/export";
+import { toCsv, toJson, parseImportedSession } from "@/lib/analysis/export";
 import { formatTimestampLabel } from "@/lib/analysis/time";
-import { AnalysisEvent, TagDefinition } from "@/lib/analysis/types";
+import { compareVideoFileNames } from "@/lib/analysis/video";
+import { AnalysisEvent, ExportedSession, SessionMetadata, TagDefinition } from "@/lib/analysis/types";
+
+const RECOVERY_KEY = "softball-analysis-lab:recovery:v1";
 
 function downloadFile(content: string, fileName: string, type: string): void {
   const blob = new Blob([content], { type });
@@ -81,14 +84,68 @@ type SaveToProjectResult = {
 
 export default function AnalysePage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [playerName, setPlayerName] = useState("");
-  const [sessionName, setSessionName] = useState("");
-  const [countBalls, setCountBalls] = useState(0);
-  const [countStrikes, setCountStrikes] = useState(0);
-  const [videoFileName, setVideoFileName] = useState("");
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [session, setSession] = useState<SessionMetadata>({
+    sessionId: crypto.randomUUID(),
+    sessionName: "",
+    playerName: "",
+    sessionDate: "",
+    opponent: "",
+    videoFileName: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
+
   const [events, setEvents] = useState<AnalysisEvent[]>([]);
+  const [countBalls, setCountBalls] = useState<number | null>(null);
+  const [countStrikes, setCountStrikes] = useState<number | null>(null);
+
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
+  const [videoMessage, setVideoMessage] = useState("");
+  
+  const [isDirty, setIsDirty] = useState(false);
+  const [hasRecoveryData, setHasRecoveryData] = useState(false);
+  const [recoverySnapshot, setRecoverySnapshot] = useState<any>(null);
+
+  // Check for recovery on mount
+  useEffect(() => {
+    const rawData = localStorage.getItem(RECOVERY_KEY);
+    if (rawData) {
+      try {
+        const parsed = JSON.parse(rawData);
+        if (parsed.session && parsed.events) {
+          setRecoverySnapshot(parsed);
+          setHasRecoveryData(true);
+        }
+      } catch (e) {
+        console.error("Failed to parse recovery data", e);
+      }
+    }
+  }, []);
+
+  // Debounced Autosave
+  useEffect(() => {
+    if (!isDirty || hasRecoveryData) return;
+    const timer = setTimeout(() => {
+      const recoveryData = { session, events };
+      localStorage.setItem(RECOVERY_KEY, JSON.stringify(recoveryData));
+    }, 750);
+    return () => clearTimeout(timer);
+  }, [session, events, isDirty, hasRecoveryData]);
+
+  // Before unload warning
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   useEffect(() => {
     return () => {
@@ -106,25 +163,38 @@ export default function AnalysePage() {
       ),
     [events]
   );
-  const sessionLabel = sessionName.trim() || "session";
+
+  const sessionLabel = session.sessionName.trim() || "session";
   const csvFileName = `${sessionLabel}-events.csv`;
   const jsonFileName = `${sessionLabel}-events.json`;
-  const csvContent = useMemo(() => `\uFEFF${toCsv(sortedEvents)}`, [sortedEvents]);
-  const jsonContent = useMemo(() => toJson(sortedEvents), [sortedEvents]);
+  const csvContent = useMemo(() => `\uFEFF${toCsv(session, sortedEvents)}`, [session, sortedEvents]);
+  const jsonContent = useMemo(() => toJson(session, sortedEvents), [session, sortedEvents]);
+
+  function updateSession(updates: Partial<SessionMetadata>) {
+    setSession((prev) => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
+    setIsDirty(true);
+  }
 
   function handleSelectFile(file: File | null): void {
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl);
     }
-
     if (!file) {
       setVideoUrl(null);
-      setVideoFileName("");
+      updateSession({ videoFileName: null });
       return;
     }
-
-    setVideoFileName(file.name);
     setVideoUrl(URL.createObjectURL(file));
+
+    const expected = session.videoFileName;
+    if (expected) {
+      const result = compareVideoFileNames(expected, file.name);
+      setVideoMessage(result.message);
+    } else {
+      setVideoMessage("");
+    }
+    
+    updateSession({ videoFileName: file.name });
   }
 
   function handleTagClick(tag: TagDefinition): void {
@@ -133,23 +203,25 @@ export default function AnalysePage() {
     }
 
     const timestampSeconds = videoRef.current.currentTime;
-    const countLabel = `${countBalls}-${countStrikes}`;
+    const countLabel = countBalls !== null && countStrikes !== null ? `${countBalls}-${countStrikes}` : null;
     const newEvent: AnalysisEvent = {
       id: crypto.randomUUID(),
       timestampSeconds,
       timestampLabel: formatTimestampLabel(timestampSeconds),
-      playerName: playerName.trim(),
-      sessionName: sessionName.trim(),
-      countBalls,
-      countStrikes,
-      countLabel,
-      tag: tag.tag,
+      tagId: tag.id,
+      tagLabel: tag.label,
       category: tag.category,
       note: "",
+      count: countLabel,
+      pitchLocation: null,
+      contactDirection: null,
+      contactQuality: null,
+      result: null,
       createdAt: new Date().toISOString()
     };
 
     setEvents((previous) => [...previous, newEvent]);
+    setIsDirty(true);
   }
 
   function handleSeek(timestampSeconds: number): void {
@@ -164,6 +236,12 @@ export default function AnalysePage() {
     setEvents((previous) =>
       previous.map((event) => (event.id === id ? { ...event, note } : event))
     );
+    setIsDirty(true);
+  }
+
+  function handleDeleteEvent(id: string): void {
+    setEvents((previous) => previous.filter((event) => event.id !== id));
+    setIsDirty(true);
   }
 
   async function handleExportCsv(): Promise<void> {
@@ -184,6 +262,7 @@ export default function AnalysePage() {
       ".json"
     );
     setExportMessage(`JSON export triggered: ${jsonFileName}`);
+    setIsDirty(false); // JSON is a durable backup, mark session as clean
   }
 
   async function handleCopyCsv(): Promise<void> {
@@ -250,51 +329,107 @@ export default function AnalysePage() {
     setExportMessage("Opened JSON view.");
   }
 
-  async function saveToProject(
-    format: "csv" | "json",
-    fileName: string,
-    content: string
-  ): Promise<void> {
-    try {
-      const response = await fetch("/api/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ format, fileName, content })
-      });
+  function handleRestoreRecovery() {
+    if (recoverySnapshot) {
+      setSession(recoverySnapshot.session);
+      setEvents(recoverySnapshot.events);
+      setIsDirty(true);
+      setExportMessage("Session restored. Select the original video file to resume playback and timestamp review.");
+    }
+    setHasRecoveryData(false);
+    setRecoverySnapshot(null);
+  }
 
-      if (!response.ok) {
-        setExportMessage(`Could not save ${format.toUpperCase()} to project folder.`);
-        return;
+  function handleDiscardRecovery() {
+    localStorage.removeItem(RECOVERY_KEY);
+    setHasRecoveryData(false);
+    setRecoverySnapshot(null);
+  }
+
+  function handleImportJson(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        const parsed = parseImportedSession(text);
+        setSession(parsed.session);
+        setEvents(parsed.events);
+        setIsDirty(false);
+        setExportMessage(`Imported ${file.name}. Select the original video file (${parsed.session.videoFileName || 'unknown'}) to resume playback.`);
+      } catch (err: any) {
+        setExportMessage(`Import failed: ${err.message}`);
       }
-
-      const result = (await response.json()) as SaveToProjectResult;
-      setExportMessage(
-        `${format.toUpperCase()} saved to ${result.savedFolder}\\${result.savedFile}`
-      );
-    } catch {
-      setExportMessage(`Could not save ${format.toUpperCase()} to project folder.`);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   }
 
-  async function handleSaveCsvToProject(): Promise<void> {
-    await saveToProject("csv", csvFileName, csvContent);
-  }
-
-  async function handleSaveJsonToProject(): Promise<void> {
-    await saveToProject("json", jsonFileName, jsonContent);
+  if (hasRecoveryData) {
+    return (
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+          <h2 className="mb-2 text-xl font-bold">Unfinished Session Found</h2>
+          <p className="mb-4">
+            {recoverySnapshot?.session?.playerName || "Unknown Player"} — {recoverySnapshot?.session?.sessionName || "Unnamed Session"}
+            <br />
+            Last saved: {new Date(recoverySnapshot?.session?.updatedAt || Date.now()).toLocaleString()}
+          </p>
+          <div className="flex gap-4">
+            <button
+              onClick={handleRestoreRecovery}
+              className="rounded-md bg-emerald-600 px-4 py-2 font-semibold text-white hover:bg-emerald-700"
+            >
+              Restore session
+            </button>
+            <button
+              onClick={handleDiscardRecovery}
+              className="rounded-md border border-amber-300 bg-white px-4 py-2 font-semibold text-amber-900 hover:bg-amber-100"
+            >
+              Discard recovery
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
-      <h1 className="text-2xl font-bold text-slate-900">
-        Stage 2: Structured Batter Context
-      </h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold text-slate-900">
+          Batter Video Analysis
+        </h1>
+        <div>
+          <input
+            type="file"
+            accept=".json"
+            ref={fileInputRef}
+            onChange={handleImportJson}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
+          >
+            Import JSON Session
+          </button>
+        </div>
+      </div>
 
       <SessionDetails
-        playerName={playerName}
-        sessionName={sessionName}
-        onPlayerNameChange={setPlayerName}
-        onSessionNameChange={setSessionName}
+        playerName={session.playerName}
+        sessionName={session.sessionName}
+        sessionDate={session.sessionDate}
+        opponent={session.opponent}
+        onPlayerNameChange={(v) => updateSession({ playerName: v })}
+        onSessionNameChange={(v) => updateSession({ sessionName: v })}
+        onSessionDateChange={(v) => updateSession({ sessionDate: v })}
+        onOpponentChange={(v) => updateSession({ opponent: v })}
       />
       <CountSelector
         balls={countBalls}
@@ -306,19 +441,19 @@ export default function AnalysePage() {
       <VideoPlayer
         videoRef={videoRef}
         videoUrl={videoUrl}
-        selectedFileName={videoFileName}
+        selectedFileName={videoUrl ? (session.videoFileName || "") : null}
+        expectedVideoFileName={session.videoFileName}
+        videoMessage={videoMessage}
         onSelectFile={handleSelectFile}
       />
 
       <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} />
 
-      <Timeline events={sortedEvents} onSeek={handleSeek} onNoteChange={handleNoteChange} />
+      <Timeline events={sortedEvents} onSeek={handleSeek} onNoteChange={handleNoteChange} onDeleteEvent={handleDeleteEvent} />
 
       <ExportButtons
         onExportCsv={() => void handleExportCsv()}
         onExportJson={() => void handleExportJson()}
-        onSaveCsvToProject={() => void handleSaveCsvToProject()}
-        onSaveJsonToProject={() => void handleSaveJsonToProject()}
         onOpenCsv={handleOpenCsv}
         onOpenJson={handleOpenJson}
         onCopyCsv={() => void handleCopyCsv()}
@@ -326,7 +461,7 @@ export default function AnalysePage() {
         csvContent={csvContent}
         jsonContent={jsonContent}
         exportMessage={exportMessage}
-        disabled={sortedEvents.length === 0}
+        hasEvents={sortedEvents.length > 0}
       />
     </main>
   );

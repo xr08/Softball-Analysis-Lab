@@ -23,3 +23,12 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
+
+# video and local data (Privacy rules)
+*.mp4
+*.mov
+*.avi
+*.mkv
+/exports
+.cache/
+

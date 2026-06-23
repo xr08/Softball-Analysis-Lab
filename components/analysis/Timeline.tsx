@@ -4,9 +4,10 @@ type TimelineProps = {
   events: AnalysisEvent[];
   onSeek: (timestampSeconds: number) => void;
   onNoteChange: (id: string, note: string) => void;
+  onDeleteEvent: (id: string) => void;
 };
 
-export function Timeline({ events, onSeek, onNoteChange }: TimelineProps) {
+export function Timeline({ events, onSeek, onNoteChange, onDeleteEvent }: TimelineProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="mb-3 text-lg font-semibold text-slate-900">Timeline</h2>
@@ -25,15 +26,18 @@ export function Timeline({ events, onSeek, onNoteChange }: TimelineProps) {
                 >
                   {event.timestampLabel}
                 </button>
-                <span className="text-sm font-medium text-slate-900">{event.tag}</span>
+                <span className="text-sm font-medium text-slate-900">{event.tagLabel}</span>
                 <span className="text-xs text-slate-600">{event.category}</span>
+                <button
+                  type="button"
+                  onClick={() => onDeleteEvent(event.id)}
+                  className="ml-auto rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                >
+                  Delete
+                </button>
               </div>
 
-              <div className="mb-2 text-xs text-slate-600">
-                Player: {event.playerName || "Unknown"} | Session:{" "}
-                {event.sessionName || "Unnamed"}
-              </div>
-              <div className="mb-2 text-xs text-slate-600">Count: {event.countLabel}</div>
+              <div className="mb-2 text-xs text-slate-600">Count: {event.count ?? "Unknown"}</div>
 
               <label className="flex flex-col gap-1 text-xs text-slate-700">
                 Note

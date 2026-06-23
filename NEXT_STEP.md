@@ -2,14 +2,15 @@
 
 ## Current Stage
 
-Stage 2 — Structured Batter Context
+Stage 3 — Structured Batter Context
 
-## Current Task
+## Deferred Task: VT-2 — Structured Batter Context
+
+The original Stage 2 task was deferred so we could establish the durable tagging foundation first in VT-1. We are now ready to tackle VT-2.
 
 Add pitch result selector and 13-zone location selector (9-zone strike grid + 4 chase zones), and include both in saved events, timeline, CSV, and JSON.
 
-
-## Build This Now
+## Build This Next
 
 Extend `/analyse` with:
 
@@ -37,7 +38,7 @@ Do not add:
 
 ## Testing Checklist
 
-The current task is complete only when:
+The next task is complete only when:
 
 * I can run the app locally
 * I can open `/analyse`
@@ -53,6 +54,6 @@ The current task is complete only when:
 
 Commit in GitHub Desktop with this message:
 
-`Add Stage 2 pitch result and location context`
+`Add Stage 3 pitch result and location context`
 
 Then update this file to the next task.

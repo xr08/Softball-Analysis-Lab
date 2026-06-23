@@ -1,8 +1,6 @@
 type ExportButtonsProps = {
   onExportCsv: () => void;
   onExportJson: () => void;
-  onSaveCsvToProject: () => void;
-  onSaveJsonToProject: () => void;
   onOpenCsv: () => void;
   onOpenJson: () => void;
   onCopyCsv: () => void;
@@ -10,14 +8,12 @@ type ExportButtonsProps = {
   csvContent: string;
   jsonContent: string;
   exportMessage: string;
-  disabled?: boolean;
+  hasEvents?: boolean;
 };
 
 export function ExportButtons({
   onExportCsv,
   onExportJson,
-  onSaveCsvToProject,
-  onSaveJsonToProject,
   onOpenCsv,
   onOpenJson,
   onCopyCsv,
@@ -25,8 +21,10 @@ export function ExportButtons({
   csvContent,
   jsonContent,
   exportMessage,
-  disabled = false
+  hasEvents = false
 }: ExportButtonsProps) {
+  const disabled = !hasEvents;
+  
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
       <h2 className="mb-3 text-lg font-semibold text-slate-900">Export</h2>
@@ -46,22 +44,6 @@ export function ExportButtons({
           className="rounded-md bg-slate-800 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Export JSON
-        </button>
-        <button
-          type="button"
-          onClick={onSaveCsvToProject}
-          disabled={disabled}
-          className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Save CSV to project
-        </button>
-        <button
-          type="button"
-          onClick={onSaveJsonToProject}
-          disabled={disabled}
-          className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Save JSON to project
         </button>
         <button
           type="button"
