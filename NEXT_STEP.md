@@ -2,24 +2,36 @@
 
 ## Current Stage
 
-Stage 3 — Structured Batter Context
+Stage 4 — Session Reports and Comparison Views (VT-4)
 
-## Deferred Task: VT-2 — Structured Batter Context
+VT-3 (Review Mode and Filtered Playback) is complete.
 
-The original Stage 2 task was deferred so we could establish the durable tagging foundation first in VT-1. We are now ready to tackle VT-2.
+## Build This Next — VT-4
 
-Add pitch result selector and 13-zone location selector (9-zone strike grid + 4 chase zones), and include both in saved events, timeline, CSV, and JSON.
+Add a session report view that summarises a completed tagged session and can be exported or printed.
 
-## Build This Next
+### Required outputs
 
-Extend `/analyse` with:
+* **Session summary** — player, date, opponent, total events, event count by category
+* **Pitch result summary** — counts and percentages for each pitch result
+* **Count distribution** — how often events were tagged in each count
+* **Contact quality summary** — hard/medium/weak breakdown
+* **At-bat result summary** — outcome distribution
+* **Coach note export** — all tagged notes in one readable list
+* **Exportable HTML or printable page** — coach can print the summary
 
-* pitch result selector (Ball, Strike Looking, Strike Swinging, Foul, Ball in Play)
-* location selector (9-zone grid + High/Low/Inside/Outside chase zones)
-* event save updates to include pitch result and location
-* timeline display updates for pitch result and location
-* CSV export updates for pitch result and location columns
-* JSON export updates for pitch result and location fields
+### Expected pages and components
+
+* New page: `/analyse/report` — session report view
+* `components/analysis/ReportSection.tsx` — reusable report block
+* `lib/analysis/report.ts` — pure helper functions for generating summary data from events
+
+### Notes
+
+* This is still local-first. No database, no Supabase, no AI.
+* Report data must be derived only from the exported JSON session or the current in-memory session.
+* The report page should be reachable from the analyse page with a "Generate Report" button.
+* All report functions must be unit-tested.
 
 ## Do Not Build Now
 
@@ -35,25 +47,24 @@ Do not add:
 * team mode
 * drawing tools
 * automatic highlight clips
+* multi-session comparison (later stage)
 
 ## Testing Checklist
 
-The next task is complete only when:
+VT-4 is complete only when:
 
-* I can run the app locally
-* I can open `/analyse`
-* I can choose pitch result before tagging
-* I can choose location zone before tagging
-* tagged events save pitch result and location correctly
-* timeline entries show pitch result and location
-* CSV includes pitch result and location columns
-* JSON includes pitch result and location fields
-* export files still work in this in-app browser workflow
+* Session report page is accessible from `/analyse`
+* All summary sections render correctly
+* Report data is derived from actual event data (no hard-coded values)
+* Exportable/printable version works
+* `npm run typecheck` passes
+* `npm run test` passes
+* `npm run build` passes
 
 ## After This Is Complete
 
 Commit in GitHub Desktop with this message:
 
-`Add Stage 3 pitch result and location context`
+`feat: add VT-4 session report and summary view`
 
 Then update this file to the next task.

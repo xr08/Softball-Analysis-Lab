@@ -1,29 +1,30 @@
 # Softball Analysis Lab
 
+# Softball Analysis Lab
+
 Softball Analysis Lab is a local-first video coding and analysis tool for individual softball player development.
 
 The first use case is high-level batter analysis using pre-recorded video. The app will allow a coach or analyst to select a local video file, code key batter events, review timestamped moments, and export the coded data for coaching review.
 
 ## Current Project Stage
 
-**Stage 2 — Structured Batter Context**
+**Stage 3 — Review Mode and Filtered Playback (VT-3)**
 
-The first production pass is intentionally simple and local-first.
-
-It should allow the user to:
+The app now allows a coach or analyst to:
 
 * select a local MP4 video file
-* enter a player name
-* enter a session name
+* enter a player name and session name
 * play the video in the browser
-* click batter tag buttons while watching
-* save timestamped events
-* view a timeline of coded moments
-* click a timeline event to jump back to that video moment
-* add or edit notes
-* export the session as CSV
-* export the session as JSON
-* capture count context (balls-strikes) per tag event
+* click batter tag buttons while watching to save timestamped events
+* view a timeline of coded moments and click to seek
+* capture structured context per pitch (count, pitch result, location, handedness, contact direction/quality, at-bat result)
+* add or edit notes inline
+* export the session as CSV and JSON
+* **switch to Review Mode to filter and step through tagged events**
+* **filter by tag, pitch result, location, count, handedness, contact, result, or text**
+* **navigate previous/next matching events with keyboard shortcuts**
+* **play a pre-roll/post-roll clip for any single event**
+* **run a playlist through all matching events automatically**
 
 ## Why This Project Exists
 
@@ -62,7 +63,7 @@ The video remains local. The tagged analysis data can be exported separately.
 
 ## What We Are Not Building Yet
 
-Do not add these features in Stage 2:
+Do not add these features in VT-3:
 
 * Supabase
 * user login
@@ -79,6 +80,51 @@ Do not add these features in Stage 2:
 
 These may be added later, but only after the local batter tagging MVP works.
 
+## Review Mode
+
+### Entering Review Mode
+
+Click the **Review** tab in the top-right of the analysis page. The **Tagging** tab returns to the normal workflow.
+
+### How Filters Combine
+
+* Multiple groups (e.g. Pitch Result + Contact Quality) use **AND** logic — all conditions must match.
+* Multiple values within one group (e.g. Swing + Swing and miss) use **OR** logic — any value matches.
+* No filters selected → all events shown.
+* "Clear all filters" resets to unfiltered.
+
+### Previous / Next Navigation
+
+Use the ← Previous and Next → buttons, or the keyboard shortcuts:
+
+* **Left Arrow** — previous matching event
+* **Right Arrow** — next matching event
+* **Space** — play/pause video
+
+Keyboard shortcuts only work in Review mode and are suppressed when focus is inside a form field, select, or text area.
+
+### Pre-roll and Post-roll
+
+Set the **Pre-roll** (0–10 seconds, default 2) and **Post-roll** (1–15 seconds, default 3) values in the Review Controls panel.
+
+* **Play clip** — seeks to `max(0, event_timestamp − pre_roll)` and plays until `min(duration, event_timestamp + post_roll)`. Uses the video's `timeupdate` event as the boundary source of truth.
+* The clip stops safely if playback buffers or lags.
+
+### Playlist Playback
+
+**Play all matching events** runs through every filtered event in timestamp order.
+
+* Click **Stop review** to halt at any time.
+* The playlist also stops automatically if filters change, mode switches, or the video is replaced.
+* No overlapping timers or listeners are created.
+
+### Current Limitations
+
+* Clips are played from the locally connected video file — no clip is exported.
+* Filter results depend entirely on manually tagged data.
+* Missing structured values (null) are shown as "Not set" in summaries.
+* Video must be reconnected after a page refresh or JSON import.
+
 ## International/ISC Standards Target
 
 The long-term tagging matrix should support national-team and ISC-level analysis depth.
@@ -91,56 +137,6 @@ Planned model coverage includes:
 * Advanced mechanics and biomechanics: pitcher and hitter marker sets for scouting/review
 
 These are being delivered progressively by stage rather than all at once.
-
-## Project Files to Read First
-
-Before making changes, read these files:
-
-* `PROJECT_PLAN.md`
-* `AI_WORKFLOW.md`
-* `NEXT_STEP.md`
-* `.github/copilot-instructions.md`
-
-These files explain the project direction, current task, AI workflow rules, and what is out of scope.
-
-## Recommended Repo Structure
-
-```txt
-softball-analysis-lab/
-  app/
-    page.tsx
-    analyse/
-      page.tsx
-
-  components/
-    analysis/
-      VideoPlayer.tsx
-      TagPanel.tsx
-      Timeline.tsx
-      SessionDetails.tsx
-      ExportButtons.tsx
-
-  lib/
-    analysis/
-      tags.ts
-      types.ts
-      export.ts
-      time.ts
-
-  data/
-    sample-session.json
-
-  PROJECT_PLAN.md
-  AI_WORKFLOW.md
-  NEXT_STEP.md
-  README.md
-```
-
-## Stage 1 Initial Batter Tags
-
-The first version should include these batter tags:
-
-* At-bat start
 * Pitch seen
 * Take
 * Swing

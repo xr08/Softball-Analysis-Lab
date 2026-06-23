@@ -9,9 +9,11 @@ type TimelineEventItemProps = {
   onSeek: (timestampSeconds: number) => void;
   onUpdateEvent: (updatedEvent: AnalysisEvent) => void;
   onDeleteEvent: (id: string) => void;
+  /** When true, renders a highlight ring to indicate this is the current review event */
+  isSelected?: boolean;
 };
 
-export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent }: TimelineEventItemProps) {
+export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleUpdate = (updates: Partial<AnalysisEvent>) => {
@@ -28,7 +30,11 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent 
   };
 
   return (
-    <li className="rounded-md border border-slate-200 bg-slate-50 p-3">
+    <li className={`rounded-md border p-3 transition-colors ${
+      isSelected
+        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
+        : "border-slate-200 bg-slate-50"
+    }`}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <button
           type="button"
