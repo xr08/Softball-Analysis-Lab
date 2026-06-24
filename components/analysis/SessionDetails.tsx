@@ -9,6 +9,8 @@ type SessionDetailsProps = {
   onSessionDateChange: (value: string) => void;
   onOpponentChange: (value: string) => void;
   onBatterHandednessChange: (value: "right" | "left" | null) => void;
+  sessionType: "batter" | "pitcher";
+  onSessionTypeChange: (value: "batter" | "pitcher") => void;
 };
 
 export function SessionDetails({
@@ -21,11 +23,41 @@ export function SessionDetails({
   onSessionNameChange,
   onSessionDateChange,
   onOpponentChange,
-  onBatterHandednessChange
+  onBatterHandednessChange,
+  sessionType,
+  onSessionTypeChange
 }: SessionDetailsProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Session Details</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-900">Session Details</h2>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-slate-600">Mode:</span>
+          <div className="flex overflow-hidden rounded-md border border-slate-300">
+            <button
+              onClick={() => onSessionTypeChange("batter")}
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
+                sessionType === "batter"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Batter
+            </button>
+            <div className="w-px bg-slate-300"></div>
+            <button
+              onClick={() => onSessionTypeChange("pitcher")}
+              className={`px-3 py-1 text-sm font-medium transition-colors ${
+                sessionType === "pitcher"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Pitcher
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm text-slate-700">
           Player name

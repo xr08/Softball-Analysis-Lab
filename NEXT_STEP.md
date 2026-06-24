@@ -12,7 +12,8 @@ Add a dedicated Pitcher Mode to allow coding and analyzing a pitcher's performan
 
 ### Required outputs
 
-* **Pitcher Mode Toggle** — allow switching between Batter Mode and Pitcher Mode on the analysis page.
+* **[x] Schema Foundation** — `sessionType` added to `SessionMetadata` and exports correctly handle migrations.
+* **[x] Pitcher Mode Toggle UI** — allow switching between Batter Mode and Pitcher Mode on the analysis page (e.g. in SessionDetails).
 * **Pitcher-Specific Tags** — update the tagging interface to support pitcher-specific events and taxonomy.
 * **Pitcher Context Elements** — track metrics like arm slot, release point, velocity (if available manually), and pitch type (rise, drop, changeup, etc.).
 * **Pitcher Review & Filtering** — extend the Review mode to filter by pitcher-specific metrics.
@@ -43,8 +44,11 @@ Do not add:
 * club dashboard
 * team mode
 * drawing tools
-* automatic video clipping
 * computer vision tracking
+
+## Deferred Maintenance Tasks
+
+* **ESLint Configuration** — Adding `eslint` and `eslint-config-next` has been deferred because Next.js 15.5.19 deprecates `next lint` and transitioning to ESLint 9+ flat config natively creates a known circular dependency bug with the current `eslint-config-next` adapter. This is scheduled for the next major milestone after VT-5.
 
 ## Testing Checklist
 

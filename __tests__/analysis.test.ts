@@ -44,6 +44,7 @@ describe("JSON Export and Import", () => {
     sessionId: "s123",
     sessionName: "Test Session",
     playerName: "Player A",
+    sessionType: "batter",
     sessionDate: "2026-06-23",
     opponent: "Red Sox",
     videoFileName: "video.mp4",
@@ -69,6 +70,9 @@ describe("JSON Export and Import", () => {
       contactDirection: null,
       contactQuality: null,
       result: null,
+      pitchType: "fastball",
+      velocity: 64,
+      armSlot: "overhand",
       createdAt: new Date().toISOString()
     }
   ];
@@ -77,7 +81,7 @@ describe("JSON Export and Import", () => {
     const jsonStr = toJson(session, events);
     const parsed = parseImportedSession(jsonStr);
 
-    expect(parsed.schemaVersion).toBe("1.1");
+    expect(parsed.schemaVersion).toBe("1.2");
     expect(parsed.session.sessionId).toBe(session.sessionId);
     expect(parsed.events.length).toBe(1);
     expect(parsed.events[0].count).toBe("1-2");
@@ -85,6 +89,9 @@ describe("JSON Export and Import", () => {
     expect(parsed.events[0].pitchLocationZone).toBe("zone_2");
     expect(parsed.events[0].pitchLocationLabel).toBe("Zone 2");
     expect(parsed.events[0].batterHandedness).toBe("right");
+    expect(parsed.events[0].pitchType).toBe("fastball");
+    expect(parsed.events[0].velocity).toBe(64);
+    expect(parsed.events[0].armSlot).toBe("overhand");
   });
 
   it("migrates schema 1.0 to 1.1", () => {
@@ -96,6 +103,7 @@ describe("JSON Export and Import", () => {
         sessionId: "s123",
         sessionName: "Old Session",
         playerName: "Player A",
+        sessionType: "batter",
         sessionDate: "2026-06-23",
         opponent: "Red Sox",
         videoFileName: "video.mp4",
@@ -123,11 +131,14 @@ describe("JSON Export and Import", () => {
 
     const parsed = parseImportedSession(oldSchemaJson);
 
-    expect(parsed.schemaVersion).toBe("1.1");
+    expect(parsed.schemaVersion).toBe("1.2");
     expect(parsed.session.batterHandedness).toBeNull();
     expect(parsed.events[0].pitchResult).toBeNull();
     expect(parsed.events[0].pitchLocationZone).toBeNull();
     expect(parsed.events[0].batterHandedness).toBeNull();
+    expect(parsed.events[0].pitchType).toBeNull();
+    expect(parsed.events[0].velocity).toBeNull();
+    expect(parsed.events[0].armSlot).toBeNull();
   });
 
   it("rejects malformed json", () => {
@@ -150,6 +161,7 @@ describe("CSV Export", () => {
     sessionId: "s123",
     sessionName: "Test Session",
     playerName: "Player A",
+    sessionType: "batter",
     sessionDate: "2026-06-23",
     opponent: "Red Sox",
     videoFileName: "video.mp4",
@@ -175,6 +187,9 @@ describe("CSV Export", () => {
       contactDirection: null,
       contactQuality: null,
       result: "strikeout",
+      pitchType: null,
+      velocity: null,
+      armSlot: null,
       createdAt: "2026-06-23T00:00:00.000Z"
     }
   ];

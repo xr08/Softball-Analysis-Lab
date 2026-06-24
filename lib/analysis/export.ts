@@ -1,6 +1,6 @@
 import { AnalysisEvent, ExportedSession, SessionMetadata } from "./types";
 
-function escapeCsvValue(value: string | null | undefined): string {
+function escapeCsvValue(value: string | number | null | undefined): string {
   if (value === null || value === undefined) {
     return '""';
   }
@@ -30,6 +30,9 @@ export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string
     "contactDirection",
     "contactQuality",
     "result",
+    "pitchType",
+    "velocity",
+    "armSlot",
     "note",
     "source",
     "reviewStatus",
@@ -68,6 +71,9 @@ export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string
       event.contactDirection,
       event.contactQuality,
       event.result,
+      event.pitchType,
+      event.velocity,
+      event.armSlot,
       event.note,
       "manual", // source
       "unreviewed", // review status
@@ -82,7 +88,7 @@ export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string
 
 export function toJson(session: SessionMetadata, events: AnalysisEvent[]): string {
   const exportedData: ExportedSession = {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     exportedAt: new Date().toISOString(),
     session,
     events
@@ -98,7 +104,7 @@ export function parseImportedSession(text: string): ExportedSession {
   if (parsed.reportFormat) {
     throw new Error("This is a Report JSON file, which cannot be imported as a session. Please select a Session JSON file.");
   }
-  if (parsed.schemaVersion !== "1.0" && parsed.schemaVersion !== "1.1") {
+  if (parsed.schemaVersion !== "1.0" && parsed.schemaVersion !== "1.1" && parsed.schemaVersion !== "1.2") {
     throw new Error(`Unsupported schema version: ${parsed.schemaVersion || "none"}`);
   }
   if (!parsed.session || typeof parsed.session !== "object") {
@@ -111,6 +117,7 @@ export function parseImportedSession(text: string): ExportedSession {
   // Migrate schema 1.0 to 1.1
   const migratedSession = {
     ...parsed.session,
+    sessionType: parsed.session.sessionType || "batter",
     batterHandedness: parsed.session.batterHandedness ?? null,
   };
 
@@ -123,10 +130,13 @@ export function parseImportedSession(text: string): ExportedSession {
     contactDirection: event.contactDirection ?? null,
     contactQuality: event.contactQuality ?? null,
     result: event.result ?? null,
+    pitchType: event.pitchType ?? null,
+    velocity: event.velocity ?? null,
+    armSlot: event.armSlot ?? null,
   }));
 
   return {
-    schemaVersion: "1.1",
+    schemaVersion: "1.2",
     exportedAt: parsed.exportedAt || new Date().toISOString(),
     session: migratedSession,
     events: migratedEvents

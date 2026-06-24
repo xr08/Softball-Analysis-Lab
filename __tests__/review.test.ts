@@ -38,7 +38,10 @@ function makeEvent(overrides: Partial<AnalysisEvent>): AnalysisEvent {
     contactDirection: null,
     contactQuality: null,
     result: null,
-    createdAt: "2026-06-23T00:00:00.000Z",
+    pitchType: null,
+    velocity: null,
+    armSlot: null,
+    createdAt: "2026-06-01T10:00:00.000Z",
     ...overrides
   };
 }

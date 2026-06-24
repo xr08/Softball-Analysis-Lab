@@ -1,43 +1,33 @@
-# Restart Audit
+# Restart Audit (Updated)
 
 ## Current State
-The project has a Next.js App Router foundation. It is currently at the beginning of its life cycle and is capable of local manual video tagging with CSV/JSON export. The goal is to provide a local-first batter analysis tool without cloud video upload. 
+The project has a Next.js App Router foundation. It is currently at **Stage 5 (VT-5)**. The goal is to provide a local-first batter and pitcher analysis tool without cloud video upload. 
 
 ## What Already Works
-- The application can be built and run using Next.js.
-- Local MP4 video can be selected and played via a file input.
-- Users can input a player name and session name.
-- Tag buttons correctly capture timestamps.
-- A timeline displays the coded events in order.
-- Clicking an event in the timeline seeks the video back to that timestamp.
-- Note fields on events are editable.
-- Both CSV and JSON can be generated and exported locally.
-- Basic API route for saving to the local project folder (`/exports`).
+- **VT-1 (Durable Manual Batter Tagging Foundation):** Completed. Includes session identity, schema versioning, JSON import, local recovery (localStorage), debounced autosaving, event deletion, and 150+ tests.
+- **VT-2 (Structured Batter Context):** Completed. Includes count, pitch location, contact direction, contact quality, and hit results tracking.
+- **VT-3 (Review Mode):** Completed. Includes Tagging/Review toggle, Review Filters panel (AND across, OR within), playlist playback, and keyboard navigation.
+- **VT-4 (Reports):** Completed. Includes Session Report, Comparison Mode, and data exports.
+- **VT-5 (Pitcher Mode):** In progress. Initial schema changes (sessionType) have been laid down.
 
-## Missing Pieces (To be built in Milestone VT-1)
-- **Session Identity:** No stable session ID, creation date, opponent details, or schema versioning.
-- **Event Deletion & Correction:** Events cannot currently be deleted from the timeline.
-- **JSON Import:** No functionality to load a previously exported session.
-- **Local Recovery:** No `localStorage` autosave/recovery mechanism to prevent data loss on page refresh.
-- **Dirty State:** No warnings when closing the browser with unsaved work.
-- **Robust Field Types:** Missing nullable fields (count, pitchLocation, contactDirection, contactQuality, result) required for proper schema stability.
-- **Testing:** Zero test coverage (no Unit tests or end-to-end testing).
+## Technical Debt Resolved
+- **Tag Identity:** Tags now use stable IDs rather than display labels.
+- **Testing:** 150 unit tests cover core review and reporting logic.
 
-## Technical Debt
-- **Tag Identity:** Tags currently rely on display labels which is brittle. We need stable IDs for tags.
-- **Conflicting Milestones:** The previous `NEXT_STEP.md` directed work towards 13-zone location selectors before establishing safe, durable session management (VT-1). We are rectifying this by prioritizing VT-1 and deferring the zone selectors to VT-2.
+## Known Technical Debt
+- **Linting:** ESLint is not currently configured. Next.js 15.5.19 deprecates `next lint` and attempting to use ESLint 9 flat config manually results in a circular structure bug with the `eslint-config-next` adapter. Lint configuration is deferred to a future maintenance milestone to avoid disproportionate setup scope.
 
 ## Privacy Concerns
 - Local footage MUST NOT be committed to git.
-- We must enforce strict `.gitignore` rules for video formats, exported sessions, and temporary files to prevent accidental leakage of real athlete names/data.
+- Strict `.gitignore` rules for video formats, exported sessions, and temporary files remain enforced.
 
 ## Recommended Next Milestone
-**VT-1: Durable Manual Batter Tagging Foundation.**
-Includes session identity, schema versioning, JSON import, local recovery (localStorage), debounced autosaving, event deletion, and tests.
+**VT-5: Pitcher Mode.**
+Complete the Pitcher Mode UI toggle and specific tags.
 
 ## What Should Not Be Built Yet
 - Supabase integration, login, or cloud authentication.
 - Google Drive API or direct integration.
 - Full video uploads.
 - AI analysis, tracking, or automated clip generation.
-- Pitcher mode, club dashboard, team mode, drawing tools.
+- Club dashboard, team mode, drawing tools.

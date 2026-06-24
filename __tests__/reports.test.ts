@@ -32,6 +32,7 @@ function makeSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata 
     sessionId: "test-session-a",
     sessionName: "Test Session A",
     playerName: "Player A",
+    sessionType: "batter",
     sessionDate: "2026-06-01",
     opponent: "Team B",
     videoFileName: "sample.mp4",
@@ -59,6 +60,9 @@ function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
     contactDirection: null,
     contactQuality: null,
     result: null,
+    pitchType: null,
+    velocity: null,
+    armSlot: null,
     createdAt: "2026-06-01T10:00:00.000Z",
     ...overrides,
   };
@@ -622,6 +626,7 @@ describe("schema 1.0 migration compatibility", () => {
         sessionId: "old-session",
         sessionName: "Old Session",
         playerName: "Player B",
+        sessionType: "batter",
         sessionDate: "2026-01-01",
         opponent: "Team A",
         videoFileName: "old-video.mp4",
@@ -677,7 +682,7 @@ describe("schema 1.1 load", () => {
     });
 
     const parsed = parseImportedSession(schema11Json);
-    expect(parsed.schemaVersion).toBe("1.1");
+    expect(parsed.schemaVersion).toBe("1.2");
     expect(parsed.events[0].pitchResult).toBe("ball");
     expect(parsed.events[0].pitchLocationZone).toBe("zone_3");
   });

@@ -6,6 +6,8 @@ import { CountSelector } from "@/components/analysis/CountSelector";
 import { ExportButtons } from "@/components/analysis/ExportButtons";
 import { PitchLocationSelector } from "@/components/analysis/PitchLocationSelector";
 import { PitchResultSelector } from "@/components/analysis/PitchResultSelector";
+import { PitchTypeSelector } from "@/components/analysis/PitchTypeSelector";
+import { PitcherContextSelector } from "@/components/analysis/PitcherContextSelector";
 import { ReviewControls } from "@/components/analysis/ReviewControls";
 import { ReviewFilters } from "@/components/analysis/ReviewFilters";
 import { ReviewSummary } from "@/components/analysis/ReviewSummary";
@@ -121,6 +123,7 @@ export default function AnalysePage() {
     sessionId: crypto.randomUUID(),
     sessionName: "",
     playerName: "",
+    sessionType: "batter",
     sessionDate: "",
     opponent: "",
     videoFileName: null,
@@ -139,6 +142,10 @@ export default function AnalysePage() {
   const [currentContactDirection, setCurrentContactDirection] = useState<AnalysisEvent["contactDirection"]>(null);
   const [currentContactQuality, setCurrentContactQuality] = useState<AnalysisEvent["contactQuality"]>(null);
   const [currentResult, setCurrentResult] = useState<AnalysisEvent["result"]>(null);
+  
+  const [currentPitchType, setCurrentPitchType] = useState<AnalysisEvent["pitchType"]>(null);
+  const [currentVelocity, setCurrentVelocity] = useState<AnalysisEvent["velocity"]>(null);
+  const [currentArmSlot, setCurrentArmSlot] = useState<AnalysisEvent["armSlot"]>(null);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
@@ -578,6 +585,9 @@ export default function AnalysePage() {
       contactDirection: currentContactDirection,
       contactQuality: currentContactQuality,
       result: currentResult,
+      pitchType: currentPitchType,
+      velocity: currentVelocity,
+      armSlot: currentArmSlot,
       createdAt: new Date().toISOString()
     };
 
@@ -823,13 +833,15 @@ export default function AnalysePage() {
         playerName={session.playerName}
         sessionName={session.sessionName}
         sessionDate={session.sessionDate}
-        opponent={session.opponent}
+        opponent={session.opponent || ""}
         batterHandedness={session.batterHandedness}
+        sessionType={session.sessionType || "batter"}
         onPlayerNameChange={(v) => updateSession({ playerName: v })}
         onSessionNameChange={(v) => updateSession({ sessionName: v })}
         onSessionDateChange={(v) => updateSession({ sessionDate: v })}
         onOpponentChange={(v) => updateSession({ opponent: v })}
         onBatterHandednessChange={(v) => updateSession({ batterHandedness: v })}
+        onSessionTypeChange={(v) => updateSession({ sessionType: v })}
       />
 
       {/* ================================================================ */}
@@ -867,6 +879,20 @@ export default function AnalysePage() {
               onContactQualityChange={setCurrentContactQuality}
               onResultChange={setCurrentResult}
             />
+            {session.sessionType === "pitcher" && (
+              <>
+                <PitchTypeSelector
+                  value={currentPitchType}
+                  onChange={setCurrentPitchType}
+                />
+                <PitcherContextSelector
+                  velocity={currentVelocity}
+                  armSlot={currentArmSlot}
+                  onVelocityChange={setCurrentVelocity}
+                  onArmSlotChange={setCurrentArmSlot}
+                />
+              </>
+            )}
           </div>
         </>
       )}

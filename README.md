@@ -8,7 +8,7 @@ The first use case is high-level batter analysis using pre-recorded video. The a
 
 ## Current Project Stage
 
-**Stage 4 — Reports and Comparison (VT-4)**
+**Stage 5 — Pitcher Mode (VT-5)**
 
 The app now allows a coach or analyst to:
 
@@ -281,6 +281,7 @@ Possible future features:
 * Google Drive or cloud video references
 * private sharing
 * full club video analysis workflow
+* ESLint / static analysis configuration (deferred due to Next.js 15 flat config compat issues)
 
 But the first goal is simple:
 

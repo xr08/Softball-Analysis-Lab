@@ -31,6 +31,11 @@ export type AnalysisEvent = {
   contactQuality: "hard" | "medium" | "weak" | null;
   result: "single" | "double" | "triple" | "home_run" | "walk" | "strikeout" | "field_out" | "fielders_choice" | "reached_on_error" | "sacrifice" | "hit_by_pitch" | null;
 
+  // Pitcher context
+  pitchType: "rise" | "drop" | "changeup" | "curve" | "screw" | "fastball" | "other" | null;
+  velocity: number | null;
+  armSlot: "overhand" | "three_quarter" | "sidearm" | "submarine" | null;
+
   createdAt: string;
 };
 
@@ -38,6 +43,7 @@ export type SessionMetadata = {
   sessionId: string;
   sessionName: string;
   playerName: string;
+  sessionType: "batter" | "pitcher";
   sessionDate: string;
   opponent: string;
   videoFileName: string | null;
@@ -47,7 +53,7 @@ export type SessionMetadata = {
 };
 
 export type ExportedSession = {
-  schemaVersion: "1.0" | "1.1";
+  schemaVersion: "1.0" | "1.1" | "1.2";
   exportedAt: string;
   session: SessionMetadata;
   events: AnalysisEvent[];
