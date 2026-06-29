@@ -2,34 +2,33 @@
 
 ## Current Stage
 
-Stage 5 — Pitcher Mode (VT-5)
+Session-based multi-player manual tagging foundation.
 
 VT-4 (Reports and Comparison) is complete.
 
-## Build This Next — VT-5
+## Build This Next
 
-Add a dedicated Pitcher Mode to allow coding and analyzing a pitcher's performance, complementing the existing batter analysis tools.
+Update the core architecture to support a session-based workflow instead of the old one-video/one-player model.
 
 ### Required outputs
 
-* **[x] Schema Foundation** — `sessionType` added to `SessionMetadata` and exports correctly handle migrations.
-* **[x] Pitcher Mode Toggle UI** — allow switching between Batter Mode and Pitcher Mode on the analysis page (e.g. in SessionDetails).
-* **Pitcher-Specific Tags** — update the tagging interface to support pitcher-specific events and taxonomy.
-* **Pitcher Context Elements** — track metrics like arm slot, release point, velocity (if available manually), and pitch type (rise, drop, changeup, etc.).
-* **Pitcher Review & Filtering** — extend the Review mode to filter by pitcher-specific metrics.
-* **Pitcher Reports** — generate summary reports tailored to pitcher performance (e.g., strike percentage by pitch type, location heatmaps from pitcher's perspective).
+* **Session Modes** — Support Game, Player, and Training modes.
+* **Team Tracking** — Support Team A / Team B (not Home / Away) in Game mode.
+* **Multiple Videos & Players** — Allow a session to contain multiple players and one or more videos.
+* **Role-Based Tagging** — Tags must be linked to the correct role: pitcher, batter, fielder, team, or review.
+* **At-Bat Grouping** — At-bats must become important objects linking batter, pitcher, teams, and timestamps.
+* **Manual-First MVP** — Ensure manual tagging remains the primary workflow. AI, automatic detection, cloud storage, and overlays remain future work.
 
 ### Expected pages and components
 
-* Update `app/analyse/page.tsx` — add Pitcher Mode state and UI toggles.
-* Update `lib/analysis/types.ts` — add pitcher-specific fields to `AnalysisEvent`.
-* Update `components/analysis/ReportsPanel.tsx` — support pitcher report views.
-* Update `components/analysis/ZoneHeatmap.tsx` — support pitcher perspective (if needed).
+* Update session and event schema to support multiple videos, multiple players, roles, and at-bats.
+* Update UI forms to support Game, Player, and Training mode creation.
+* Update tagging interface to link tags to specific roles and at-bats.
 
 ### Notes
 
-* This is still local-first. No database, no Supabase, no AI.
-* Pitcher data must be backward compatible or clearly separated from batter session schema (consider a `sessionType` field in session metadata).
+* This is still local-first. No database, no Supabase, no cloud storage, no AI tagging.
+* Data schema must be backward compatible with existing single-player/single-video exports.
 * All new pure functions must be unit-tested.
 
 ## Do Not Build Now
@@ -39,12 +38,12 @@ Do not add:
 * Supabase
 * login
 * Google Drive API
-* cloud upload
-* AI analysis
+* cloud upload / storage
+* Google Drive integration
+* AI, automatic detection, or computer vision tracking
+* overlays and drawing tools
+* full historical reports
 * club dashboard
-* team mode
-* drawing tools
-* computer vision tracking
 
 ## Deferred Maintenance Tasks
 
@@ -52,12 +51,12 @@ Do not add:
 
 ## Testing Checklist
 
-VT-5 is complete only when:
+This milestone is complete only when:
 
-* Pitcher mode can be selected during session setup or dynamically.
-* Pitcher-specific tags and context can be logged.
-* Review mode successfully filters pitcher events.
-* Pitcher reports render correctly.
+* Sessions can be created as Game, Player, or Training modes.
+* A session can contain multiple players and multiple videos.
+* Tags are properly linked to roles (pitcher, batter, fielder, team, review) and grouped by at-bats.
+* The workflow remains manual-first and local-first.
 * `npm run typecheck` passes
 * `npm run test` passes
 * `npm run build` passes
@@ -66,6 +65,6 @@ VT-5 is complete only when:
 
 Commit in GitHub Desktop with this message:
 
-`feat: add VT-5 pitcher mode`
+`feat: add session-based multi-player manual tagging foundation`
 
 Then update this file to the next task.

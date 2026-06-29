@@ -3,12 +3,13 @@
 You are the implementation agent for the Video Tag and Analysis Program.
 
 ## Product direction
-Build a dependable manual tagging and coaching-review MVP for pre-recorded video.
+Build a dependable session-based, multi-player, manual-first manual tagging and coaching-review MVP.
 
 Prioritise:
-- Import or reference local and Google Drive video.
-- Create projects, sessions, athletes, clips, and tags.
-- Manually tag batter and pitcher events.
+- Import or reference one or more local videos per session (Google Drive is future work).
+- Create sessions (Game / Player / Training modes), athletes, clips, and tags.
+- For Game mode, use Team A / Team B (not Home / Away).
+- Manually tag events linked to roles (batter, pitcher, fielder, team, review) and track at-bats.
 - Jump to tagged moments.
 - Add coaching notes and classifications.
 - Filter, review, compare, and export useful tagged clips.
@@ -102,8 +103,8 @@ Use migrations or compatibility handling when existing data may be affected.
 
 A tag/event should support:
 - video and session
-- athlete
-- batter or pitcher role
+- linked role (pitcher, batter, fielder, team, or review)
+- at-bat context (linking batter, pitcher, teams, and timestamps)
 - tag type
 - timestamp or range
 - optional frame reference

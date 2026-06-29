@@ -2,15 +2,15 @@
 
 ## Project Purpose
 
-Softball Analysis Lab is a local-first video coding and analysis tool for individual softball player development.
+Softball Analysis Lab is a local-first, session-based, multi-player, manual-first softball/baseball video tagging system.
 
-The first real use case is high-level batter analysis for a national-level Australian player and coach using pre-recorded video.
+The app supports Game, Player, and Training modes. A session may contain multiple players and one or more videos, with tags linked to the correct role (pitcher, batter, fielder, team, review).
 
 The app should allow the user to:
 
-1. Select a local video file.
-2. Enter a player name and session name.
-3. Code batter events using tag buttons.
+1. Create a session (Game, Player, or Training mode).
+2. Set up Team A / Team B (for Game mode) and add one or more local video files.
+3. Code events linking tags to roles (pitcher, batter, fielder, team, or review) and track at-bats.
 4. Save timestamped events.
 5. Review a timeline of tagged moments.
 6. Click timeline events to jump back to the video moment.
@@ -26,8 +26,8 @@ The app should save lightweight metadata against the video, such as:
 * timestamp
 * tag name
 * tag category
-* player name
-* session name
+* role (pitcher/batter/fielder)
+* at-bat context
 * count
 * pitch location
 * contact quality
@@ -36,7 +36,7 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Stage 5 — Pitcher Mode (VT-5 pending)**
+Current stage: **Session-based multi-player manual tagging foundation**
 
 VT-4 (Reports and Comparison) is now complete.
 
@@ -50,9 +50,9 @@ Stage 1 is complete and includes:
 
 * local video file selection
 * browser video playback
-* player name field
-* session name field
-* batter tag buttons
+* session creation (Game / Player / Training)
+* Team A / Team B tracking
+* at-bat tracking and tag roles
 * timestamp capture when a tag is clicked
 * timeline list of tagged events
 * click timeline event to seek video
@@ -97,10 +97,10 @@ Do not add these until later stages:
 * Google Drive API integration
 * cloud video upload
 * automatic video clipping
-* AI swing analysis
-* drawing tools/telestration
-* pitcher mode
-* team mode
+* AI, automatic detection, or AI tagging
+* drawing tools/telestration or overlays
+* cloud storage
+* full historical reports
 * club dashboard
 * mobile app install/PWA
 * public sharing
@@ -180,9 +180,9 @@ Delivered:
 * **Exports** — exports to CSV (which now includes `reportFormat` distinction) and Report JSON (with filters and report generation metadata, excluding video paths for privacy).
 * **UI Components** — `SessionReport`, `ComparisonReport`, `ZoneHeatmap` and a master `ReportsPanel` implemented with strict CSS and no external charting libraries.
 
-### Stage 5 — Pitcher Mode
+### Stage 5 — Session-Based Multi-Player Tagging
 
-Only after batter mode is useful.
+Currently in progress.
 
 ### Stage 6 — Player Library and Database
 

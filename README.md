@@ -2,9 +2,9 @@
 
 # Softball Analysis Lab
 
-Softball Analysis Lab is a local-first video coding and analysis tool for individual softball player development.
+Softball Analysis Lab is a local-first, session-based, multi-player, manual-first softball/baseball video tagging system.
 
-The first use case is high-level batter analysis using pre-recorded video. The app will allow a coach or analyst to select a local video file, code key batter events, review timestamped moments, and export the coded data for coaching review.
+The app is session-based. The main modes are Game, Player, and Training. A session may contain multiple players and one or more videos. Tags must be linked to the correct role: pitcher, batter, fielder, team, or review. At-bats are important objects linking batter, pitcher, teams, and timestamps.
 
 ## Current Project Stage
 
@@ -12,10 +12,10 @@ The first use case is high-level batter analysis using pre-recorded video. The a
 
 The app now allows a coach or analyst to:
 
-* select a local MP4 video file
-* enter a player name and session name
-* play the video in the browser
-* click batter tag buttons while watching to save timestamped events
+* create a session (Game, Player, or Training mode)
+* add one or more local MP4 video files to a session
+* for Game mode, assign Team A / Team B (not Home / Away)
+* link tags to roles (pitcher, batter, fielder, team, review) and at-bats
 * view a timeline of coded moments and click to seek
 * capture structured context per pitch (count, pitch result, location, handedness, contact direction/quality, at-bat result)
 * add or edit notes inline
@@ -32,19 +32,18 @@ The app now allows a coach or analyst to:
 
 ## Why This Project Exists
 
-This project has started because there is a real need to support individual batter analysis for a high-level Australian softball player and coach.
+This project has started because there is a real need to support detailed manual analysis for high-level Australian softball players and coaches.
 
 The goal is to build the project in stages:
 
-1. Basic local batter coding tool
-2. Structured batter review
+1. Session-based multi-player manual tagging foundation
+2. Structured review
 3. Exportable reports
-4. Pitcher mode
-5. Player library
-6. Coach dashboard
-7. Future club/team platform
+4. Player library
+5. Coach dashboard
+6. Future club/team platform
 
-The project should not jump ahead to the full club platform until the first local analysis workflow is working properly.
+The project should not jump ahead to the full club platform until the local manual analysis workflow is working properly.
 
 ## Important Design Principle
 
@@ -55,8 +54,10 @@ The app should save lightweight data against the video, such as:
 * timestamp
 * tag
 * category
-* player name
-* session name
+* session details (Game / Player / Training)
+* role (pitcher, batter, fielder)
+* Team A / Team B
+* at-bat context
 * note
 * count
 * pitch location
@@ -73,11 +74,10 @@ Do not add these features in VT-3:
 * user login
 * Google Drive API integration
 * cloud video upload
-* AI swing analysis
-* automatic video clipping
-* drawing tools
-* pitcher mode
-* team mode
+* AI, automatic detection or AI tagging
+* cloud storage
+* full historical reports
+* overlays and drawing tools
 * club dashboard
 * public sharing
 * payment/subscription features
@@ -285,4 +285,4 @@ Possible future features:
 
 But the first goal is simple:
 
-**Code one batter’s pre-recorded footage and produce one useful CSV export for a coach.**
+**Code a session (with one or more players/videos) manually, track at-bats, and produce one useful CSV export for a coach.**

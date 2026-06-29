@@ -51,7 +51,7 @@ Keep changes small.
 
 Do not build ahead of the current stage.
 
-Do not add Supabase, authentication, Google Drive API, cloud storage, AI analysis, pitcher mode, team mode, or club dashboard unless PROJECT_PLAN.md and NEXT_STEP.md say that stage has started.
+Do not add Supabase, authentication, Google Drive API, cloud storage, AI, automatic detection, overlays, full historical reports, or club dashboard unless PROJECT_PLAN.md and NEXT_STEP.md say that stage has started.
 
 Prefer simple readable code over clever code.
 
@@ -59,7 +59,7 @@ Use TypeScript.
 
 Use clear component names.
 
-Keep video local-first in Stage 1.
+Keep the app session-based, manual-first, and video local-first.
 
 ## GitHub Desktop Rule
 
