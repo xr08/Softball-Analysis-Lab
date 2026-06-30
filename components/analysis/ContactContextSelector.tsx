@@ -49,7 +49,7 @@ export function ContactContextSelector({
     onChange: (next: T | null) => void
   ) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
           <button
@@ -60,7 +60,7 @@ export function ContactContextSelector({
             Clear
           </button>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {options.map((option) => {
             const selected = value === option.value;
             return (
@@ -69,7 +69,7 @@ export function ContactContextSelector({
                 type="button"
                 aria-pressed={selected}
                 onClick={() => onChange(option.value)}
-                className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                   selected
                     ? "border-emerald-600 bg-emerald-600 text-white"
                     : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -85,41 +85,43 @@ export function ContactContextSelector({
   }
 
   return (
-    <section className={`rounded-lg border p-4 ${sectionTone} ${compact ? "p-3" : "p-4"}`}>
-      <div className="mb-3">
+    <section className={`rounded-lg border ${sectionTone} ${compact ? "p-2.5" : "p-4"}`}>
+      <div className="mb-2">
         <h2 className={`font-semibold text-slate-900 ${compact ? "text-base" : "text-lg"}`}>Contact & Result</h2>
-        <p className="text-xs text-slate-500">
-          Keep these details optional unless the pitch result makes contact context important.
-        </p>
+        {!compact ? (
+          <p className="text-xs text-slate-500">
+            Keep these details optional unless the pitch result makes contact context important.
+          </p>
+        ) : null}
       </div>
-      <div className="grid gap-4">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
+      <div className="grid gap-3">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
           {renderChipGroup("Contact Direction", contactType, CONTACT_TYPE_OPTIONS, onContactTypeChange)}
           {renderChipGroup("Contact Quality", contactQuality, CONTACT_QUALITY_OPTIONS, onContactQualityChange)}
           {renderChipGroup("At-Bat Result", playResult, PLAY_RESULT_OPTIONS, onPlayResultChange)}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${accentClasses}`}>
+        <div className="flex flex-wrap gap-1.5">
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${accentClasses}`}>
             Direction: {getContactTypeLabel(contactType)}
           </span>
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${accentClasses}`}>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${accentClasses}`}>
             Quality: {getContactQualityLabel(contactQuality)}
           </span>
-          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${accentClasses}`}>
+          <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${accentClasses}`}>
             Result: {getPlayResultLabel(playResult)}
           </span>
         </div>
 
-        <label className="flex max-w-sm flex-col gap-1 text-sm text-slate-700">
-          Fallback play result picker
+        <label className="flex max-w-xs flex-col gap-1 text-xs text-slate-700">
+          Fallback result picker
           <select
             value={playResult || ""}
             onChange={(e) => {
               const val = e.target.value;
               onPlayResultChange(val === "" ? null : (val as TaggedEvent["playResult"]));
             }}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
             <option value="">Unknown / Clear</option>
             {PLAY_RESULT_OPTIONS.map((option) => (
@@ -131,7 +133,7 @@ export function ContactContextSelector({
               <option value={fallbackPlayResultValue}>{getPlayResultLabel(playResult)}</option>
             ) : null}
           </select>
-          <span className="text-xs text-slate-500">Use this only if the quick buttons are not the fastest fit.</span>
+          <span className="text-[11px] text-slate-500">Use only when the quick buttons are not the fastest fit.</span>
         </label>
       </div>
     </section>

@@ -32,7 +32,7 @@ type PitchWindowProps = {
 
 function SummaryPill({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900">
+    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-900">
       {label}: {value}
     </span>
   );
@@ -61,11 +61,11 @@ export function PitchWindow({
   const contactTone = isContactContextPrimary(pitchResult) ? "emphasized" : "muted";
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <section className="rounded-lg border border-slate-200 bg-white p-3">
+      <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Pitch Window</h2>
-          <p className="mt-1 max-w-3xl text-sm text-slate-600">{getPitchWindowGuidance(pitchResult)}</p>
+          <h2 className="text-base font-semibold text-slate-900">Pitch Window</h2>
+          <p className="mt-0.5 max-w-3xl text-xs text-slate-600">{getPitchWindowGuidance(pitchResult)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <SummaryPill label="Result" value={getPitchResultLabel(pitchResult)} />
@@ -74,10 +74,10 @@ export function PitchWindow({
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <div className="grid gap-4">
-          <PitchResultSelector value={pitchResult} onChange={onPitchResultChange} compact />
-          <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <div className="grid gap-3">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px] xl:grid-cols-[minmax(0,1fr)_220px]">
+            <PitchResultSelector value={pitchResult} onChange={onPitchResultChange} compact />
             <CountSelector
               balls={balls}
               strikes={strikes}
@@ -85,17 +85,17 @@ export function PitchWindow({
               onStrikesChange={onStrikesChange}
               compact
             />
-            {showPitchType ? (
-              <PitchTypeSelector value={pitchType} onChange={onPitchTypeChange} compact />
-            ) : (
-              <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                Pitch type stays hidden for this session type.
-              </div>
-            )}
           </div>
+          {showPitchType ? (
+            <PitchTypeSelector value={pitchType} onChange={onPitchTypeChange} compact />
+          ) : (
+            <p className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
+              Pitch type is hidden for this session type.
+            </p>
+          )}
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           <PitchLocationSelector value={pitchLocation} onChange={onPitchLocationChange} compact />
           <ContactContextSelector
             contactType={contactType}

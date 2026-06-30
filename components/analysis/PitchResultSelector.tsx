@@ -11,11 +11,13 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
   const hasCustomValue = Boolean(value) && !PITCH_RESULT_OPTIONS.some((option) => option.value === value);
 
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-3" : "p-4"}`}>
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <section className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-2.5" : "p-4"}`}>
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div>
           <h2 className={`font-semibold text-slate-900 ${compact ? "text-base" : "text-lg"}`}>Pitch Result</h2>
-          <p className="text-xs text-slate-500">Fast result buttons feed the same stored pitch result value used in tags and exports.</p>
+          {!compact ? (
+            <p className="text-xs text-slate-500">Fast result buttons feed the same stored pitch result value used in tags and exports.</p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -26,7 +28,7 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {PITCH_RESULT_OPTIONS.map((option) => {
           const selected = value === option.value;
           return (
@@ -35,7 +37,7 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
               type="button"
               aria-pressed={selected}
               onClick={() => onChange(option.value)}
-              className={`rounded-full border px-3 py-2 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+              className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                 selected
                   ? "border-emerald-600 bg-emerald-600 text-white"
                   : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
@@ -47,7 +49,7 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
         })}
       </div>
 
-      <p className={`mt-3 text-slate-700 ${compact ? "text-xs" : "text-sm"}`}>
+      <p className={`mt-2 text-slate-700 ${compact ? "text-xs" : "text-sm"}`}>
         Selected result: {getPitchResultLabel(value)}
       </p>
       {hasCustomValue ? (
