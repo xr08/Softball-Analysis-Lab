@@ -11,6 +11,7 @@ import {
 } from "../lib/analysis/pitch-window";
 import { buildNextPitchSelection } from "../lib/analysis/workflow";
 import { parseImportedSession, toJson } from "../lib/analysis/export";
+import { WORKFLOW_TAG_GROUPS } from "../lib/analysis/tags";
 import { Session, TaggedEvent } from "../lib/analysis/types";
 
 describe("pitch window helpers", () => {
@@ -90,6 +91,25 @@ describe("pitch window helpers", () => {
   it("formats play result buttons with the same stored playResult values", () => {
     expect(getPlayResultLabel("fielders_choice")).toBe("Fielder's Choice");
     expect(getPlayResultLabel("hit_by_pitch")).toBe("Hit by Pitch");
+  });
+
+  it("exposes HBP and Wild Pitch as pitcher Pitch Result tags", () => {
+    const pitcherTags = WORKFLOW_TAG_GROUPS.find((group) => group.role === "pitcher")?.tags ?? [];
+
+    expect(pitcherTags).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "hit_by_pitch",
+          label: "Hit by Pitch",
+          category: "Pitch Result",
+        }),
+        expect.objectContaining({
+          id: "wild_pitch",
+          label: "Wild Pitch",
+          category: "Pitch Result",
+        }),
+      ])
+    );
   });
 });
 

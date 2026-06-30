@@ -36,6 +36,8 @@ export const WORKFLOW_TAG_GROUPS: WorkflowTagGroup[] = [
       tag("pitcher", "swinging_strike", "Swinging Strike", "Pitch Result"),
       tag("pitcher", "foul", "Foul", "Pitch Result"),
       tag("pitcher", "ball_in_play", "In Play", "Pitch Result"),
+      tag("pitcher", "hit_by_pitch", "Hit by Pitch", "Pitch Result"),
+      tag("pitcher", "wild_pitch", "Wild Pitch", "Pitch Result"),
       tag("pitcher", "walk", "Walk", "Outcome"),
       tag("pitcher", "strikeout", "Strikeout", "Outcome")
     ]

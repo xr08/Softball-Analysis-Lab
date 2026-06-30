@@ -26,6 +26,7 @@ export const PITCH_RESULT_LABELS: Record<string, string> = {
   ball: "Ball",
   ball_in_play: "Ball in Play",
   hit_by_pitch: "Hit by Pitch",
+  wild_pitch: "Wild Pitch",
 };
 
 export const LOCATION_LABELS: Record<string, string> = {
@@ -84,6 +85,7 @@ const PITCH_RESULT_ORDER = [
   "ball",
   "ball_in_play",
   "hit_by_pitch",
+  "wild_pitch",
   NOT_SET_KEY,
 ];
 
