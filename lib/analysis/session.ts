@@ -1,4 +1,4 @@
-import { Session, Player, TeamSide, AtBat, TaggedEvent, EventRole } from "./types";
+import { Session, Player, TeamSide, AtBat, TaggedEvent, EventRole, VideoSource } from "./types";
 
 export function createDefaultSession(): Session {
   return {
@@ -21,11 +21,70 @@ export function createPlayer(sessionId: string, name: string, teamSide: TeamSide
   };
 }
 
+export function upsertLocalVideoSource(
+  videoSources: VideoSource[],
+  sessionId: string,
+  fileName: string,
+  durationSeconds?: number
+): VideoSource[] {
+  const existing = videoSources.find((source) => source.sourceType === "local_file" && source.type === "main");
+  const cleanDuration = durationSeconds !== undefined && Number.isFinite(durationSeconds) && durationSeconds > 0
+    ? durationSeconds
+    : undefined;
+
+  if (existing) {
+    return videoSources.map((source) =>
+      source.id === existing.id
+        ? {
+            ...source,
+            sessionId,
+            fileName,
+            sourceType: "local_file",
+            type: "main",
+            durationSeconds: cleanDuration ?? source.durationSeconds
+          }
+        : source
+    );
+  }
+
+  return [
+    ...videoSources,
+    {
+      id: crypto.randomUUID(),
+      sessionId,
+      fileName,
+      sourceType: "local_file",
+      type: "main",
+      durationSeconds: cleanDuration,
+      addedAt: new Date().toISOString()
+    }
+  ];
+}
+
+export function updateVideoSourceDuration(
+  videoSources: VideoSource[],
+  videoSourceId: string | null,
+  durationSeconds: number
+): VideoSource[] {
+  if (!videoSourceId || !Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    return videoSources;
+  }
+
+  const existing = videoSources.find((source) => source.id === videoSourceId);
+  if (!existing || existing.durationSeconds === durationSeconds) {
+    return videoSources;
+  }
+
+  return videoSources.map((source) =>
+    source.id === videoSourceId ? { ...source, durationSeconds } : source
+  );
+}
+
 export function createAtBat(
   sessionId: string,
-  batterId: string,
+  batterId: string | null,
   pitcherId: string,
-  batterTeamSide: TeamSide,
+  batterTeamSide: TeamSide | null,
   pitcherTeamSide: TeamSide,
   startTimestampSeconds: number
 ): AtBat {

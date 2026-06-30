@@ -15,7 +15,7 @@ type ComparisonSessionLoaderProps = {
 /**
  * File input for loading Session B for comparison.
  *
- * - Validates using existing parseImportedSession (supports 1.0 → 1.1 migration).
+ * - Validates using existing parseImportedSession for current session JSON.
  * - Does NOT load the video, replace the active session, or add to recovery.
  * - Warns if the same session ID is loaded on both sides.
  */
@@ -114,7 +114,7 @@ export function ComparisonSessionLoader({
             Load comparison session
           </button>
           <p className="mt-1.5 text-[11px] text-slate-400">
-            Accepts a saved session JSON file (schema 1.0 or 1.1). The video is not loaded.
+            Accepts a saved session JSON file (schema 2.0). The video is not loaded.
           </p>
         </div>
       )}

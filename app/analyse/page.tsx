@@ -15,9 +15,15 @@ import { SessionDetails } from "@/components/analysis/SessionDetails";
 import { TagPanel } from "@/components/analysis/TagPanel";
 import { Timeline } from "@/components/analysis/Timeline";
 import { VideoPlayer } from "@/components/analysis/VideoPlayer";
-import { toCsv, toJson, parseImportedSession } from "@/lib/analysis/export";
+import { toCsv, toJson, parseImportedSession, buildImportRestoreMessage } from "@/lib/analysis/export";
+import { WorkflowTagDefinition } from "@/lib/analysis/tags";
 import { formatTimestampLabel } from "@/lib/analysis/time";
 import { compareVideoFileNames } from "@/lib/analysis/video";
+import {
+  buildNextAtBatState,
+  buildNextPitchSelection,
+  resolveTagAssignment
+} from "@/lib/analysis/workflow";
 import {
   ReviewFilters as ReviewFiltersType,
   emptyFilters,
@@ -30,8 +36,15 @@ import {
   getReviewSummary,
   hasActiveFilters
 } from "@/lib/analysis/review";
-import { TaggedEvent, ExportedSession, Session, TagDefinition, Player, AtBat, TeamSide } from "@/lib/analysis/types";
-import { createDefaultSession, createTaggedEvent, createPlayer, createAtBat } from "@/lib/analysis/session";
+import { TaggedEvent, ExportedSession, Session, Player, AtBat, TeamSide, VideoSource } from "@/lib/analysis/types";
+import {
+  createDefaultSession,
+  createTaggedEvent,
+  createPlayer,
+  createAtBat,
+  upsertLocalVideoSource,
+  updateVideoSourceDuration
+} from "@/lib/analysis/session";
 import { PlayersList } from "@/components/analysis/PlayersList";
 import { AtBatControls } from "@/components/analysis/AtBatControls";
 
@@ -126,8 +139,10 @@ export default function AnalysePage() {
   const [events, setEvents] = useState<TaggedEvent[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [atBats, setAtBats] = useState<AtBat[]>([]);
+  const [videoSources, setVideoSources] = useState<VideoSource[]>([]);
   const [currentPitcherId, setCurrentPitcherId] = useState<string | null>(null);
   const [currentBatterId, setCurrentBatterId] = useState<string | null>(null);
+  const [selectedFielderId, setSelectedFielderId] = useState<string | null>(null);
   const [activeAtBatId, setActiveAtBatId] = useState<string | null>(null);
   const [countBalls, setCountBalls] = useState<number | null>(null);
   const [countStrikes, setCountStrikes] = useState<number | null>(null);
@@ -143,7 +158,9 @@ export default function AnalysePage() {
   
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
+  const [importRestoreMessage, setImportRestoreMessage] = useState("");
   const [videoMessage, setVideoMessage] = useState("");
+  const [tagMessage, setTagMessage] = useState("");
 
   const [isDirty, setIsDirty] = useState(false);
   const [hasRecoveryData, setHasRecoveryData] = useState(false);
@@ -206,7 +223,19 @@ export default function AnalysePage() {
   const csvFileName = `${sessionLabel}-events.csv`;
   const jsonFileName = `${sessionLabel}-events.json`;
   const csvContent = useMemo(() => `\uFEFF${toCsv(session, players, atBats, sortedEvents)}`, [session, players, atBats, sortedEvents]);
-  const jsonContent = useMemo(() => toJson(session, players, [], atBats, sortedEvents), [session, players, atBats, sortedEvents]);
+  const jsonContent = useMemo(() => toJson(session, players, videoSources, atBats, sortedEvents), [session, players, videoSources, atBats, sortedEvents]);
+  const currentVideoSource = useMemo(
+    () => videoSources.find((source) => source.sourceType === "local_file" && source.type === "main") ?? null,
+    [videoSources]
+  );
+  const activeAtBat = useMemo(
+    () => atBats.find((atBat) => atBat.id === activeAtBatId) ?? null,
+    [atBats, activeAtBatId]
+  );
+  const currentAtBatEventCount = useMemo(
+    () => events.filter((event) => event.atBatId === activeAtBatId).length,
+    [events, activeAtBatId]
+  );
 
   // ---------------------------------------------------------------------------
   // Recovery
@@ -234,6 +263,7 @@ export default function AnalysePage() {
         session,
         events,
         players,
+        videoSources,
         atBats,
         currentPitcherId,
         currentBatterId,
@@ -242,7 +272,7 @@ export default function AnalysePage() {
       localStorage.setItem(RECOVERY_KEY, JSON.stringify(recoveryData));
     }, 750);
     return () => clearTimeout(timer);
-  }, [session, events, players, atBats, currentPitcherId, currentBatterId, activeAtBatId, isDirty, hasRecoveryData]);
+  }, [session, events, players, videoSources, atBats, currentPitcherId, currentBatterId, activeAtBatId, isDirty, hasRecoveryData]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -262,6 +292,32 @@ export default function AnalysePage() {
       }
     };
   }, [videoUrl]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!videoUrl || !video || !currentVideoSource) return;
+    const videoSourceId = currentVideoSource.id;
+
+    function syncDuration() {
+      if (Number.isFinite(video!.duration) && video!.duration > 0) {
+        setVideoSources((previous) => {
+          const next = updateVideoSourceDuration(previous, videoSourceId, video!.duration);
+          if (next !== previous) {
+            setIsDirty(true);
+          }
+          return next;
+        });
+      }
+    }
+
+    if (Number.isFinite(video.duration) && video.duration > 0) {
+      syncDuration();
+      return;
+    }
+
+    video.addEventListener("loadedmetadata", syncDuration);
+    return () => video.removeEventListener("loadedmetadata", syncDuration);
+  }, [videoUrl, currentVideoSource]);
 
   // ---------------------------------------------------------------------------
   // Clip playback controller (timeupdate-based)
@@ -541,6 +597,18 @@ export default function AnalysePage() {
     setIsDirty(true);
   }
 
+  function resetPitchContext() {
+    setCountBalls(null);
+    setCountStrikes(null);
+    setCurrentPitchResult(null);
+    setCurrentPitchLocation(null);
+    setCurrentPitchLocationLabel(null);
+    setCurrentContactType(null);
+    setCurrentContactQuality(null);
+    setCurrentPlayResult(null);
+    setCurrentPitchType(null);
+  }
+
   function handleAddPlayer(name: string, teamSide: TeamSide) {
     const player = createPlayer(session.id, name, teamSide);
     setPlayers((prev) => [...prev, player]);
@@ -551,7 +619,8 @@ export default function AnalysePage() {
     const inUse = events.some((e) => e.playerId === playerId || e.relatedPlayerId === playerId) ||
                   atBats.some((ab) => ab.pitcherId === playerId || ab.batterId === playerId) ||
                   currentPitcherId === playerId ||
-                  currentBatterId === playerId;
+                  currentBatterId === playerId ||
+                  selectedFielderId === playerId;
     if (inUse) {
       alert("Cannot remove player because they are currently associated with an at-bat or tagged event.");
       return;
@@ -560,18 +629,49 @@ export default function AnalysePage() {
     setIsDirty(true);
   }
 
+  function syncEmptyActiveAtBat(updates: Partial<AtBat>) {
+    if (!activeAtBatId || currentAtBatEventCount > 0) return;
+    setAtBats((prev) =>
+      prev.map((atBat) =>
+        atBat.id === activeAtBatId ? { ...atBat, ...updates } : atBat
+      )
+    );
+  }
+
+  function handlePitcherChange(playerId: string | null) {
+    const pitcher = playerId ? players.find((player) => player.id === playerId) : null;
+    setCurrentPitcherId(playerId);
+    if (playerId && pitcher) {
+      syncEmptyActiveAtBat({
+        pitcherId: playerId,
+        pitcherTeamSide: pitcher.teamSide
+      });
+    }
+    setIsDirty(true);
+  }
+
+  function handleBatterChange(playerId: string | null) {
+    const batter = playerId ? players.find((player) => player.id === playerId) : null;
+    setCurrentBatterId(playerId);
+    syncEmptyActiveAtBat({
+      batterId: playerId,
+      batterTeamSide: batter?.teamSide ?? null
+    });
+    setIsDirty(true);
+  }
+
   function handleStartAtBat() {
-    if (!currentPitcherId || !currentBatterId) return;
+    if (!currentPitcherId) return;
     const pitcher = players.find((p) => p.id === currentPitcherId);
-    const batter = players.find((p) => p.id === currentBatterId);
-    if (!pitcher || !batter) return;
+    const batter = currentBatterId ? players.find((p) => p.id === currentBatterId) : null;
+    if (!pitcher) return;
 
     const timestampSeconds = videoRef.current ? videoRef.current.currentTime : 0;
     const newAtBat = createAtBat(
       session.id,
       currentBatterId,
       currentPitcherId,
-      batter.teamSide,
+      batter?.teamSide ?? null,
       pitcher.teamSide,
       timestampSeconds
     );
@@ -592,7 +692,48 @@ export default function AnalysePage() {
       })
     );
     setActiveAtBatId(null);
+    resetPitchContext();
+    setSelectedFielderId(null);
     setIsDirty(true);
+  }
+
+  function handleNextPitch() {
+    const nextPitchSelection = buildNextPitchSelection({
+      currentPitcherId,
+      currentBatterId,
+      activeAtBatId
+    });
+    setCurrentPitcherId(nextPitchSelection.currentPitcherId);
+    setCurrentBatterId(nextPitchSelection.currentBatterId);
+    setActiveAtBatId(nextPitchSelection.activeAtBatId);
+    setSelectedFielderId(nextPitchSelection.selectedFielderId);
+    resetPitchContext();
+    setTagMessage("Ready for the next pitch. Pitcher, batter, and at-bat context stayed in place.");
+  }
+
+  function handleNextAtBat() {
+    if (!currentPitcherId) return;
+
+    const timestampSeconds = videoRef.current ? videoRef.current.currentTime : 0;
+    const nextState = buildNextAtBatState({
+      sessionId: session.id,
+      players,
+      atBats,
+      currentPitcherId,
+      currentBatterId,
+      activeAtBatId,
+      timestampSeconds,
+      newAtBatId: crypto.randomUUID()
+    });
+
+    setAtBats(nextState.atBats);
+    setCurrentPitcherId(nextState.currentPitcherId);
+    setCurrentBatterId(nextState.currentBatterId);
+    setActiveAtBatId(nextState.activeAtBatId);
+    setSelectedFielderId(null);
+    resetPitchContext();
+    setIsDirty(true);
+    setTagMessage("Advanced to the next at-bat. Current pitcher was kept.");
   }
 
   function handleSelectFile(file: File | null): void {
@@ -604,10 +745,12 @@ export default function AnalysePage() {
 
     if (!file) {
       setVideoUrl(null);
-      setVideoUrl(null);
       return;
     }
     setVideoUrl(URL.createObjectURL(file));
+    setImportRestoreMessage("");
+    setVideoSources((previous) => upsertLocalVideoSource(previous, session.id, file.name));
+    setIsDirty(true);
 
     const expected = "";
     if (expected) {
@@ -620,22 +763,33 @@ export default function AnalysePage() {
     
   }
 
-  function handleTagClick(tag: TagDefinition): void {
+  function handleTagClick(tag: WorkflowTagDefinition): void {
     if (!videoRef.current) return;
 
     const timestampSeconds = videoRef.current.currentTime;
     const countLabel = countBalls !== null && countStrikes !== null ? `${countBalls}-${countStrikes}` : null;
-    const batter = players.find((p) => p.id === currentBatterId);
-    const teamSide = batter ? batter.teamSide : null;
+    const assignment = resolveTagAssignment({
+      role: tag.role,
+      players,
+      currentPitcherId,
+      currentBatterId,
+      selectedFielderId,
+      activeAtBatId
+    });
+
+    if (!assignment.ok) {
+      setTagMessage(assignment.reason);
+      return;
+    }
 
     const newEvent: TaggedEvent = createTaggedEvent({
       sessionId: session.id,
-      videoSourceId: null,
-      atBatId: activeAtBatId,
-      eventRole: "batter",
-      playerId: currentBatterId,
-      relatedPlayerId: currentPitcherId,
-      teamSide,
+      videoSourceId: currentVideoSource?.id ?? null,
+      atBatId: assignment.atBatId,
+      eventRole: assignment.eventRole,
+      playerId: assignment.playerId,
+      relatedPlayerId: assignment.relatedPlayerId,
+      teamSide: assignment.teamSide,
       timestampSeconds,
       timestampLabel: formatTimestampLabel(timestampSeconds),
       tag: tag.id,
@@ -652,6 +806,7 @@ export default function AnalysePage() {
 
     setEvents((previous) => [...previous, newEvent]);
     setIsDirty(true);
+    setTagMessage(`${tag.label} tagged for ${tag.role}.`);
   }
 
   function handleSeek(timestampSeconds: number): void {
@@ -740,9 +895,11 @@ export default function AnalysePage() {
       setSession(recoverySnapshot.session);
       setEvents(recoverySnapshot.events);
       setPlayers(recoverySnapshot.players || []);
+      setVideoSources(recoverySnapshot.videoSources || []);
       setAtBats(recoverySnapshot.atBats || []);
       setCurrentPitcherId(recoverySnapshot.currentPitcherId || null);
       setCurrentBatterId(recoverySnapshot.currentBatterId || null);
+      setSelectedFielderId(null);
       setActiveAtBatId(recoverySnapshot.activeAtBatId || null);
       setIsDirty(true);
       setSelectedReviewEventId(null);
@@ -773,18 +930,27 @@ export default function AnalysePage() {
         setSession(parsed.session);
         setEvents(parsed.events);
         setPlayers(parsed.players || []);
+        setVideoSources(parsed.videoSources || []);
         setAtBats(parsed.atBats || []);
         setCurrentPitcherId(null);
         setCurrentBatterId(null);
+        setSelectedFielderId(null);
         setActiveAtBatId(null);
+        if (videoUrl) {
+          URL.revokeObjectURL(videoUrl);
+        }
+        setVideoUrl(null);
+        setVideoMessage("");
         setIsDirty(false);
         setSelectedReviewEventId(null);
         setReviewFilters(emptyFilters());
         // Clear stale comparison session when active session is replaced
         setComparisonSession(null);
         stopPlaylist();
-        setExportMessage(`Imported ${file.name}. Select the original video file (unknown) to resume playback.`);
+        setImportRestoreMessage(buildImportRestoreMessage(file.name, parsed));
+        setExportMessage("");
       } catch (err: any) {
+        setImportRestoreMessage("");
         setExportMessage(`Import failed: ${err.message}`);
       }
     };
@@ -898,7 +1064,7 @@ export default function AnalysePage() {
       </div>
 
       {/* Session Details — always visible */}
-      <SessionDetails session={session} onUpdateSession={(updates) => setSession((s) => ({ ...s, ...updates, updatedAt: new Date().toISOString() }))} />
+      <SessionDetails session={session} onUpdateSession={updateSession} />
 
       {/* ================================================================ */}
       {/* TAGGING MODE                                                     */}
@@ -912,14 +1078,22 @@ export default function AnalysePage() {
               onRemovePlayer={handleRemovePlayer}
             />
             <AtBatControls
+              session={session}
               players={players}
+              activeAtBat={activeAtBat}
+              currentAtBatEventCount={currentAtBatEventCount}
               currentPitcherId={currentPitcherId}
               currentBatterId={currentBatterId}
-              onPitcherChange={setCurrentPitcherId}
-              onBatterChange={setCurrentBatterId}
+              selectedFielderId={selectedFielderId}
+              onPitcherChange={handlePitcherChange}
+              onBatterChange={handleBatterChange}
+              onFielderChange={setSelectedFielderId}
+              onClearFielder={() => setSelectedFielderId(null)}
               onStartAtBat={handleStartAtBat}
               hasActiveAtBat={!!activeAtBatId}
               onEndAtBat={handleEndAtBat}
+              onNextPitch={handleNextPitch}
+              onNextAtBat={handleNextAtBat}
             />
           </div>
 
@@ -954,10 +1128,24 @@ export default function AnalysePage() {
 
       {/* Video Player — preserved in DOM to maintain state, hidden in reports */}
       <div className={showReports ? "hidden" : "block"}>
+        {importRestoreMessage ? (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="font-medium">{importRestoreMessage}</p>
+              <button
+                type="button"
+                onClick={() => setImportRestoreMessage("")}
+                className="self-start rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        ) : null}
         <VideoPlayer
           videoRef={videoRef}
           videoUrl={videoUrl}
-          selectedFileName={null}
+          selectedFileName={currentVideoSource?.fileName ?? null}
           
           videoMessage={videoMessage}
           onSelectFile={handleSelectFile}
@@ -968,7 +1156,7 @@ export default function AnalysePage() {
       {/* TAGGING MODE — Tag panel                                         */}
       {/* ================================================================ */}
       {mode === "tagging" && (
-        <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} />
+        <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} message={tagMessage} />
       )}
 
       {/* ================================================================ */}
@@ -1022,6 +1210,8 @@ export default function AnalysePage() {
       {!showReports && (
         <Timeline
           events={showReview ? filteredReviewEvents : sortedEvents}
+          players={players}
+          atBats={atBats}
           onSeek={handleSeek}
           onUpdateEvent={handleUpdateEvent}
           onDeleteEvent={handleDeleteEvent}

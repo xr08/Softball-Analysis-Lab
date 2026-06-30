@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { TaggedEvent } from "@/lib/analysis/types";
+import { AtBat, Player, TaggedEvent } from "@/lib/analysis/types";
+import { getTimelineEventDisplayData } from "@/lib/analysis/workflow";
 import { PitchResultSelector } from "./PitchResultSelector";
 import { PitchLocationSelector } from "./PitchLocationSelector";
 import { ContactContextSelector } from "./ContactContextSelector";
 
 type TimelineEventItemProps = {
   event: TaggedEvent;
+  player?: Player;
+  relatedPlayer?: Player;
+  atBat?: AtBat;
   onSeek: (timestampSeconds: number) => void;
   onUpdateEvent: (updatedEvent: TaggedEvent) => void;
   onDeleteEvent: (id: string) => void;
@@ -13,8 +17,13 @@ type TimelineEventItemProps = {
   isSelected?: boolean;
 };
 
-export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
+export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const display = getTimelineEventDisplayData(
+    event,
+    [player, relatedPlayer].filter((candidate): candidate is Player => Boolean(candidate)),
+    atBat ? [atBat] : []
+  );
 
   const handleUpdate = (updates: Partial<TaggedEvent>) => {
     onUpdateEvent({ ...event, ...updates });
@@ -43,6 +52,9 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
         >
           {event.timestampLabel}
         </button>
+        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold capitalize text-slate-700">
+          {event.eventRole}
+        </span>
         <span className="text-sm font-medium text-slate-900">{event.tag}</span>
         <span className="text-xs text-slate-600">{event.category}</span>
         <div className="ml-auto flex gap-2">
@@ -65,6 +77,10 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
 
       {!isEditing ? (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-2">
+          <div><span className="font-semibold">Player:</span> {display.playerName}</div>
+          <div><span className="font-semibold">Related:</span> {display.relatedPlayerName}</div>
+          <div><span className="font-semibold">Team:</span> {display.teamLabel}</div>
+          <div><span className="font-semibold">At-Bat:</span> {display.atBatLabel === "None" ? "None" : `${display.atBatLabel} (${display.atBatStatus})`}</div>
           <div><span className="font-semibold">Count:</span> {event.pitchCount ?? "Unknown"}</div>
           {event.pitchResult && <div><span className="font-semibold">Pitch:</span> {event.pitchResult.replace("_", " ")}</div>}
           {event.pitchLocation && <div><span className="font-semibold">Location:</span> {event.pitchLocation}</div>}

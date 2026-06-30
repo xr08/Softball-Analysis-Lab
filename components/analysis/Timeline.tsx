@@ -1,8 +1,10 @@
-import { TaggedEvent } from "@/lib/analysis/types";
+import { AtBat, Player, TaggedEvent } from "@/lib/analysis/types";
 import { TimelineEventItem } from "./TimelineEventItem";
 
 type TimelineProps = {
   events: TaggedEvent[];
+  players: Player[];
+  atBats: AtBat[];
   onSeek: (timestampSeconds: number) => void;
   onUpdateEvent: (updatedEvent: TaggedEvent) => void;
   onDeleteEvent: (id: string) => void;
@@ -16,6 +18,8 @@ type TimelineProps = {
 
 export function Timeline({
   events,
+  players,
+  atBats,
   onSeek,
   onUpdateEvent,
   onDeleteEvent,
@@ -23,6 +27,8 @@ export function Timeline({
   totalCount,
   filteredCount
 }: TimelineProps) {
+  const playerById = new Map(players.map((player) => [player.id, player]));
+  const atBatById = new Map(atBats.map((atBat) => [atBat.id, atBat]));
   const showFilterBadge =
     filteredCount !== undefined &&
     totalCount !== undefined &&
@@ -55,6 +61,9 @@ export function Timeline({
             <TimelineEventItem
               key={event.id}
               event={event}
+              player={event.playerId ? playerById.get(event.playerId) : undefined}
+              relatedPlayer={event.relatedPlayerId ? playerById.get(event.relatedPlayerId) : undefined}
+              atBat={event.atBatId ? atBatById.get(event.atBatId) : undefined}
               onSeek={onSeek}
               onUpdateEvent={onUpdateEvent}
               onDeleteEvent={onDeleteEvent}
