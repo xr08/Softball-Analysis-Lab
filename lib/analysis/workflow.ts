@@ -74,7 +74,7 @@ export function teamSideLabel(teamSide: TeamSide | null | undefined): string {
 export function getPlayerName(players: Player[], playerId: string | null | undefined): string {
   if (playerId === UNKNOWN_FIELDER_ID) return UNKNOWN_FIELDER_LABEL;
   if (!playerId) return UNKNOWN_PLAYER_LABEL;
-  return players.find((player) => player.id === playerId)?.name ?? "Unknown player";
+  return players.find((player) => player.id === playerId)?.name ?? UNKNOWN_PLAYER_LABEL;
 }
 
 export function getPlayerTeamSide(players: Player[], playerId: string | null): TeamSide | null {
@@ -132,6 +132,10 @@ export function buildNextPitchSelection(input: {
 
 export function canEditAtBatParticipants(activeAtBatId: string | null, currentAtBatEventCount: number): boolean {
   return !activeAtBatId || currentAtBatEventCount === 0;
+}
+
+export function canClearPitcherSelection(activeAtBatId: string | null): boolean {
+  return !activeAtBatId;
 }
 
 export function closeAtBat(

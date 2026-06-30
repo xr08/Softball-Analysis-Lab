@@ -300,10 +300,13 @@ export default function AnalysePage() {
 
     function syncDuration() {
       if (Number.isFinite(video!.duration) && video!.duration > 0) {
-        setVideoSources((previous) =>
-          updateVideoSourceDuration(previous, videoSourceId, video!.duration)
-        );
-        setIsDirty(true);
+        setVideoSources((previous) => {
+          const next = updateVideoSourceDuration(previous, videoSourceId, video!.duration);
+          if (next !== previous) {
+            setIsDirty(true);
+          }
+          return next;
+        });
       }
     }
 

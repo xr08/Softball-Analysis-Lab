@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   buildNextAtBatState,
   buildNextPitchSelection,
+  canClearPitcherSelection,
   canEditAtBatParticipants,
   getNextBatterId,
   getTimelineEventDisplayData,
   UNKNOWN_FIELDER_ID,
+  UNKNOWN_PLAYER_LABEL,
   resolveTagAssignment
 } from "../lib/analysis/workflow";
 import { buildImportRestoreMessage, toCsv, toJson, parseImportedSession } from "../lib/analysis/export";
@@ -138,6 +140,11 @@ describe("session workflow controls", () => {
 
   it("locks pitcher and batter changes once the active at-bat has events", () => {
     expect(canEditAtBatParticipants("atbat-2", 1)).toBe(false);
+  });
+
+  it("does not allow clearing the pitcher once an active at-bat exists", () => {
+    expect(canClearPitcherSelection("atbat-2")).toBe(false);
+    expect(canClearPitcherSelection(null)).toBe(true);
   });
 
   it("Unknown Batter remains selectable after Next At-Bat", () => {
@@ -330,6 +337,13 @@ describe("workflow export preservation", () => {
     expect(updated[0].durationSeconds).toBe(88.25);
   });
 
+  it("does not create a new videoSources array when duration metadata is unchanged", () => {
+    const sources = [videoSource];
+    const unchanged = updateVideoSourceDuration(sources, videoSource.id, videoSource.durationSeconds!);
+
+    expect(unchanged).toBe(sources);
+  });
+
   it("selecting a different local video updates the main local video source", () => {
     const sources = upsertLocalVideoSource([], session.id, "game-one.mp4");
     const updated = upsertLocalVideoSource(sources, session.id, "game-two.mp4");
@@ -461,5 +475,24 @@ describe("timeline workflow display data", () => {
     expect(display.playerName).toBe("Unknown Player");
     expect(display.relatedPlayerName).toBe("None");
     expect(display.teamLabel).toBe("No team");
+  });
+
+  it("uses the shared unknown player label when a player id cannot be resolved", () => {
+    const display = getTimelineEventDisplayData(
+      makeEvent({ eventRole: "fielder", playerId: "missing-player", relatedPlayerId: "missing-related" }),
+      players,
+      [activeAtBat]
+    );
+
+    expect(display.playerName).toBe(UNKNOWN_PLAYER_LABEL);
+    expect(display.relatedPlayerName).toBe(UNKNOWN_PLAYER_LABEL);
+  });
+
+  it("uses the shared unknown player label for unresolved related players in CSV export", () => {
+    const csv = toCsv(session, players, [activeAtBat], [
+      makeEvent({ id: "event-missing-related", relatedPlayerId: "missing-related" })
+    ]);
+
+    expect(csv).toContain(`"${UNKNOWN_PLAYER_LABEL}"`);
   });
 });

@@ -55,7 +55,7 @@ export function toCsv(
     const relatedPlayer = event.relatedPlayerId ? playerById.get(event.relatedPlayerId) : undefined;
     const atBat = event.atBatId ? atBatById.get(event.atBatId) : undefined;
     const playerName = player?.name ?? UNKNOWN_PLAYER_LABEL;
-    const relatedPlayerName = event.relatedPlayerId ? relatedPlayer?.name ?? "Unknown player" : "";
+    const relatedPlayerName = event.relatedPlayerId ? relatedPlayer?.name ?? UNKNOWN_PLAYER_LABEL : "";
 
     return [
       session.id,

@@ -5,6 +5,7 @@ import {
   UNKNOWN_BATTER_LABEL,
   UNKNOWN_FIELDER_ID,
   UNKNOWN_FIELDER_LABEL,
+  canClearPitcherSelection,
   canEditAtBatParticipants
 } from "@/lib/analysis/workflow";
 
@@ -53,6 +54,7 @@ export function AtBatControls({
     ? `Active at-bat (${currentAtBatEventCount} event${currentAtBatEventCount === 1 ? "" : "s"})`
     : "No active at-bat";
   const selectorsLocked = !canEditAtBatParticipants(activeAtBat?.id ?? null, currentAtBatEventCount);
+  const allowEmptyPitcherOption = canClearPitcherSelection(activeAtBat?.id ?? null);
   const fielderLabel = selectedFielderId
     ? getPlayerName(players, selectedFielderId)
     : "No fielder selected";
@@ -117,7 +119,7 @@ export function AtBatControls({
             disabled={selectorsLocked}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500"
           >
-            <option value="">Select Pitcher...</option>
+            {allowEmptyPitcherOption ? <option value="">Select Pitcher...</option> : null}
             {pitchers.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.teamSide === "teamA" ? "A" : p.teamSide === "teamB" ? "B" : "N"})
