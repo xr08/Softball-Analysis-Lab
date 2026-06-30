@@ -1104,7 +1104,6 @@ export default function AnalysePage() {
             contactType={currentContactType}
             contactQuality={currentContactQuality}
             playResult={currentPlayResult}
-            showPitchType={session.sessionType === "player"}
             onBallsChange={setCountBalls}
             onStrikesChange={setCountStrikes}
             onPitchResultChange={setCurrentPitchResult}

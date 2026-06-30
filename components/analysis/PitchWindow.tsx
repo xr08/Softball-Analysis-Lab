@@ -19,7 +19,6 @@ type PitchWindowProps = {
   contactType: TaggedEvent["contactType"];
   contactQuality: TaggedEvent["contactQuality"];
   playResult: TaggedEvent["playResult"];
-  showPitchType: boolean;
   onBallsChange: (value: number | null) => void;
   onStrikesChange: (value: number | null) => void;
   onPitchResultChange: (value: TaggedEvent["pitchResult"]) => void;
@@ -47,7 +46,6 @@ export function PitchWindow({
   contactType,
   contactQuality,
   playResult,
-  showPitchType,
   onBallsChange,
   onStrikesChange,
   onPitchResultChange,
@@ -74,40 +72,30 @@ export function PitchWindow({
         </div>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <div className="grid gap-3">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px] xl:grid-cols-[minmax(0,1fr)_220px]">
-            <PitchResultSelector value={pitchResult} onChange={onPitchResultChange} compact />
-            <CountSelector
-              balls={balls}
-              strikes={strikes}
-              onBallsChange={onBallsChange}
-              onStrikesChange={onStrikesChange}
-              compact
-            />
-          </div>
-          {showPitchType ? (
-            <PitchTypeSelector value={pitchType} onChange={onPitchTypeChange} compact />
-          ) : (
-            <p className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
-              Pitch type is hidden for this session type.
-            </p>
-          )}
+      <div className="grid gap-3">
+        <div className="grid items-start gap-3 lg:grid-cols-[minmax(280px,1.4fr)_180px_minmax(220px,0.85fr)] xl:grid-cols-[minmax(320px,1.35fr)_170px_260px_minmax(220px,0.9fr)]">
+          <PitchResultSelector value={pitchResult} onChange={onPitchResultChange} compact />
+          <CountSelector
+            balls={balls}
+            strikes={strikes}
+            onBallsChange={onBallsChange}
+            onStrikesChange={onStrikesChange}
+            compact
+          />
+          <PitchLocationSelector value={pitchLocation} onChange={onPitchLocationChange} compact />
+          <PitchTypeSelector value={pitchType} onChange={onPitchTypeChange} compact />
         </div>
 
-        <div className="grid gap-3">
-          <PitchLocationSelector value={pitchLocation} onChange={onPitchLocationChange} compact />
-          <ContactContextSelector
-            contactType={contactType}
-            contactQuality={contactQuality}
-            playResult={playResult}
-            onContactTypeChange={onContactTypeChange}
-            onContactQualityChange={onContactQualityChange}
-            onPlayResultChange={onPlayResultChange}
-            compact
-            tone={contactTone}
-          />
-        </div>
+        <ContactContextSelector
+          contactType={contactType}
+          contactQuality={contactQuality}
+          playResult={playResult}
+          onContactTypeChange={onContactTypeChange}
+          onContactQualityChange={onContactQualityChange}
+          onPlayResultChange={onPlayResultChange}
+          compact
+          tone={contactTone}
+        />
       </div>
     </section>
   );
