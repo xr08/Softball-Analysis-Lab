@@ -1,12 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ContactContextSelector } from "@/components/analysis/ContactContextSelector";
-import { CountSelector } from "@/components/analysis/CountSelector";
 import { ExportButtons } from "@/components/analysis/ExportButtons";
-import { PitchLocationSelector } from "@/components/analysis/PitchLocationSelector";
-import { PitchResultSelector } from "@/components/analysis/PitchResultSelector";
-import { PitchTypeSelector } from "@/components/analysis/PitchTypeSelector";
+import { PitchWindow } from "@/components/analysis/PitchWindow";
 import { ReviewControls } from "@/components/analysis/ReviewControls";
 import { ReviewFilters } from "@/components/analysis/ReviewFilters";
 import { ReviewSummary } from "@/components/analysis/ReviewSummary";
@@ -45,6 +41,7 @@ import {
   upsertLocalVideoSource,
   updateVideoSourceDuration
 } from "@/lib/analysis/session";
+import { createEmptyPitchWindowState } from "@/lib/analysis/pitch-window";
 import { PlayersList } from "@/components/analysis/PlayersList";
 import { AtBatControls } from "@/components/analysis/AtBatControls";
 
@@ -598,15 +595,16 @@ export default function AnalysePage() {
   }
 
   function resetPitchContext() {
-    setCountBalls(null);
-    setCountStrikes(null);
-    setCurrentPitchResult(null);
-    setCurrentPitchLocation(null);
+    const emptyState = createEmptyPitchWindowState();
+    setCountBalls(emptyState.countBalls);
+    setCountStrikes(emptyState.countStrikes);
+    setCurrentPitchResult(emptyState.pitchResult);
+    setCurrentPitchLocation(emptyState.pitchLocation);
     setCurrentPitchLocationLabel(null);
-    setCurrentContactType(null);
-    setCurrentContactQuality(null);
-    setCurrentPlayResult(null);
-    setCurrentPitchType(null);
+    setCurrentContactType(emptyState.contactType);
+    setCurrentContactQuality(emptyState.contactQuality);
+    setCurrentPlayResult(emptyState.playResult);
+    setCurrentPitchType(emptyState.pitchType);
   }
 
   function handleAddPlayer(name: string, teamSide: TeamSide) {
@@ -1097,32 +1095,28 @@ export default function AnalysePage() {
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <CountSelector
-              balls={countBalls}
-              strikes={countStrikes}
-              onBallsChange={setCountBalls}
-              onStrikesChange={setCountStrikes}
-            />
-            <PitchResultSelector
-              value={currentPitchResult}
-              onChange={setCurrentPitchResult}
-            />
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <PitchLocationSelector value={currentPitchLocation} onChange={(zoneId, label) => { setCurrentPitchLocation(zoneId); setCurrentPitchLocationLabel(label); }} />
-            <ContactContextSelector contactType={currentContactType} contactQuality={currentContactQuality} playResult={currentPlayResult} onContactTypeChange={setCurrentContactType} onContactQualityChange={setCurrentContactQuality} onPlayResultChange={setCurrentPlayResult} />
-            {session.sessionType === "player" && (
-              <>
-                <PitchTypeSelector
-                  value={currentPitchType}
-                  onChange={setCurrentPitchType}
-                />
-                
-              </>
-            )}
-          </div>
+          <PitchWindow
+            balls={countBalls}
+            strikes={countStrikes}
+            pitchResult={currentPitchResult}
+            pitchLocation={currentPitchLocation}
+            pitchType={currentPitchType}
+            contactType={currentContactType}
+            contactQuality={currentContactQuality}
+            playResult={currentPlayResult}
+            showPitchType={session.sessionType === "player"}
+            onBallsChange={setCountBalls}
+            onStrikesChange={setCountStrikes}
+            onPitchResultChange={setCurrentPitchResult}
+            onPitchLocationChange={(zoneId, label) => {
+              setCurrentPitchLocation(zoneId);
+              setCurrentPitchLocationLabel(label);
+            }}
+            onPitchTypeChange={setCurrentPitchType}
+            onContactTypeChange={setCurrentContactType}
+            onContactQualityChange={setCurrentContactQuality}
+            onPlayResultChange={setCurrentPlayResult}
+          />
         </>
       )}
 

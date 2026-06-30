@@ -3,6 +3,7 @@ import { TaggedEvent } from "@/lib/analysis/types";
 type PitchLocationSelectorProps = {
   value: TaggedEvent["pitchLocation"];
   onChange: (zoneId: TaggedEvent["pitchLocation"], label: string | null) => void;
+  compact?: boolean;
 };
 
 const ZONES = [
@@ -17,7 +18,7 @@ const ZONES = [
   { id: "zone_9", label: "Zone 9" },
 ] as const;
 
-export function PitchLocationSelector({ value, onChange }: PitchLocationSelectorProps) {
+export function PitchLocationSelector({ value, onChange, compact = false }: PitchLocationSelectorProps) {
   const isLeftHanded = false;
   const leftId = isLeftHanded ? "outside" : "inside";
   const rightId = isLeftHanded ? "inside" : "outside";
@@ -25,9 +26,9 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
   const rightLabel = isLeftHanded ? "Inside" : "Outside";
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-3" : "p-4"}`}>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Pitch Location</h2>
+        <h2 className={`font-semibold text-slate-900 ${compact ? "text-base" : "text-lg"}`}>Pitch Location</h2>
         <button
           type="button"
           onClick={() => onChange(null, null)}
@@ -41,12 +42,12 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
         Inside and outside are shown from the selected batter's perspective.
       </p>
 
-      <div className="mx-auto flex max-w-[300px] flex-col items-center gap-2">
+      <div className={`mx-auto flex flex-col items-center gap-2 ${compact ? "max-w-[260px]" : "max-w-[300px]"}`}>
         {/* High Zone */}
         <button
           type="button"
           onClick={() => onChange("high", "High")}
-          className={`h-10 w-32 rounded-t-xl border border-slate-300 text-sm font-medium transition-colors ${
+          className={`${compact ? "h-9 w-28" : "h-10 w-32"} rounded-t-xl border border-slate-300 text-sm font-medium transition-colors ${
             value === "high" ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
           }`}
         >
@@ -58,7 +59,7 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
           <button
             type="button"
             onClick={() => onChange(leftId, leftLabel)}
-            className={`w-16 rounded-l-xl border border-slate-300 text-sm font-medium transition-colors [writing-mode:vertical-lr] rotate-180 flex items-center justify-center ${
+            className={`${compact ? "w-14" : "w-16"} rounded-l-xl border border-slate-300 text-sm font-medium transition-colors [writing-mode:vertical-lr] rotate-180 flex items-center justify-center ${
               value === leftId ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
             }`}
           >
@@ -66,7 +67,7 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
           </button>
 
           {/* 3x3 Grid */}
-          <div className="grid grid-cols-3 grid-rows-3 gap-1 bg-slate-300 border-2 border-slate-800 p-1 w-32 h-32 flex-shrink-0">
+          <div className={`grid grid-cols-3 grid-rows-3 gap-1 bg-slate-300 border-2 border-slate-800 p-1 flex-shrink-0 ${compact ? "h-28 w-28" : "h-32 w-32"}`}>
             {ZONES.map((zone) => (
               <button
                 key={zone.id}
@@ -85,7 +86,7 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
           <button
             type="button"
             onClick={() => onChange(rightId, rightLabel)}
-            className={`w-16 rounded-r-xl border border-slate-300 text-sm font-medium transition-colors [writing-mode:vertical-rl] flex items-center justify-center ${
+            className={`${compact ? "w-14" : "w-16"} rounded-r-xl border border-slate-300 text-sm font-medium transition-colors [writing-mode:vertical-rl] flex items-center justify-center ${
               value === rightId ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
             }`}
           >
@@ -97,7 +98,7 @@ export function PitchLocationSelector({ value, onChange }: PitchLocationSelector
         <button
           type="button"
           onClick={() => onChange("low", "Low")}
-          className={`h-10 w-32 rounded-b-xl border border-slate-300 text-sm font-medium transition-colors ${
+          className={`${compact ? "h-9 w-28" : "h-10 w-32"} rounded-b-xl border border-slate-300 text-sm font-medium transition-colors ${
             value === "low" ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
           }`}
         >

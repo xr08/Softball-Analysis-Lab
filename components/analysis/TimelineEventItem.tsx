@@ -120,6 +120,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                 <option value="ball">Ball</option>
                 <option value="ball_in_play">Ball In Play</option>
                 <option value="hit_by_pitch">Hit by Pitch</option>
+                <option value="wild_pitch">Wild Pitch</option>
               </select>
             </label>
           </div>

@@ -3,6 +3,7 @@ import { TaggedEvent } from "@/lib/analysis/types";
 type PitchTypeSelectorProps = {
   value: TaggedEvent["pitchType"];
   onChange: (val: TaggedEvent["pitchType"]) => void;
+  compact?: boolean;
 };
 
 const PITCH_TYPES = [
@@ -15,11 +16,11 @@ const PITCH_TYPES = [
   { id: "other", label: "Other" },
 ] as const;
 
-export function PitchTypeSelector({ value, onChange }: PitchTypeSelectorProps) {
+export function PitchTypeSelector({ value, onChange, compact = false }: PitchTypeSelectorProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-3" : "p-4"}`}>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Pitch Type</h2>
+        <h2 className={`font-semibold text-slate-900 ${compact ? "text-base" : "text-lg"}`}>Pitch Type</h2>
         <button
           type="button"
           onClick={() => onChange(null)}
