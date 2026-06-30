@@ -6,7 +6,9 @@ import {
   getContactQualityLabel,
   getContactTypeLabel,
   getPitchResultLabel,
+  getPitchResultOptionsForValue,
   getPlayResultLabel,
+  isKnownPitchResult,
   PITCH_RESULT_OPTIONS
 } from "../lib/analysis/pitch-window";
 import { buildNextPitchSelection } from "../lib/analysis/workflow";
@@ -68,6 +70,19 @@ describe("pitch window helpers", () => {
   it("formats the new fast result labels clearly for summaries", () => {
     expect(getPitchResultLabel("wild_pitch")).toBe("Wild Pitch");
     expect(getPitchResultLabel("hit_by_pitch")).toBe("HBP");
+  });
+
+  it("keeps known pitch result edit options unchanged", () => {
+    expect(isKnownPitchResult("ball")).toBe(true);
+    expect(getPitchResultOptionsForValue("ball")).toBe(PITCH_RESULT_OPTIONS);
+  });
+
+  it("adds a visible imported option for unknown pitch result values", () => {
+    expect(isKnownPitchResult("legacy_pitch_result")).toBe(false);
+    expect(getPitchResultOptionsForValue("legacy_pitch_result")).toContainEqual({
+      value: "legacy_pitch_result",
+      label: "Unknown / imported: legacy_pitch_result"
+    });
   });
 
   it("maps contact direction buttons to the same stored contactType values", () => {
@@ -158,5 +173,13 @@ describe("pitch result export compatibility", () => {
     expect(parsed.events[0].contactType).toBe("pull");
     expect(parsed.events[0].contactQuality).toBe("hard");
     expect(parsed.events[0].playResult).toBe("field_out");
+  });
+
+  it("preserves unknown imported pitch result strings through JSON export/import", () => {
+    const parsed = parseImportedSession(
+      toJson(session, [], [], [], [{ ...event, id: "event-legacy", pitchResult: "legacy_pitch_result" }])
+    );
+
+    expect(parsed.events[0].pitchResult).toBe("legacy_pitch_result");
   });
 });

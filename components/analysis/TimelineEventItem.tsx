@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AtBat, Player, TaggedEvent } from "@/lib/analysis/types";
 import { getTimelineEventDisplayData } from "@/lib/analysis/workflow";
-import { PitchResultSelector } from "./PitchResultSelector";
+import { getPitchResultOptionsForValue } from "@/lib/analysis/pitch-window";
 import { PitchLocationSelector } from "./PitchLocationSelector";
 import { ContactContextSelector } from "./ContactContextSelector";
 
@@ -24,6 +24,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
     [player, relatedPlayer].filter((candidate): candidate is Player => Boolean(candidate)),
     atBat ? [atBat] : []
   );
+  const pitchResultOptions = getPitchResultOptionsForValue(event.pitchResult);
 
   const handleUpdate = (updates: Partial<TaggedEvent>) => {
     onUpdateEvent({ ...event, ...updates });
@@ -114,13 +115,11 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
               >
                 <option value="">Unknown</option>
-                <option value="called_strike">Called Strike</option>
-                <option value="swinging_strike">Swinging Strike</option>
-                <option value="foul">Foul</option>
-                <option value="ball">Ball</option>
-                <option value="ball_in_play">Ball In Play</option>
-                <option value="hit_by_pitch">Hit by Pitch</option>
-                <option value="wild_pitch">Wild Pitch</option>
+                {pitchResultOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

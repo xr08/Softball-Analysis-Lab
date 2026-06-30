@@ -24,6 +24,11 @@ export const PITCH_RESULT_OPTIONS: Array<{
   { value: "wild_pitch", label: "Wild Pitch" }
 ];
 
+export type PitchResultOption = {
+  value: NonNullable<TaggedEvent["pitchResult"]>;
+  label: string;
+};
+
 export const CONTACT_TYPE_OPTIONS: Array<{
   value: NonNullable<TaggedEvent["contactType"]>;
   label: string;
@@ -75,6 +80,21 @@ export function createEmptyPitchWindowState(): PitchWindowState {
 export function getPitchResultLabel(value: TaggedEvent["pitchResult"]): string {
   if (!value) return "Unspecified";
   return PITCH_RESULT_OPTIONS.find((option) => option.value === value)?.label ?? value.replaceAll("_", " ");
+}
+
+export function isKnownPitchResult(value: TaggedEvent["pitchResult"]): boolean {
+  return Boolean(value) && PITCH_RESULT_OPTIONS.some((option) => option.value === value);
+}
+
+export function getPitchResultOptionsForValue(value: TaggedEvent["pitchResult"]): PitchResultOption[] {
+  if (!value || isKnownPitchResult(value)) return PITCH_RESULT_OPTIONS;
+  return [
+    ...PITCH_RESULT_OPTIONS,
+    {
+      value,
+      label: `Unknown / imported: ${value}`
+    }
+  ];
 }
 
 function getOptionLabel<T extends string>(
