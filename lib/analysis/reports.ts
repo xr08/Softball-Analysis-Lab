@@ -126,9 +126,13 @@ const AT_BAT_RESULT_ORDER = [
 const TAG_CATEGORY_ORDER: string[] = [
   "Plate Appearance",
   "Pitch Tracking",
+  "Pitch Type",
+  "Pitch Result",
   "Swing Decision",
   "Contact Type",
   "Outcome",
+  "Fielding",
+  "Review",
   "Coach Observation",
 ];
 

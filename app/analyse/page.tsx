@@ -16,8 +16,14 @@ import { TagPanel } from "@/components/analysis/TagPanel";
 import { Timeline } from "@/components/analysis/Timeline";
 import { VideoPlayer } from "@/components/analysis/VideoPlayer";
 import { toCsv, toJson, parseImportedSession } from "@/lib/analysis/export";
+import { WorkflowTagDefinition } from "@/lib/analysis/tags";
 import { formatTimestampLabel } from "@/lib/analysis/time";
 import { compareVideoFileNames } from "@/lib/analysis/video";
+import {
+  buildNextAtBatState,
+  buildNextPitchSelection,
+  resolveTagAssignment
+} from "@/lib/analysis/workflow";
 import {
   ReviewFilters as ReviewFiltersType,
   emptyFilters,
@@ -30,7 +36,7 @@ import {
   getReviewSummary,
   hasActiveFilters
 } from "@/lib/analysis/review";
-import { TaggedEvent, ExportedSession, Session, TagDefinition, Player, AtBat, TeamSide } from "@/lib/analysis/types";
+import { TaggedEvent, ExportedSession, Session, Player, AtBat, TeamSide } from "@/lib/analysis/types";
 import { createDefaultSession, createTaggedEvent, createPlayer, createAtBat } from "@/lib/analysis/session";
 import { PlayersList } from "@/components/analysis/PlayersList";
 import { AtBatControls } from "@/components/analysis/AtBatControls";
@@ -128,6 +134,7 @@ export default function AnalysePage() {
   const [atBats, setAtBats] = useState<AtBat[]>([]);
   const [currentPitcherId, setCurrentPitcherId] = useState<string | null>(null);
   const [currentBatterId, setCurrentBatterId] = useState<string | null>(null);
+  const [selectedFielderId, setSelectedFielderId] = useState<string | null>(null);
   const [activeAtBatId, setActiveAtBatId] = useState<string | null>(null);
   const [countBalls, setCountBalls] = useState<number | null>(null);
   const [countStrikes, setCountStrikes] = useState<number | null>(null);
@@ -144,6 +151,7 @@ export default function AnalysePage() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
   const [videoMessage, setVideoMessage] = useState("");
+  const [tagMessage, setTagMessage] = useState("");
 
   const [isDirty, setIsDirty] = useState(false);
   const [hasRecoveryData, setHasRecoveryData] = useState(false);
@@ -207,6 +215,14 @@ export default function AnalysePage() {
   const jsonFileName = `${sessionLabel}-events.json`;
   const csvContent = useMemo(() => `\uFEFF${toCsv(session, players, atBats, sortedEvents)}`, [session, players, atBats, sortedEvents]);
   const jsonContent = useMemo(() => toJson(session, players, [], atBats, sortedEvents), [session, players, atBats, sortedEvents]);
+  const activeAtBat = useMemo(
+    () => atBats.find((atBat) => atBat.id === activeAtBatId) ?? null,
+    [atBats, activeAtBatId]
+  );
+  const currentAtBatEventCount = useMemo(
+    () => events.filter((event) => event.atBatId === activeAtBatId).length,
+    [events, activeAtBatId]
+  );
 
   // ---------------------------------------------------------------------------
   // Recovery
@@ -541,6 +557,18 @@ export default function AnalysePage() {
     setIsDirty(true);
   }
 
+  function resetPitchContext() {
+    setCountBalls(null);
+    setCountStrikes(null);
+    setCurrentPitchResult(null);
+    setCurrentPitchLocation(null);
+    setCurrentPitchLocationLabel(null);
+    setCurrentContactType(null);
+    setCurrentContactQuality(null);
+    setCurrentPlayResult(null);
+    setCurrentPitchType(null);
+  }
+
   function handleAddPlayer(name: string, teamSide: TeamSide) {
     const player = createPlayer(session.id, name, teamSide);
     setPlayers((prev) => [...prev, player]);
@@ -551,7 +579,8 @@ export default function AnalysePage() {
     const inUse = events.some((e) => e.playerId === playerId || e.relatedPlayerId === playerId) ||
                   atBats.some((ab) => ab.pitcherId === playerId || ab.batterId === playerId) ||
                   currentPitcherId === playerId ||
-                  currentBatterId === playerId;
+                  currentBatterId === playerId ||
+                  selectedFielderId === playerId;
     if (inUse) {
       alert("Cannot remove player because they are currently associated with an at-bat or tagged event.");
       return;
@@ -592,7 +621,48 @@ export default function AnalysePage() {
       })
     );
     setActiveAtBatId(null);
+    resetPitchContext();
+    setSelectedFielderId(null);
     setIsDirty(true);
+  }
+
+  function handleNextPitch() {
+    const nextPitchSelection = buildNextPitchSelection({
+      currentPitcherId,
+      currentBatterId,
+      activeAtBatId
+    });
+    setCurrentPitcherId(nextPitchSelection.currentPitcherId);
+    setCurrentBatterId(nextPitchSelection.currentBatterId);
+    setActiveAtBatId(nextPitchSelection.activeAtBatId);
+    setSelectedFielderId(nextPitchSelection.selectedFielderId);
+    resetPitchContext();
+    setTagMessage("Ready for the next pitch. Pitcher, batter, and at-bat context stayed in place.");
+  }
+
+  function handleNextAtBat() {
+    if (!currentPitcherId || !currentBatterId) return;
+
+    const timestampSeconds = videoRef.current ? videoRef.current.currentTime : 0;
+    const nextState = buildNextAtBatState({
+      sessionId: session.id,
+      players,
+      atBats,
+      currentPitcherId,
+      currentBatterId,
+      activeAtBatId,
+      timestampSeconds,
+      newAtBatId: crypto.randomUUID()
+    });
+
+    setAtBats(nextState.atBats);
+    setCurrentPitcherId(nextState.currentPitcherId);
+    setCurrentBatterId(nextState.currentBatterId);
+    setActiveAtBatId(nextState.activeAtBatId);
+    setSelectedFielderId(null);
+    resetPitchContext();
+    setIsDirty(true);
+    setTagMessage("Advanced to the next at-bat. Current pitcher was kept.");
   }
 
   function handleSelectFile(file: File | null): void {
@@ -620,22 +690,33 @@ export default function AnalysePage() {
     
   }
 
-  function handleTagClick(tag: TagDefinition): void {
+  function handleTagClick(tag: WorkflowTagDefinition): void {
     if (!videoRef.current) return;
 
     const timestampSeconds = videoRef.current.currentTime;
     const countLabel = countBalls !== null && countStrikes !== null ? `${countBalls}-${countStrikes}` : null;
-    const batter = players.find((p) => p.id === currentBatterId);
-    const teamSide = batter ? batter.teamSide : null;
+    const assignment = resolveTagAssignment({
+      role: tag.role,
+      players,
+      currentPitcherId,
+      currentBatterId,
+      selectedFielderId,
+      activeAtBatId
+    });
+
+    if (!assignment.ok) {
+      setTagMessage(assignment.reason);
+      return;
+    }
 
     const newEvent: TaggedEvent = createTaggedEvent({
       sessionId: session.id,
       videoSourceId: null,
-      atBatId: activeAtBatId,
-      eventRole: "batter",
-      playerId: currentBatterId,
-      relatedPlayerId: currentPitcherId,
-      teamSide,
+      atBatId: assignment.atBatId,
+      eventRole: assignment.eventRole,
+      playerId: assignment.playerId,
+      relatedPlayerId: assignment.relatedPlayerId,
+      teamSide: assignment.teamSide,
       timestampSeconds,
       timestampLabel: formatTimestampLabel(timestampSeconds),
       tag: tag.id,
@@ -652,6 +733,7 @@ export default function AnalysePage() {
 
     setEvents((previous) => [...previous, newEvent]);
     setIsDirty(true);
+    setTagMessage(`${tag.label} tagged for ${tag.role}.`);
   }
 
   function handleSeek(timestampSeconds: number): void {
@@ -743,6 +825,7 @@ export default function AnalysePage() {
       setAtBats(recoverySnapshot.atBats || []);
       setCurrentPitcherId(recoverySnapshot.currentPitcherId || null);
       setCurrentBatterId(recoverySnapshot.currentBatterId || null);
+      setSelectedFielderId(null);
       setActiveAtBatId(recoverySnapshot.activeAtBatId || null);
       setIsDirty(true);
       setSelectedReviewEventId(null);
@@ -898,7 +981,7 @@ export default function AnalysePage() {
       </div>
 
       {/* Session Details — always visible */}
-      <SessionDetails session={session} onUpdateSession={(updates) => setSession((s) => ({ ...s, ...updates, updatedAt: new Date().toISOString() }))} />
+      <SessionDetails session={session} onUpdateSession={updateSession} />
 
       {/* ================================================================ */}
       {/* TAGGING MODE                                                     */}
@@ -912,14 +995,22 @@ export default function AnalysePage() {
               onRemovePlayer={handleRemovePlayer}
             />
             <AtBatControls
+              session={session}
               players={players}
+              activeAtBat={activeAtBat}
+              currentAtBatEventCount={currentAtBatEventCount}
               currentPitcherId={currentPitcherId}
               currentBatterId={currentBatterId}
+              selectedFielderId={selectedFielderId}
               onPitcherChange={setCurrentPitcherId}
               onBatterChange={setCurrentBatterId}
+              onFielderChange={setSelectedFielderId}
+              onClearFielder={() => setSelectedFielderId(null)}
               onStartAtBat={handleStartAtBat}
               hasActiveAtBat={!!activeAtBatId}
               onEndAtBat={handleEndAtBat}
+              onNextPitch={handleNextPitch}
+              onNextAtBat={handleNextAtBat}
             />
           </div>
 
@@ -968,7 +1059,7 @@ export default function AnalysePage() {
       {/* TAGGING MODE — Tag panel                                         */}
       {/* ================================================================ */}
       {mode === "tagging" && (
-        <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} />
+        <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} message={tagMessage} />
       )}
 
       {/* ================================================================ */}
@@ -1022,6 +1113,8 @@ export default function AnalysePage() {
       {!showReports && (
         <Timeline
           events={showReview ? filteredReviewEvents : sortedEvents}
+          players={players}
+          atBats={atBats}
           onSeek={handleSeek}
           onUpdateEvent={handleUpdateEvent}
           onDeleteEvent={handleDeleteEvent}

@@ -14,16 +14,25 @@ export function toCsv(
   atBats: AtBat[],
   events: TaggedEvent[]
 ): string {
+  const playerById = new Map(players.map((player) => [player.id, player]));
+  const atBatById = new Map(atBats.map((atBat) => [atBat.id, atBat]));
+
   const headers = [
     "sessionId",
     "sessionName",
+    "sessionType",
     "sessionDate",
     "opponent",
+    "atBatId",
+    "atBatStartTimestampSeconds",
+    "atBatEndTimestampSeconds",
     "timestampSeconds",
     "timestampLabel",
     "eventRole",
     "playerId",
+    "playerName",
     "relatedPlayerId",
+    "relatedPlayerName",
     "teamSide",
     "tag",
     "category",
@@ -41,16 +50,26 @@ export function toCsv(
   ];
 
   const rows = events.map((event) => {
+    const player = event.playerId ? playerById.get(event.playerId) : undefined;
+    const relatedPlayer = event.relatedPlayerId ? playerById.get(event.relatedPlayerId) : undefined;
+    const atBat = event.atBatId ? atBatById.get(event.atBatId) : undefined;
+
     return [
       session.id,
       session.name,
+      session.sessionType,
       session.date,
       session.context,
+      event.atBatId,
+      atBat?.startTimestampSeconds,
+      atBat?.endTimestampSeconds,
       event.timestampSeconds.toString(),
       event.timestampLabel,
       event.eventRole,
       event.playerId,
+      player?.name,
       event.relatedPlayerId,
+      relatedPlayer?.name,
       event.teamSide,
       event.tag,
       event.category,
