@@ -288,8 +288,25 @@ describe("summarisePitchResults — stable ordering", () => {
       "ball",
       "ball_in_play",
       "hit_by_pitch",
+      "wild_pitch",
       NOT_SET_KEY,
     ]);
+  });
+
+  it("includes Wild Pitch in pitch result reports when events contain it", () => {
+    const rows = summarisePitchResults([
+      makeEvent({ pitchResult: "wild_pitch" }),
+      makeEvent({ pitchResult: "ball" }),
+    ]);
+    const wildPitch = rows.find((row) => row.id === "wild_pitch");
+
+    expect(wildPitch).toMatchObject({
+      id: "wild_pitch",
+      label: "Wild Pitch",
+      count: 1,
+      denominator: 2,
+      percentage: 50,
+    });
   });
 });
 

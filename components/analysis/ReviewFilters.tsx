@@ -76,7 +76,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
     { value: "foul", label: "Foul" },
     { value: "ball", label: "Ball" },
     { value: "ball_in_play", label: "Ball in Play" },
-    { value: "hit_by_pitch", label: "Hit by Pitch" }
+    { value: "hit_by_pitch", label: "Hit by Pitch" },
+    { value: "wild_pitch", label: "Wild Pitch" }
   ];
 
   const ZONES: Array<{ value: TaggedEvent["pitchLocation"]; label: string }> = [
