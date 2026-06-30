@@ -1,61 +1,96 @@
-export type TagCategory =
-  | "Plate Appearance"
-  | "Pitch Tracking"
-  | "Swing Decision"
-  | "Contact Type"
-  | "Outcome"
-  | "Coach Observation";
+export type TeamSide = "teamA" | "teamB" | "neutral";
+export type EventRole = "pitcher" | "batter" | "fielder" | "runner" | "team" | "review";
+export type EventSource = "manual" | "ai" | "imported";
+export type ReviewStatus = "none" | "flagged" | "reviewed" | "resolved";
 
-export type TagDefinition = {
+export interface Player {
   id: string;
-  label: string;
-  category: TagCategory;
-};
-
-export type AnalysisEvent = {
-  id: string;
-  timestampSeconds: number;
-  timestampLabel: string;
-  tagId: string;
-  tagLabel: string;
-  category: TagCategory;
-  note: string;
-
-  // Explicitly nullable structured context
-  count: string | null;
-  pitchResult: "called_strike" | "swinging_strike" | "foul" | "ball" | "ball_in_play" | "hit_by_pitch" | null;
-  pitchLocationZone: "zone_1" | "zone_2" | "zone_3" | "zone_4" | "zone_5" | "zone_6" | "zone_7" | "zone_8" | "zone_9" | "high" | "low" | "inside" | "outside" | null;
-  pitchLocationLabel: string | null;
-  batterHandedness: "right" | "left" | null;
-  contactDirection: "pull" | "middle" | "opposite" | null;
-  contactQuality: "hard" | "medium" | "weak" | null;
-  result: "single" | "double" | "triple" | "home_run" | "walk" | "strikeout" | "field_out" | "fielders_choice" | "reached_on_error" | "sacrifice" | "hit_by_pitch" | null;
-
-  // Pitcher context
-  pitchType: "rise" | "drop" | "changeup" | "curve" | "screw" | "fastball" | "other" | null;
-  velocity: number | null;
-  armSlot: "overhand" | "three_quarter" | "sidearm" | "submarine" | null;
-
-  createdAt: string;
-};
-
-export type SessionMetadata = {
   sessionId: string;
-  sessionName: string;
-  playerName: string;
-  sessionType: "batter" | "pitcher";
-  sessionDate: string;
-  opponent: string;
-  videoFileName: string | null;
-  batterHandedness: "right" | "left" | null;
+  name: string;
+  teamSide: TeamSide;
+  jerseyNumber?: string;
+  handedness?: {
+    batting?: "left" | "right" | "switch";
+    throwing?: "left" | "right";
+  };
+}
+
+export interface AtBat {
+  id: string;
+  sessionId: string;
+  batterId: string;
+  pitcherId: string;
+  batterTeamSide: TeamSide;
+  pitcherTeamSide: TeamSide;
+  startTimestampSeconds: number;
+  endTimestampSeconds?: number;
+}
+
+export interface VideoSource {
+  id: string;
+  sessionId: string;
+  fileName: string;
+  filePath?: string; // local only
+  type: "main" | "angle2" | "angle3";
+  addedAt: string;
+}
+
+export interface Session {
+  id: string;
+  name: string;
+  date: string;
+  context: string;
+  sessionType: "game" | "player" | "training";
   createdAt: string;
   updatedAt: string;
-};
+}
 
-export type ExportedSession = {
-  schemaVersion: "1.0" | "1.1" | "1.2";
-  exportedAt: string;
-  session: SessionMetadata;
-  events: AnalysisEvent[];
-};
+export interface TaggedEvent {
+  id: string;
+  sessionId: string;
+  videoSourceId: string | null;
+  atBatId: string | null;
+  
+  timestampSeconds: number;
+  timestampLabel?: string;
+  
+  eventRole: EventRole;
+  playerId: string | null;
+  relatedPlayerId: string | null;
+  teamSide: TeamSide | null;
+  
+  tag: string;
+  category: string;
+  note?: string;
+  
+  pitchCount: string | null;
+  pitchResult: string | null;
+  pitchLocation: string | null;
+  pitchType: string | null;
+  contactType: string | null;
+  contactQuality: string | null;
+  playResult: string | null;
+  
+  source?: EventSource;
+  reviewStatus?: ReviewStatus;
+  
+  createdAt: string;
+}
 
+export interface ExportedSession {
+  schemaVersion: "2.0";
+  session: Session;
+  players: Player[];
+  videoSources: VideoSource[];
+  atBats: AtBat[];
+  events: TaggedEvent[];
+}
+
+export interface TagDefinition {
+  id: string;
+  category: string;
+  label: string;
+  color: string;
+  shortcut?: string;
+  description?: string;
+}

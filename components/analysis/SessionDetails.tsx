@@ -1,119 +1,54 @@
-type SessionDetailsProps = {
-  playerName: string;
-  sessionName: string;
-  sessionDate: string;
-  opponent: string;
-  batterHandedness: "right" | "left" | null;
-  onPlayerNameChange: (value: string) => void;
-  onSessionNameChange: (value: string) => void;
-  onSessionDateChange: (value: string) => void;
-  onOpponentChange: (value: string) => void;
-  onBatterHandednessChange: (value: "right" | "left" | null) => void;
-  sessionType: "batter" | "pitcher";
-  onSessionTypeChange: (value: "batter" | "pitcher") => void;
-};
+import { Session } from "@/lib/analysis/types";
+
+export interface SessionDetailsProps {
+  session: Session;
+  onUpdateSession: (updates: Partial<Session>) => void;
+}
 
 export function SessionDetails({
-  playerName,
-  sessionName,
-  sessionDate,
-  opponent,
-  batterHandedness,
-  onPlayerNameChange,
-  onSessionNameChange,
-  onSessionDateChange,
-  onOpponentChange,
-  onBatterHandednessChange,
-  sessionType,
-  onSessionTypeChange
+  session,
+  onUpdateSession,
 }: SessionDetailsProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">Session Details</h2>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-600">Mode:</span>
-          <div className="flex overflow-hidden rounded-md border border-slate-300">
-            <button
-              onClick={() => onSessionTypeChange("batter")}
-              className={`px-3 py-1 text-sm font-medium transition-colors ${
-                sessionType === "batter"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              Batter
-            </button>
-            <div className="w-px bg-slate-300"></div>
-            <button
-              onClick={() => onSessionTypeChange("pitcher")}
-              className={`px-3 py-1 text-sm font-medium transition-colors ${
-                sessionType === "pitcher"
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-white text-slate-600 hover:bg-slate-50"
-              }`}
-            >
-              Pitcher
-            </button>
-          </div>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-slate-800">Session Details</h2>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Session Name
+          </label>
+          <input
+            type="text"
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            value={session.name}
+            onChange={(e) => onUpdateSession({ name: e.target.value })}
+            placeholder="e.g. Pre-season Bullpen"
+          />
         </div>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Player name
-          <input
-            type="text"
-            value={playerName}
-            onChange={(event) => onPlayerNameChange(event.target.value)}
-            placeholder="Player A"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Batter Handedness
-          <select
-            value={batterHandedness || ""}
-            onChange={(event) => {
-              const val = event.target.value;
-              onBatterHandednessChange(val === "" ? null : (val as "right" | "left"));
-            }}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
-          >
-            <option value="">Unknown</option>
-            <option value="right">Right-handed</option>
-            <option value="left">Left-handed</option>
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Session name
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(event) => onSessionNameChange(event.target.value)}
-            placeholder="Test Session"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Session date
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Date
+          </label>
           <input
             type="date"
-            value={sessionDate}
-            onChange={(event) => onSessionDateChange(event.target.value)}
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            value={session.date}
+            onChange={(e) => onUpdateSession({ date: e.target.value })}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-700">
-          Opponent / Context
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium text-slate-700">
+            Context / Opponent
+          </label>
           <input
             type="text"
-            value={opponent}
-            onChange={(event) => onOpponentChange(event.target.value)}
-            placeholder="e.g. Finals vs Red Sox"
-            className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+            value={session.context}
+            onChange={(e) => onUpdateSession({ context: e.target.value })}
+            placeholder="e.g. vs Eagles or Week 1 Practice"
           />
-        </label>
+        </div>
       </div>
-    </section>
+    </div>
   );
 }

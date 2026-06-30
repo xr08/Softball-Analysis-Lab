@@ -51,7 +51,7 @@ export function CountSelector({
         </label>
       </div>
       <p className="mt-3 text-sm text-slate-700">
-        Current count: {balls !== null && strikes !== null ? `${balls}-${strikes}` : "Unknown"}
+        Current pitchCount: {balls !== null && strikes !== null ? `${balls}-${strikes}` : "Unknown"}
       </p>
     </section>
   );

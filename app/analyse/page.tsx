@@ -7,7 +7,6 @@ import { ExportButtons } from "@/components/analysis/ExportButtons";
 import { PitchLocationSelector } from "@/components/analysis/PitchLocationSelector";
 import { PitchResultSelector } from "@/components/analysis/PitchResultSelector";
 import { PitchTypeSelector } from "@/components/analysis/PitchTypeSelector";
-import { PitcherContextSelector } from "@/components/analysis/PitcherContextSelector";
 import { ReviewControls } from "@/components/analysis/ReviewControls";
 import { ReviewFilters } from "@/components/analysis/ReviewFilters";
 import { ReviewSummary } from "@/components/analysis/ReviewSummary";
@@ -31,7 +30,10 @@ import {
   getReviewSummary,
   hasActiveFilters
 } from "@/lib/analysis/review";
-import { AnalysisEvent, ExportedSession, SessionMetadata, TagDefinition } from "@/lib/analysis/types";
+import { TaggedEvent, ExportedSession, Session, TagDefinition, Player, AtBat, TeamSide } from "@/lib/analysis/types";
+import { createDefaultSession, createTaggedEvent, createPlayer, createAtBat } from "@/lib/analysis/session";
+import { PlayersList } from "@/components/analysis/PlayersList";
+import { AtBatControls } from "@/components/analysis/AtBatControls";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -119,34 +121,26 @@ export default function AnalysePage() {
   // Session state
   // ---------------------------------------------------------------------------
 
-  const [session, setSession] = useState<SessionMetadata>({
-    sessionId: crypto.randomUUID(),
-    sessionName: "",
-    playerName: "",
-    sessionType: "batter",
-    sessionDate: "",
-    opponent: "",
-    videoFileName: null,
-    batterHandedness: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  });
+  const [session, setSession] = useState<Session>(createDefaultSession());
 
-  const [events, setEvents] = useState<AnalysisEvent[]>([]);
+  const [events, setEvents] = useState<TaggedEvent[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [atBats, setAtBats] = useState<AtBat[]>([]);
+  const [currentPitcherId, setCurrentPitcherId] = useState<string | null>(null);
+  const [currentBatterId, setCurrentBatterId] = useState<string | null>(null);
+  const [activeAtBatId, setActiveAtBatId] = useState<string | null>(null);
   const [countBalls, setCountBalls] = useState<number | null>(null);
   const [countStrikes, setCountStrikes] = useState<number | null>(null);
 
-  const [currentPitchResult, setCurrentPitchResult] = useState<AnalysisEvent["pitchResult"]>(null);
-  const [currentPitchLocationZone, setCurrentPitchLocationZone] = useState<AnalysisEvent["pitchLocationZone"]>(null);
+  const [currentPitchResult, setCurrentPitchResult] = useState<TaggedEvent["pitchResult"]>(null);
+  const [currentPitchLocation, setCurrentPitchLocation] = useState<TaggedEvent["pitchLocation"]>(null);
   const [currentPitchLocationLabel, setCurrentPitchLocationLabel] = useState<string | null>(null);
-  const [currentContactDirection, setCurrentContactDirection] = useState<AnalysisEvent["contactDirection"]>(null);
-  const [currentContactQuality, setCurrentContactQuality] = useState<AnalysisEvent["contactQuality"]>(null);
-  const [currentResult, setCurrentResult] = useState<AnalysisEvent["result"]>(null);
+  const [currentContactType, setCurrentContactType] = useState<TaggedEvent["contactType"]>(null);
+  const [currentContactQuality, setCurrentContactQuality] = useState<TaggedEvent["contactQuality"]>(null);
+  const [currentPlayResult, setCurrentPlayResult] = useState<TaggedEvent["playResult"]>(null);
   
-  const [currentPitchType, setCurrentPitchType] = useState<AnalysisEvent["pitchType"]>(null);
-  const [currentVelocity, setCurrentVelocity] = useState<AnalysisEvent["velocity"]>(null);
-  const [currentArmSlot, setCurrentArmSlot] = useState<AnalysisEvent["armSlot"]>(null);
-
+  const [currentPitchType, setCurrentPitchType] = useState<TaggedEvent["pitchType"]>(null);
+  
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [exportMessage, setExportMessage] = useState("");
   const [videoMessage, setVideoMessage] = useState("");
@@ -208,11 +202,11 @@ export default function AnalysePage() {
     [filteredReviewEvents]
   );
 
-  const sessionLabel = session.sessionName.trim() || "session";
+  const sessionLabel = session.name.trim() || "session";
   const csvFileName = `${sessionLabel}-events.csv`;
   const jsonFileName = `${sessionLabel}-events.json`;
-  const csvContent = useMemo(() => `\uFEFF${toCsv(session, sortedEvents)}`, [session, sortedEvents]);
-  const jsonContent = useMemo(() => toJson(session, sortedEvents), [session, sortedEvents]);
+  const csvContent = useMemo(() => `\uFEFF${toCsv(session, players, atBats, sortedEvents)}`, [session, players, atBats, sortedEvents]);
+  const jsonContent = useMemo(() => toJson(session, players, [], atBats, sortedEvents), [session, players, atBats, sortedEvents]);
 
   // ---------------------------------------------------------------------------
   // Recovery
@@ -236,11 +230,19 @@ export default function AnalysePage() {
   useEffect(() => {
     if (!isDirty || hasRecoveryData) return;
     const timer = setTimeout(() => {
-      const recoveryData = { session, events };
+      const recoveryData = {
+        session,
+        events,
+        players,
+        atBats,
+        currentPitcherId,
+        currentBatterId,
+        activeAtBatId
+      };
       localStorage.setItem(RECOVERY_KEY, JSON.stringify(recoveryData));
     }, 750);
     return () => clearTimeout(timer);
-  }, [session, events, isDirty, hasRecoveryData]);
+  }, [session, events, players, atBats, currentPitcherId, currentBatterId, activeAtBatId, isDirty, hasRecoveryData]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -285,7 +287,7 @@ export default function AnalysePage() {
    * Returns a Promise that resolves when the clip is finished (stopped or ended).
    */
   const playClipForEvent = useCallback(
-    (event: AnalysisEvent): Promise<void> => {
+    (event: TaggedEvent): Promise<void> => {
       return new Promise((resolve) => {
         const video = videoRef.current;
         if (!video) {
@@ -366,7 +368,7 @@ export default function AnalysePage() {
    * - A shared `cancelled` ref allows any external stop to short-circuit the loop.
    */
   async function runPlaylist(
-    events: AnalysisEvent[],
+    events: TaggedEvent[],
     cancelledRef: { current: boolean }
   ): Promise<void> {
     for (let i = 0; i < events.length; i++) {
@@ -513,7 +515,7 @@ export default function AnalysePage() {
   // Review navigation
   // ---------------------------------------------------------------------------
 
-  function handleSelectReviewEvent(event: AnalysisEvent): void {
+  function handleSelectReviewEvent(event: TaggedEvent): void {
     setSelectedReviewEventId(event.id);
     if (videoRef.current) {
       videoRef.current.currentTime = event.timestampSeconds;
@@ -534,8 +536,62 @@ export default function AnalysePage() {
   // Session helpers
   // ---------------------------------------------------------------------------
 
-  function updateSession(updates: Partial<SessionMetadata>) {
+  function updateSession(updates: Partial<Session>) {
     setSession((prev) => ({ ...prev, ...updates, updatedAt: new Date().toISOString() }));
+    setIsDirty(true);
+  }
+
+  function handleAddPlayer(name: string, teamSide: TeamSide) {
+    const player = createPlayer(session.id, name, teamSide);
+    setPlayers((prev) => [...prev, player]);
+    setIsDirty(true);
+  }
+
+  function handleRemovePlayer(playerId: string) {
+    const inUse = events.some((e) => e.playerId === playerId || e.relatedPlayerId === playerId) ||
+                  atBats.some((ab) => ab.pitcherId === playerId || ab.batterId === playerId) ||
+                  currentPitcherId === playerId ||
+                  currentBatterId === playerId;
+    if (inUse) {
+      alert("Cannot remove player because they are currently associated with an at-bat or tagged event.");
+      return;
+    }
+    setPlayers((prev) => prev.filter((p) => p.id !== playerId));
+    setIsDirty(true);
+  }
+
+  function handleStartAtBat() {
+    if (!currentPitcherId || !currentBatterId) return;
+    const pitcher = players.find((p) => p.id === currentPitcherId);
+    const batter = players.find((p) => p.id === currentBatterId);
+    if (!pitcher || !batter) return;
+
+    const timestampSeconds = videoRef.current ? videoRef.current.currentTime : 0;
+    const newAtBat = createAtBat(
+      session.id,
+      currentBatterId,
+      currentPitcherId,
+      batter.teamSide,
+      pitcher.teamSide,
+      timestampSeconds
+    );
+    setAtBats((prev) => [...prev, newAtBat]);
+    setActiveAtBatId(newAtBat.id);
+    setIsDirty(true);
+  }
+
+  function handleEndAtBat() {
+    if (!activeAtBatId) return;
+    const timestampSeconds = videoRef.current ? videoRef.current.currentTime : 0;
+    setAtBats((prev) =>
+      prev.map((ab) => {
+        if (ab.id === activeAtBatId) {
+          return { ...ab, endTimestampSeconds: timestampSeconds };
+        }
+        return ab;
+      })
+    );
+    setActiveAtBatId(null);
     setIsDirty(true);
   }
 
@@ -548,12 +604,12 @@ export default function AnalysePage() {
 
     if (!file) {
       setVideoUrl(null);
-      updateSession({ videoFileName: null });
+      setVideoUrl(null);
       return;
     }
     setVideoUrl(URL.createObjectURL(file));
 
-    const expected = session.videoFileName;
+    const expected = "";
     if (expected) {
       const result = compareVideoFileNames(expected, file.name);
       setVideoMessage(result.message);
@@ -561,7 +617,7 @@ export default function AnalysePage() {
       setVideoMessage("");
     }
 
-    updateSession({ videoFileName: file.name });
+    
   }
 
   function handleTagClick(tag: TagDefinition): void {
@@ -569,27 +625,30 @@ export default function AnalysePage() {
 
     const timestampSeconds = videoRef.current.currentTime;
     const countLabel = countBalls !== null && countStrikes !== null ? `${countBalls}-${countStrikes}` : null;
-    const newEvent: AnalysisEvent = {
-      id: crypto.randomUUID(),
+    const batter = players.find((p) => p.id === currentBatterId);
+    const teamSide = batter ? batter.teamSide : null;
+
+    const newEvent: TaggedEvent = createTaggedEvent({
+      sessionId: session.id,
+      videoSourceId: null,
+      atBatId: activeAtBatId,
+      eventRole: "batter",
+      playerId: currentBatterId,
+      relatedPlayerId: currentPitcherId,
+      teamSide,
       timestampSeconds,
       timestampLabel: formatTimestampLabel(timestampSeconds),
-      tagId: tag.id,
-      tagLabel: tag.label,
+      tag: tag.id,
       category: tag.category,
       note: "",
-      count: countLabel,
+      pitchCount: countLabel,
       pitchResult: currentPitchResult,
-      pitchLocationZone: currentPitchLocationZone,
-      pitchLocationLabel: currentPitchLocationLabel,
-      batterHandedness: session.batterHandedness,
-      contactDirection: currentContactDirection,
-      contactQuality: currentContactQuality,
-      result: currentResult,
+      pitchLocation: currentPitchLocation,
       pitchType: currentPitchType,
-      velocity: currentVelocity,
-      armSlot: currentArmSlot,
-      createdAt: new Date().toISOString()
-    };
+      contactType: currentContactType,
+      contactQuality: currentContactQuality,
+      playResult: currentPlayResult
+    });
 
     setEvents((previous) => [...previous, newEvent]);
     setIsDirty(true);
@@ -601,7 +660,7 @@ export default function AnalysePage() {
     videoRef.current.focus();
   }
 
-  function handleUpdateEvent(updatedEvent: AnalysisEvent): void {
+  function handleUpdateEvent(updatedEvent: TaggedEvent): void {
     setEvents((previous) =>
       previous.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
     );
@@ -680,6 +739,11 @@ export default function AnalysePage() {
     if (recoverySnapshot) {
       setSession(recoverySnapshot.session);
       setEvents(recoverySnapshot.events);
+      setPlayers(recoverySnapshot.players || []);
+      setAtBats(recoverySnapshot.atBats || []);
+      setCurrentPitcherId(recoverySnapshot.currentPitcherId || null);
+      setCurrentBatterId(recoverySnapshot.currentBatterId || null);
+      setActiveAtBatId(recoverySnapshot.activeAtBatId || null);
       setIsDirty(true);
       setSelectedReviewEventId(null);
       setReviewFilters(emptyFilters());
@@ -708,13 +772,18 @@ export default function AnalysePage() {
         const parsed = parseImportedSession(text);
         setSession(parsed.session);
         setEvents(parsed.events);
+        setPlayers(parsed.players || []);
+        setAtBats(parsed.atBats || []);
+        setCurrentPitcherId(null);
+        setCurrentBatterId(null);
+        setActiveAtBatId(null);
         setIsDirty(false);
         setSelectedReviewEventId(null);
         setReviewFilters(emptyFilters());
         // Clear stale comparison session when active session is replaced
         setComparisonSession(null);
         stopPlaylist();
-        setExportMessage(`Imported ${file.name}. Select the original video file (${parsed.session.videoFileName || "unknown"}) to resume playback.`);
+        setExportMessage(`Imported ${file.name}. Select the original video file (unknown) to resume playback.`);
       } catch (err: any) {
         setExportMessage(`Import failed: ${err.message}`);
       }
@@ -733,7 +802,7 @@ export default function AnalysePage() {
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
           <h2 className="mb-2 text-xl font-bold">Unfinished Session Found</h2>
           <p className="mb-4">
-            {recoverySnapshot?.session?.playerName || "Unknown Player"} — {recoverySnapshot?.session?.sessionName || "Unnamed Session"}
+            {recoverySnapshot?.session?.context || "Unknown Player"} — {recoverySnapshot?.session?.name || "Unnamed Session"}
             <br />
             Last saved: {new Date(recoverySnapshot?.session?.updatedAt || Date.now()).toLocaleString()}
           </p>
@@ -829,26 +898,31 @@ export default function AnalysePage() {
       </div>
 
       {/* Session Details — always visible */}
-      <SessionDetails
-        playerName={session.playerName}
-        sessionName={session.sessionName}
-        sessionDate={session.sessionDate}
-        opponent={session.opponent || ""}
-        batterHandedness={session.batterHandedness}
-        sessionType={session.sessionType || "batter"}
-        onPlayerNameChange={(v) => updateSession({ playerName: v })}
-        onSessionNameChange={(v) => updateSession({ sessionName: v })}
-        onSessionDateChange={(v) => updateSession({ sessionDate: v })}
-        onOpponentChange={(v) => updateSession({ opponent: v })}
-        onBatterHandednessChange={(v) => updateSession({ batterHandedness: v })}
-        onSessionTypeChange={(v) => updateSession({ sessionType: v })}
-      />
+      <SessionDetails session={session} onUpdateSession={(updates) => setSession((s) => ({ ...s, ...updates, updatedAt: new Date().toISOString() }))} />
 
       {/* ================================================================ */}
       {/* TAGGING MODE                                                     */}
       {/* ================================================================ */}
       {mode === "tagging" && (
         <>
+          <div className="grid gap-4 md:grid-cols-2 mb-4">
+            <PlayersList
+              players={players}
+              onAddPlayer={handleAddPlayer}
+              onRemovePlayer={handleRemovePlayer}
+            />
+            <AtBatControls
+              players={players}
+              currentPitcherId={currentPitcherId}
+              currentBatterId={currentBatterId}
+              onPitcherChange={setCurrentPitcherId}
+              onBatterChange={setCurrentBatterId}
+              onStartAtBat={handleStartAtBat}
+              hasActiveAtBat={!!activeAtBatId}
+              onEndAtBat={handleEndAtBat}
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <CountSelector
               balls={countBalls}
@@ -863,34 +937,15 @@ export default function AnalysePage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <PitchLocationSelector
-              value={currentPitchLocationZone}
-              batterHandedness={session.batterHandedness}
-              onChange={(zoneId, label) => {
-                setCurrentPitchLocationZone(zoneId);
-                setCurrentPitchLocationLabel(label);
-              }}
-            />
-            <ContactContextSelector
-              contactDirection={currentContactDirection}
-              contactQuality={currentContactQuality}
-              result={currentResult}
-              onContactDirectionChange={setCurrentContactDirection}
-              onContactQualityChange={setCurrentContactQuality}
-              onResultChange={setCurrentResult}
-            />
-            {session.sessionType === "pitcher" && (
+            <PitchLocationSelector value={currentPitchLocation} onChange={(zoneId, label) => { setCurrentPitchLocation(zoneId); setCurrentPitchLocationLabel(label); }} />
+            <ContactContextSelector contactType={currentContactType} contactQuality={currentContactQuality} playResult={currentPlayResult} onContactTypeChange={setCurrentContactType} onContactQualityChange={setCurrentContactQuality} onPlayResultChange={setCurrentPlayResult} />
+            {session.sessionType === "player" && (
               <>
                 <PitchTypeSelector
                   value={currentPitchType}
                   onChange={setCurrentPitchType}
                 />
-                <PitcherContextSelector
-                  velocity={currentVelocity}
-                  armSlot={currentArmSlot}
-                  onVelocityChange={setCurrentVelocity}
-                  onArmSlotChange={setCurrentArmSlot}
-                />
+                
               </>
             )}
           </div>
@@ -902,8 +957,8 @@ export default function AnalysePage() {
         <VideoPlayer
           videoRef={videoRef}
           videoUrl={videoUrl}
-          selectedFileName={videoUrl ? (session.videoFileName || "") : null}
-          expectedVideoFileName={session.videoFileName}
+          selectedFileName={null}
+          
           videoMessage={videoMessage}
           onSelectFile={handleSelectFile}
         />

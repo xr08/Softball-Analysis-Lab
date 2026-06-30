@@ -1,8 +1,8 @@
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type PitchResultSelectorProps = {
-  value: AnalysisEvent["pitchResult"];
-  onChange: (value: AnalysisEvent["pitchResult"]) => void;
+  value: TaggedEvent["pitchResult"];
+  onChange: (value: TaggedEvent["pitchResult"]) => void;
 };
 
 export function PitchResultSelector({ value, onChange }: PitchResultSelectorProps) {
@@ -15,7 +15,7 @@ export function PitchResultSelector({ value, onChange }: PitchResultSelectorProp
           value={value || ""}
           onChange={(event) => {
             const val = event.target.value;
-            onChange(val === "" ? null : (val as AnalysisEvent["pitchResult"]));
+            onChange(val === "" ? null : (val as TaggedEvent["pitchResult"]));
           }}
           className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
         >

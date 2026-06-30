@@ -1,10 +1,10 @@
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 import { TimelineEventItem } from "./TimelineEventItem";
 
 type TimelineProps = {
-  events: AnalysisEvent[];
+  events: TaggedEvent[];
   onSeek: (timestampSeconds: number) => void;
-  onUpdateEvent: (updatedEvent: AnalysisEvent) => void;
+  onUpdateEvent: (updatedEvent: TaggedEvent) => void;
   onDeleteEvent: (id: string) => void;
   /** ID of the event currently selected in Review mode, or null */
   selectedReviewEventId?: string | null;

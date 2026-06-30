@@ -1,9 +1,8 @@
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type PitchLocationSelectorProps = {
-  value: AnalysisEvent["pitchLocationZone"];
-  batterHandedness: AnalysisEvent["batterHandedness"];
-  onChange: (zoneId: AnalysisEvent["pitchLocationZone"], label: string | null) => void;
+  value: TaggedEvent["pitchLocation"];
+  onChange: (zoneId: TaggedEvent["pitchLocation"], label: string | null) => void;
 };
 
 const ZONES = [
@@ -18,8 +17,8 @@ const ZONES = [
   { id: "zone_9", label: "Zone 9" },
 ] as const;
 
-export function PitchLocationSelector({ value, batterHandedness, onChange }: PitchLocationSelectorProps) {
-  const isLeftHanded = batterHandedness === "left";
+export function PitchLocationSelector({ value, onChange }: PitchLocationSelectorProps) {
+  const isLeftHanded = false;
   const leftId = isLeftHanded ? "outside" : "inside";
   const rightId = isLeftHanded ? "inside" : "outside";
   const leftLabel = isLeftHanded ? "Outside" : "Inside";

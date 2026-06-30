@@ -1,4 +1,4 @@
-import { AnalysisEvent, ExportedSession, SessionMetadata } from "./types";
+import { ExportedSession, Session, Player, AtBat, VideoSource, TaggedEvent } from "./types";
 
 function escapeCsvValue(value: string | number | null | undefined): string {
   if (value === null || value === undefined) {
@@ -8,31 +8,32 @@ function escapeCsvValue(value: string | number | null | undefined): string {
   return `"${escaped}"`;
 }
 
-export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string {
+export function toCsv(
+  session: Session,
+  players: Player[],
+  atBats: AtBat[],
+  events: TaggedEvent[]
+): string {
   const headers = [
     "sessionId",
-    "playerName",
     "sessionName",
     "sessionDate",
     "opponent",
-    "videoFileName",
     "timestampSeconds",
     "timestampLabel",
-    "tagId",
-    "tagLabel",
+    "eventRole",
+    "playerId",
+    "relatedPlayerId",
+    "teamSide",
+    "tag",
     "category",
-    "balls",
-    "strikes",
+    "pitchCount",
     "pitchResult",
-    "pitchLocationZone",
-    "pitchLocationLabel",
-    "batterHandedness",
-    "contactDirection",
-    "contactQuality",
-    "result",
+    "pitchLocation",
     "pitchType",
-    "velocity",
-    "armSlot",
+    "contactType",
+    "contactQuality",
+    "playResult",
     "note",
     "source",
     "reviewStatus",
@@ -40,43 +41,29 @@ export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string
   ];
 
   const rows = events.map((event) => {
-    let balls = null;
-    let strikes = null;
-    if (event.count) {
-      const parts = event.count.split("-");
-      if (parts.length === 2) {
-        balls = parts[0];
-        strikes = parts[1];
-      }
-    }
-
     return [
-      session.sessionId,
-      session.playerName,
-      session.sessionName,
-      session.sessionDate,
-      session.opponent,
-      session.videoFileName,
+      session.id,
+      session.name,
+      session.date,
+      session.context,
       event.timestampSeconds.toString(),
       event.timestampLabel,
-      event.tagId,
-      event.tagLabel,
+      event.eventRole,
+      event.playerId,
+      event.relatedPlayerId,
+      event.teamSide,
+      event.tag,
       event.category,
-      balls,
-      strikes,
+      event.pitchCount,
       event.pitchResult,
-      event.pitchLocationZone,
-      event.pitchLocationLabel,
-      event.batterHandedness,
-      event.contactDirection,
-      event.contactQuality,
-      event.result,
+      event.pitchLocation,
       event.pitchType,
-      event.velocity,
-      event.armSlot,
+      event.contactType,
+      event.contactQuality,
+      event.playResult,
       event.note,
-      "manual", // source
-      "unreviewed", // review status
+      event.source,
+      event.reviewStatus,
       event.createdAt
     ]
       .map(escapeCsvValue)
@@ -86,11 +73,19 @@ export function toCsv(session: SessionMetadata, events: AnalysisEvent[]): string
   return [headers.join(","), ...rows].join("\n");
 }
 
-export function toJson(session: SessionMetadata, events: AnalysisEvent[]): string {
+export function toJson(
+  session: Session,
+  players: Player[],
+  videoSources: VideoSource[],
+  atBats: AtBat[],
+  events: TaggedEvent[]
+): string {
   const exportedData: ExportedSession = {
-    schemaVersion: "1.2",
-    exportedAt: new Date().toISOString(),
+    schemaVersion: "2.0",
     session,
+    players,
+    videoSources,
+    atBats,
     events
   };
   return JSON.stringify(exportedData, null, 2);
@@ -104,43 +99,9 @@ export function parseImportedSession(text: string): ExportedSession {
   if (parsed.reportFormat) {
     throw new Error("This is a Report JSON file, which cannot be imported as a session. Please select a Session JSON file.");
   }
-  if (parsed.schemaVersion !== "1.0" && parsed.schemaVersion !== "1.1" && parsed.schemaVersion !== "1.2") {
-    throw new Error(`Unsupported schema version: ${parsed.schemaVersion || "none"}`);
-  }
-  if (!parsed.session || typeof parsed.session !== "object") {
-    throw new Error("Missing session metadata");
-  }
-  if (!Array.isArray(parsed.events)) {
-    throw new Error("Missing or invalid events array");
+  if (parsed.schemaVersion !== "2.0") {
+    throw new Error(`Unsupported legacy schema version: ${parsed.schemaVersion || "none"}. This app requires schema version 2.0.`);
   }
 
-  // Migrate schema 1.0 to 1.1
-  const migratedSession = {
-    ...parsed.session,
-    sessionType: parsed.session.sessionType || "batter",
-    batterHandedness: parsed.session.batterHandedness ?? null,
-  };
-
-  const migratedEvents = parsed.events.map((event: any) => ({
-    ...event,
-    pitchResult: event.pitchResult ?? null,
-    pitchLocationZone: event.pitchLocationZone ?? null,
-    pitchLocationLabel: event.pitchLocationLabel ?? null,
-    batterHandedness: event.batterHandedness ?? null,
-    contactDirection: event.contactDirection ?? null,
-    contactQuality: event.contactQuality ?? null,
-    result: event.result ?? null,
-    pitchType: event.pitchType ?? null,
-    velocity: event.velocity ?? null,
-    armSlot: event.armSlot ?? null,
-  }));
-
-  return {
-    schemaVersion: "1.2",
-    exportedAt: parsed.exportedAt || new Date().toISOString(),
-    session: migratedSession,
-    events: migratedEvents
-  } as ExportedSession;
+  return parsed as ExportedSession;
 }
-
-

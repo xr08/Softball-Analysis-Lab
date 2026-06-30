@@ -8,7 +8,7 @@ import {
   applyPreset,
   hasActiveFilters
 } from "@/lib/analysis/review";
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type ReviewFiltersProps = {
   filters: ReviewFiltersType;
@@ -70,7 +70,7 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
     return acc;
   }, {});
 
-  const PITCH_RESULTS: Array<{ value: AnalysisEvent["pitchResult"]; label: string }> = [
+  const PITCH_RESULTS: Array<{ value: TaggedEvent["pitchResult"]; label: string }> = [
     { value: "called_strike", label: "Called Strike" },
     { value: "swinging_strike", label: "Swinging Strike" },
     { value: "foul", label: "Foul" },
@@ -79,7 +79,7 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
     { value: "hit_by_pitch", label: "Hit by Pitch" }
   ];
 
-  const ZONES: Array<{ value: AnalysisEvent["pitchLocationZone"]; label: string }> = [
+  const ZONES: Array<{ value: TaggedEvent["pitchLocation"]; label: string }> = [
     { value: "zone_1", label: "Z1" }, { value: "zone_2", label: "Z2" }, { value: "zone_3", label: "Z3" },
     { value: "zone_4", label: "Z4" }, { value: "zone_5", label: "Z5" }, { value: "zone_6", label: "Z6" },
     { value: "zone_7", label: "Z7" }, { value: "zone_8", label: "Z8" }, { value: "zone_9", label: "Z9" },
@@ -87,19 +87,19 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
     { value: "inside", label: "Inside" }, { value: "outside", label: "Outside" }
   ];
 
-  const CONTACT_DIRECTIONS: Array<{ value: AnalysisEvent["contactDirection"]; label: string }> = [
+  const CONTACT_DIRECTIONS: Array<{ value: TaggedEvent["contactType"]; label: string }> = [
     { value: "pull", label: "Pull" },
     { value: "middle", label: "Middle" },
     { value: "opposite", label: "Opposite" }
   ];
 
-  const CONTACT_QUALITIES: Array<{ value: AnalysisEvent["contactQuality"]; label: string }> = [
+  const CONTACT_QUALITIES: Array<{ value: TaggedEvent["contactQuality"]; label: string }> = [
     { value: "hard", label: "Hard" },
     { value: "medium", label: "Medium" },
     { value: "weak", label: "Weak" }
   ];
 
-  const AT_BAT_RESULTS: Array<{ value: AnalysisEvent["result"]; label: string }> = [
+  const AT_BAT_RESULTS: Array<{ value: TaggedEvent["playResult"]; label: string }> = [
     { value: "single", label: "Single" },
     { value: "double", label: "Double" },
     { value: "triple", label: "Triple" },
@@ -230,18 +230,7 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           </div>
         </div>
 
-        {/* Batter handedness */}
-        <FilterSection label="Batter Handedness">
-          {(["right", "left", null] as Array<"right" | "left" | null>).map((val) => (
-            <ToggleButton
-              key={String(val)}
-              active={filters.batterHandedness.includes(val)}
-              onClick={() => onChange({ ...filters, batterHandedness: toggleInArray(filters.batterHandedness, val) })}
-            >
-              {val === null ? "Unknown" : val === "right" ? "Right-handed" : "Left-handed"}
-            </ToggleButton>
-          ))}
-        </FilterSection>
+
 
         {/* Contact direction */}
         <FilterSection label="Contact Direction">

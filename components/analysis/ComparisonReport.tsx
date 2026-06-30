@@ -115,8 +115,8 @@ function ComparisonTableSection({
 export function ComparisonReport({ comparison }: ComparisonReportProps) {
   const { sessionA, sessionB, warnings, totalEvents } = comparison;
 
-  const aName = sessionA.session.sessionName || "Session A";
-  const bName = sessionB.session.sessionName || "Session B";
+  const aName = sessionA.session.name || "Session A";
+  const bName = sessionB.session.name || "Session B";
 
   return (
     <div className="space-y-4 print-area">
@@ -135,7 +135,7 @@ export function ComparisonReport({ comparison }: ComparisonReportProps) {
           <p className="text-xs font-semibold text-emerald-800">Session A</p>
           <p className="mt-0.5 text-sm font-bold text-emerald-900">{aName}</p>
           <p className="text-xs text-emerald-700">
-            {sessionA.session.playerName || "Unknown"} · {sessionA.session.sessionDate || "No date"}
+
           </p>
           <p className="mt-1 text-xs text-emerald-700">
             <strong>{sessionA.totalEvents}</strong> event{sessionA.totalEvents === 1 ? "" : "s"}
@@ -145,7 +145,7 @@ export function ComparisonReport({ comparison }: ComparisonReportProps) {
           <p className="text-xs font-semibold text-sky-800">Session B</p>
           <p className="mt-0.5 text-sm font-bold text-sky-900">{bName}</p>
           <p className="text-xs text-sky-700">
-            {sessionB.session.playerName || "Unknown"} · {sessionB.session.sessionDate || "No date"}
+
           </p>
           <p className="mt-1 text-xs text-sky-700">
             <strong>{sessionB.totalEvents}</strong> event{sessionB.totalEvents === 1 ? "" : "s"}

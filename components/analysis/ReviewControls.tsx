@@ -1,10 +1,10 @@
 "use client";
 
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type ReviewControlsProps = {
   /** All events that match the current filters */
-  filteredEvents: AnalysisEvent[];
+  filteredEvents: TaggedEvent[];
   /** Currently selected review event ID, or null */
   selectedEventId: string | null;
   /** Whether a video is connected */
@@ -17,7 +17,7 @@ type ReviewControlsProps = {
   isPlayingPlaylist: boolean;
   /** 0-based index of the event currently being played in the playlist */
   playlistIndex: number | null;
-  onSelectEvent: (event: AnalysisEvent) => void;
+  onSelectEvent: (event: TaggedEvent) => void;
   onPrev: () => void;
   onNext: () => void;
   onPlayClip: () => void;

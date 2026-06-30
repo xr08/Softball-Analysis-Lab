@@ -1,21 +1,21 @@
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type ContactContextSelectorProps = {
-  contactDirection: AnalysisEvent["contactDirection"];
-  contactQuality: AnalysisEvent["contactQuality"];
-  result: AnalysisEvent["result"];
-  onContactDirectionChange: (val: AnalysisEvent["contactDirection"]) => void;
-  onContactQualityChange: (val: AnalysisEvent["contactQuality"]) => void;
-  onResultChange: (val: AnalysisEvent["result"]) => void;
+  contactType: TaggedEvent["contactType"];
+  contactQuality: TaggedEvent["contactQuality"];
+  playResult: TaggedEvent["playResult"];
+  onContactTypeChange: (val: TaggedEvent["contactType"]) => void;
+  onContactQualityChange: (val: TaggedEvent["contactQuality"]) => void;
+  onPlayResultChange: (val: TaggedEvent["playResult"]) => void;
 };
 
 export function ContactContextSelector({
-  contactDirection,
+  contactType,
   contactQuality,
-  result,
-  onContactDirectionChange,
+  playResult,
+  onContactTypeChange,
   onContactQualityChange,
-  onResultChange,
+  onPlayResultChange,
 }: ContactContextSelectorProps) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -24,10 +24,10 @@ export function ContactContextSelector({
         <label className="flex flex-col gap-1 text-sm text-slate-700">
           Contact Direction
           <select
-            value={contactDirection || ""}
+            value={contactType || ""}
             onChange={(e) => {
               const val = e.target.value;
-              onContactDirectionChange(val === "" ? null : (val as AnalysisEvent["contactDirection"]));
+              onContactTypeChange(val === "" ? null : (val as TaggedEvent["contactType"]));
             }}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
@@ -44,7 +44,7 @@ export function ContactContextSelector({
             value={contactQuality || ""}
             onChange={(e) => {
               const val = e.target.value;
-              onContactQualityChange(val === "" ? null : (val as AnalysisEvent["contactQuality"]));
+              onContactQualityChange(val === "" ? null : (val as TaggedEvent["contactQuality"]));
             }}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
@@ -58,10 +58,10 @@ export function ContactContextSelector({
         <label className="flex flex-col gap-1 text-sm text-slate-700">
           At-Bat Result
           <select
-            value={result || ""}
+            value={playResult || ""}
             onChange={(e) => {
               const val = e.target.value;
-              onResultChange(val === "" ? null : (val as AnalysisEvent["result"]));
+              onPlayResultChange(val === "" ? null : (val as TaggedEvent["playResult"]));
             }}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >

@@ -8,7 +8,7 @@
  * and the VT-2 structured values already defined in types.ts.
  */
 
-import { AnalysisEvent } from "./types";
+import {TaggedEvent} from "./types";
 
 // ---------------------------------------------------------------------------
 // Filter state type
@@ -18,17 +18,17 @@ export type ReviewFilters = {
   /** Tag IDs — OR logic within the group */
   tagIds: string[];
   /** Pitch result values — OR logic within the group */
-  pitchResults: Array<AnalysisEvent["pitchResult"]>;
+  pitchResults: Array<TaggedEvent["pitchResult"]>;
   /** Pitch location zone values — OR logic within the group */
-  pitchLocationZones: Array<AnalysisEvent["pitchLocationZone"]>;
+  pitchLocationZones: Array<TaggedEvent["pitchLocation"]>;
   /** Contact direction values — OR logic within the group */
-  contactDirections: Array<AnalysisEvent["contactDirection"]>;
+  contactDirections: Array<TaggedEvent["contactType"]>;
   /** Contact quality values — OR logic within the group */
-  contactQualities: Array<AnalysisEvent["contactQuality"]>;
+  contactQualities: Array<TaggedEvent["contactQuality"]>;
   /** At-bat result values — OR logic within the group */
-  results: Array<AnalysisEvent["result"]>;
+  results: Array<TaggedEvent["playResult"]>;
   /** Batter handedness values — OR logic within the group (null = unknown) */
-  batterHandedness: Array<"right" | "left" | null>;
+
   /**
    * Count filter — balls component. null = not filtering on balls.
    * Valid live count values: 0–3 (per VT-2 constraint).
@@ -39,7 +39,7 @@ export type ReviewFilters = {
    * Valid live count values: 0–2 (per VT-2 constraint).
    */
   strikesFilter: number | null;
-  /** Case-insensitive text search across tagLabel and note */
+  /** Case-insensitive text search across tag and note */
   textSearch: string;
 };
 
@@ -71,8 +71,8 @@ export type ReviewPreset = {
  * VT-2 structured values referenced:
  *   pitchResult:   "ball_in_play"
  *   contactQuality: "hard"
- *   result:        "single"|"double"|"triple"|"home_run"
- *   result:        "field_out"|"strikeout"|"fielders_choice"
+ *   playResult:        "single"|"double"|"triple"|"home_run"
+ *   playResult:        "field_out"|"strikeout"|"fielders_choice"
  */
 export const REVIEW_PRESETS: ReviewPreset[] = [
   {
@@ -132,7 +132,7 @@ export function emptyFilters(): ReviewFilters {
     contactDirections: [],
     contactQualities: [],
     results: [],
-    batterHandedness: [],
+
     ballsFilter: null,
     strikesFilter: null,
     textSearch: ""
@@ -148,7 +148,7 @@ export function hasActiveFilters(filters: ReviewFilters): boolean {
     filters.contactDirections.length > 0 ||
     filters.contactQualities.length > 0 ||
     filters.results.length > 0 ||
-    filters.batterHandedness.length > 0 ||
+
     filters.ballsFilter !== null ||
     filters.strikesFilter !== null ||
     filters.textSearch.trim() !== ""
@@ -186,9 +186,9 @@ function parseCount(count: string | null): { balls: number; strikes: number } | 
  * - An empty group is ignored (passes all events through).
  * - Null/missing values can be explicitly filtered for by using `null` in a group array.
  */
-export function eventMatchesFilters(event: AnalysisEvent, filters: ReviewFilters): boolean {
+export function eventMatchesFilters(event: TaggedEvent, filters: ReviewFilters): boolean {
   // --- Tag IDs (OR) ---
-  if (filters.tagIds.length > 0 && !filters.tagIds.includes(event.tagId)) {
+  if (filters.tagIds.length > 0 && !filters.tagIds.includes(event.tag)) {
     return false;
   }
 
@@ -198,12 +198,12 @@ export function eventMatchesFilters(event: AnalysisEvent, filters: ReviewFilters
   }
 
   // --- Pitch location zone (OR) ---
-  if (filters.pitchLocationZones.length > 0 && !filters.pitchLocationZones.includes(event.pitchLocationZone)) {
+  if (filters.pitchLocationZones.length > 0 && !filters.pitchLocationZones.includes(event.pitchLocation)) {
     return false;
   }
 
   // --- Contact direction (OR) ---
-  if (filters.contactDirections.length > 0 && !filters.contactDirections.includes(event.contactDirection)) {
+  if (filters.contactDirections.length > 0 && !filters.contactDirections.includes(event.contactType)) {
     return false;
   }
 
@@ -213,17 +213,14 @@ export function eventMatchesFilters(event: AnalysisEvent, filters: ReviewFilters
   }
 
   // --- At-bat result (OR) ---
-  if (filters.results.length > 0 && !filters.results.includes(event.result)) {
+  if (filters.results.length > 0 && !filters.results.includes(event.playResult)) {
     return false;
   }
 
-  // --- Batter handedness (OR) ---
-  if (filters.batterHandedness.length > 0 && !filters.batterHandedness.includes(event.batterHandedness)) {
-    return false;
-  }
+
 
   // --- Count filter ---
-  const parsed = parseCount(event.count);
+  const parsed = parseCount(event.pitchCount);
   if (filters.ballsFilter !== null) {
     if (!parsed || parsed.balls !== filters.ballsFilter) return false;
   }
@@ -231,10 +228,10 @@ export function eventMatchesFilters(event: AnalysisEvent, filters: ReviewFilters
     if (!parsed || parsed.strikes !== filters.strikesFilter) return false;
   }
 
-  // --- Text search (case-insensitive substring across tagLabel and note) ---
+  // --- Text search (case-insensitive substring across tag and note) ---
   const search = filters.textSearch.trim().toLowerCase();
   if (search !== "") {
-    const haystack = `${event.tagLabel} ${event.note}`.toLowerCase();
+    const haystack = `${event.tag} ${event.note}`.toLowerCase();
     if (!haystack.includes(search)) return false;
   }
 
@@ -250,7 +247,7 @@ export function eventMatchesFilters(event: AnalysisEvent, filters: ReviewFilters
  * Tie-break by createdAt (ISO string comparison) then by id for full stability.
  * Never mutates the original array.
  */
-export function filterAndSortEvents(events: AnalysisEvent[], filters: ReviewFilters): AnalysisEvent[] {
+export function filterAndSortEvents(events: TaggedEvent[], filters: ReviewFilters): TaggedEvent[] {
   return events
     .filter((event) => eventMatchesFilters(event, filters))
     .sort((a, b) => {
@@ -269,7 +266,7 @@ export function filterAndSortEvents(events: AnalysisEvent[], filters: ReviewFilt
 /**
  * Returns the index of `eventId` in `filteredEvents`, or -1 if not found.
  */
-export function getFilteredIndex(filteredEvents: AnalysisEvent[], eventId: string | null): number {
+export function getFilteredIndex(filteredEvents: TaggedEvent[], eventId: string | null): number {
   if (!eventId) return -1;
   return filteredEvents.findIndex((e) => e.id === eventId);
 }
@@ -277,7 +274,7 @@ export function getFilteredIndex(filteredEvents: AnalysisEvent[], eventId: strin
 /**
  * Returns the event after the current one in the filtered list, or null if at the end.
  */
-export function getNextEvent(filteredEvents: AnalysisEvent[], currentId: string | null): AnalysisEvent | null {
+export function getNextEvent(filteredEvents: TaggedEvent[], currentId: string | null): TaggedEvent | null {
   const index = getFilteredIndex(filteredEvents, currentId);
   if (index < 0 || index >= filteredEvents.length - 1) return null;
   return filteredEvents[index + 1];
@@ -286,7 +283,7 @@ export function getNextEvent(filteredEvents: AnalysisEvent[], currentId: string 
 /**
  * Returns the event before the current one in the filtered list, or null if at the start.
  */
-export function getPrevEvent(filteredEvents: AnalysisEvent[], currentId: string | null): AnalysisEvent | null {
+export function getPrevEvent(filteredEvents: TaggedEvent[], currentId: string | null): TaggedEvent | null {
   const index = getFilteredIndex(filteredEvents, currentId);
   if (index <= 0) return null;
   return filteredEvents[index - 1];
@@ -301,7 +298,7 @@ export function getPrevEvent(filteredEvents: AnalysisEvent[], currentId: string 
  * - If no events match → clear selection (return null).
  */
 export function resolveSelectedAfterFilterChange(
-  filteredEvents: AnalysisEvent[],
+  filteredEvents: TaggedEvent[],
   currentId: string | null
 ): string | null {
   if (filteredEvents.length === 0) return null;
@@ -353,7 +350,7 @@ const NOT_SET = "Not set";
  * Null/missing values are grouped under "Not set".
  * Never infers missing data.
  */
-export function getReviewSummary(filteredEvents: AnalysisEvent[]): ReviewSummary {
+export function getReviewSummary(filteredEvents: TaggedEvent[]): ReviewSummary {
   const pitchResults: Record<string, number> = {};
   const contactQualities: Record<string, number> = {};
   const pitchLocationZones: Record<string, number> = {};
@@ -366,10 +363,10 @@ export function getReviewSummary(filteredEvents: AnalysisEvent[]): ReviewSummary
     const cq = event.contactQuality ?? NOT_SET;
     contactQualities[cq] = (contactQualities[cq] ?? 0) + 1;
 
-    const pz = event.pitchLocationZone ?? NOT_SET;
+    const pz = event.pitchLocation ?? NOT_SET;
     pitchLocationZones[pz] = (pitchLocationZones[pz] ?? 0) + 1;
 
-    const res = event.result ?? NOT_SET;
+    const res = event.playResult ?? NOT_SET;
     results[res] = (results[res] ?? 0) + 1;
   }
 

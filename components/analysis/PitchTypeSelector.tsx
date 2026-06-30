@@ -1,8 +1,8 @@
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 
 type PitchTypeSelectorProps = {
-  value: AnalysisEvent["pitchType"];
-  onChange: (val: AnalysisEvent["pitchType"]) => void;
+  value: TaggedEvent["pitchType"];
+  onChange: (val: TaggedEvent["pitchType"]) => void;
 };
 
 const PITCH_TYPES = [
@@ -33,7 +33,7 @@ export function PitchTypeSelector({ value, onChange }: PitchTypeSelectorProps) {
           <button
             key={pt.id}
             type="button"
-            onClick={() => onChange(pt.id as AnalysisEvent["pitchType"])}
+            onClick={() => onChange(pt.id as TaggedEvent["pitchType"])}
             className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
               value === pt.id
                 ? "bg-emerald-500 text-white border-emerald-600"

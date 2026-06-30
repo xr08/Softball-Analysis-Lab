@@ -57,7 +57,7 @@ export function ComparisonSessionLoader({
     onClear();
   }
 
-  const isSameSession = comparisonSession?.session.sessionId === activeSessionId;
+  const isSameSession = comparisonSession?.session.id === activeSessionId;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
@@ -73,11 +73,11 @@ export function ComparisonSessionLoader({
           <div className="flex items-start justify-between gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
             <div>
               <p className="text-xs font-semibold text-emerald-800">
-                {comparisonSession.session.sessionName || "Unnamed Session"}
+                {comparisonSession.session.name || "Unnamed Session"}
               </p>
               <p className="text-[11px] text-emerald-700">
-                {comparisonSession.session.playerName || "Unknown Player"} ·{" "}
-                {comparisonSession.session.sessionDate || "No date"} ·{" "}
+
+                {comparisonSession.session.date || "No date"} ·{" "}
                 {comparisonSession.events.length} event
                 {comparisonSession.events.length === 1 ? "" : "s"}
               </p>

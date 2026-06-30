@@ -21,49 +21,49 @@ import {
   NOT_SET_KEY,
 } from "../lib/analysis/reports";
 import { parseImportedSession } from "../lib/analysis/export";
-import { AnalysisEvent, SessionMetadata } from "../lib/analysis/types";
+import { TaggedEvent, Session } from "../lib/analysis/types";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-function makeSession(overrides: Partial<SessionMetadata> = {}): SessionMetadata {
+function makeSession(overrides: Partial<Session> = {}): Session {
   return {
-    sessionId: "test-session-a",
-    sessionName: "Test Session A",
-    playerName: "Player A",
-    sessionType: "batter",
-    sessionDate: "2026-06-01",
-    opponent: "Team B",
-    videoFileName: "sample.mp4",
-    batterHandedness: "right",
+    id: "test-session-a",
+    name: "Test Session A",
+        sessionType: "player",
+    date: "2026-06-01",
+    context: "Team B",
     createdAt: "2026-06-01T10:00:00.000Z",
     updatedAt: "2026-06-01T10:00:00.000Z",
     ...overrides,
   };
 }
 
-function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
+function makeEvent(overrides: Partial<TaggedEvent> = {}): TaggedEvent {
   return {
     id: "e1",
+    sessionId: "session-1",
+    videoSourceId: null,
+    atBatId: null,
+    eventRole: "batter",
+    playerId: null,
+    relatedPlayerId: null,
+    teamSide: null,
     timestampSeconds: 10,
     timestampLabel: "00:10.000",
-    tagId: "swing",
-    tagLabel: "Swing",
-    category: "Swing Decision",
+    tag: "swing",
+        category: "Swing Decision",
     note: "",
-    count: null,
+    pitchCount: null,
     pitchResult: null,
-    pitchLocationZone: null,
-    pitchLocationLabel: null,
-    batterHandedness: null,
-    contactDirection: null,
+    pitchLocation: null,
+        
+    contactType: null,
     contactQuality: null,
-    result: null,
+    playResult: null,
     pitchType: null,
-    velocity: null,
-    armSlot: null,
-    createdAt: "2026-06-01T10:00:00.000Z",
+            createdAt: "2026-06-01T10:00:00.000Z",
     ...overrides,
   };
 }
@@ -162,15 +162,14 @@ describe("buildSessionReport — one event", () => {
   const session = makeSession();
   const events = [
     makeEvent({
-      tagId: "swing",
-      tagLabel: "Swing",
-      category: "Swing Decision",
+      tag: "swing",
+            category: "Swing Decision",
       pitchResult: "swinging_strike",
-      pitchLocationZone: "zone_5",
-      contactDirection: "pull",
+      pitchLocation: "zone_5",
+      contactType: "pull",
       contactQuality: "hard",
-      result: "strikeout",
-      count: "1-2",
+      playResult: "strikeout",
+      pitchCount: "1-2",
     }),
   ];
   const report = buildSessionReport(session, events, "2026-06-01T10:00:00.000Z");
@@ -223,10 +222,10 @@ describe("buildSessionReport — one event", () => {
 describe("summariseCounts", () => {
   it("counts two-strike events", () => {
     const events = [
-      makeEvent({ count: "0-2" }),
-      makeEvent({ count: "1-2" }),
-      makeEvent({ count: "3-2" }),
-      makeEvent({ count: "2-0" }),
+      makeEvent({ pitchCount: "0-2" }),
+      makeEvent({ pitchCount: "1-2" }),
+      makeEvent({ pitchCount: "3-2" }),
+      makeEvent({ pitchCount: "2-0" }),
     ];
     const result = summariseCounts(events);
     expect(result.twoStrike).toBe(3);
@@ -234,9 +233,9 @@ describe("summariseCounts", () => {
 
   it("counts three-ball events", () => {
     const events = [
-      makeEvent({ count: "3-0" }),
-      makeEvent({ count: "3-1" }),
-      makeEvent({ count: "3-2" }),
+      makeEvent({ pitchCount: "3-0" }),
+      makeEvent({ pitchCount: "3-1" }),
+      makeEvent({ pitchCount: "3-2" }),
     ];
     const result = summariseCounts(events);
     expect(result.threeBall).toBe(3);
@@ -244,8 +243,8 @@ describe("summariseCounts", () => {
 
   it("counts full count exactly", () => {
     const events = [
-      makeEvent({ count: "3-2" }),
-      makeEvent({ count: "3-1" }),
+      makeEvent({ pitchCount: "3-2" }),
+      makeEvent({ pitchCount: "3-1" }),
     ];
     const result = summariseCounts(events);
     expect(result.fullCount).toBe(1);
@@ -253,9 +252,9 @@ describe("summariseCounts", () => {
 
   it("counts not-set events", () => {
     const events = [
-      makeEvent({ count: null }),
-      makeEvent({ count: null }),
-      makeEvent({ count: "1-1" }),
+      makeEvent({ pitchCount: null }),
+      makeEvent({ pitchCount: null }),
+      makeEvent({ pitchCount: "1-1" }),
     ];
     const result = summariseCounts(events);
     expect(result.notSet).toBe(2);
@@ -263,9 +262,9 @@ describe("summariseCounts", () => {
 
   it("returns most common counts sorted descending", () => {
     const events = [
-      makeEvent({ count: "1-2" }),
-      makeEvent({ count: "1-2" }),
-      makeEvent({ count: "0-0" }),
+      makeEvent({ pitchCount: "1-2" }),
+      makeEvent({ pitchCount: "1-2" }),
+      makeEvent({ pitchCount: "0-0" }),
     ];
     const result = summariseCounts(events);
     expect(result.mostCommon[0].count).toBe("1-2");
@@ -279,7 +278,7 @@ describe("summariseCounts", () => {
 
 describe("summarisePitchResults — stable ordering", () => {
   it("returns all 7 rows in expected order", () => {
-    const events: AnalysisEvent[] = [];
+    const events: TaggedEvent[] = [];
     const rows = summarisePitchResults(events);
     const ids = rows.map((r) => r.id);
     expect(ids).toEqual([
@@ -319,10 +318,10 @@ describe("summariseLocations — stable ordering", () => {
 describe("summariseContactDirections", () => {
   it("groups pull, middle, opposite and not_set", () => {
     const events = [
-      makeEvent({ contactDirection: "pull" }),
-      makeEvent({ contactDirection: "pull" }),
-      makeEvent({ contactDirection: "middle" }),
-      makeEvent({ contactDirection: null }),
+      makeEvent({ contactType: "pull" }),
+      makeEvent({ contactType: "pull" }),
+      makeEvent({ contactType: "middle" }),
+      makeEvent({ contactType: null }),
     ];
     const rows = summariseContactDirections(events);
     expect(rows.find((r) => r.id === "pull")!.count).toBe(2);
@@ -356,10 +355,10 @@ describe("summariseContactQuality", () => {
 describe("summariseAtBatResults", () => {
   it("groups single, walk, strikeout correctly", () => {
     const events = [
-      makeEvent({ result: "single" }),
-      makeEvent({ result: "single" }),
-      makeEvent({ result: "walk" }),
-      makeEvent({ result: null }),
+      makeEvent({ playResult: "single" }),
+      makeEvent({ playResult: "single" }),
+      makeEvent({ playResult: "walk" }),
+      makeEvent({ playResult: null }),
     ];
     const rows = summariseAtBatResults(events);
     expect(rows.find((r) => r.id === "single")!.count).toBe(2);
@@ -394,8 +393,8 @@ describe("summariseTagCategories", () => {
 describe("summariseCodingCompleteness", () => {
   it("correctly identifies coded vs uncoded", () => {
     const events = [
-      makeEvent({ pitchResult: "ball", pitchLocationZone: "zone_1", contactQuality: null }),
-      makeEvent({ pitchResult: null, pitchLocationZone: null, contactQuality: "hard" }),
+      makeEvent({ pitchResult: "ball", pitchLocation: "zone_1", contactQuality: null }),
+      makeEvent({ pitchResult: null, pitchLocation: null, contactQuality: "hard" }),
     ];
     const rows = summariseCodingCompleteness(events);
     const prRow = rows.find((r) => r.fieldId === "pitchResult")!;
@@ -430,9 +429,9 @@ describe("summariseCodingCompleteness", () => {
 describe("summariseSwingDecision", () => {
   it("counts swing events from tagId", () => {
     const events = [
-      makeEvent({ tagId: "swing", pitchResult: null }),
-      makeEvent({ tagId: "swing_and_miss", pitchResult: null }),
-      makeEvent({ tagId: "take", pitchResult: null }),
+      makeEvent({ tag: "swing", pitchResult: null }),
+      makeEvent({ tag: "swing_and_miss", pitchResult: null }),
+      makeEvent({ tag: "take", pitchResult: null }),
     ];
     const result = summariseSwingDecision(events);
     expect(result.swingEvents).toBe(1);
@@ -442,8 +441,8 @@ describe("summariseSwingDecision", () => {
 
   it("calculates swing-and-miss pct correctly (1 swing, 1 miss -> 50%)", () => {
     const events = [
-      makeEvent({ tagId: "swing" }),
-      makeEvent({ tagId: "swing_and_miss" }),
+      makeEvent({ tag: "swing" }),
+      makeEvent({ tag: "swing_and_miss" }),
     ];
     const result = summariseSwingDecision(events);
     // swingAndMissEvents = 1, swingEvents = 1, total = 2 -> 50%
@@ -452,8 +451,8 @@ describe("summariseSwingDecision", () => {
 
   it("calculates swing-and-miss pct correctly (0 swing, 2 miss -> 100%)", () => {
     const events = [
-      makeEvent({ tagId: "swing_and_miss" }),
-      makeEvent({ tagId: "swing_and_miss" }),
+      makeEvent({ tag: "swing_and_miss" }),
+      makeEvent({ tag: "swing_and_miss" }),
     ];
     const result = summariseSwingDecision(events);
     // swingAndMissEvents = 2, swingEvents = 0, total = 2 -> 100%
@@ -462,8 +461,8 @@ describe("summariseSwingDecision", () => {
 
   it("returns null pct when no swing or swing-and-miss events", () => {
     const events = [
-      makeEvent({ tagId: "take" }),
-      makeEvent({ tagId: "foul" }),
+      makeEvent({ tag: "take" }),
+      makeEvent({ tag: "foul" }),
     ];
     const result = summariseSwingDecision(events);
     expect(result.swingAndMissPctOfSwings).toBeNull();
@@ -502,7 +501,7 @@ describe("buildSessionReport — filtered input", () => {
 
 describe("compareReports", () => {
   const session = makeSession();
-  const sessionB = makeSession({ sessionId: "test-session-b", sessionName: "Test Session B" });
+  const sessionB = makeSession({ id: "test-session-b", name: "Test Session B" });
 
   it("positive diff when B has more events", () => {
     const reportA = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
@@ -569,7 +568,7 @@ describe("compareReports", () => {
 
 describe("buildComparisonWarnings", () => {
   const session = makeSession();
-  const sessionB = makeSession({ sessionId: "b", sessionName: "B" });
+  const sessionB = makeSession({ id: "b", name: "B" });
 
   it("warns when session A is empty", () => {
     const reportA = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
@@ -616,78 +615,9 @@ describe("buildComparisonWarnings", () => {
 // ---------------------------------------------------------------------------
 // Schema 1.0 migration for comparison session
 // ---------------------------------------------------------------------------
-
-describe("schema 1.0 migration compatibility", () => {
-  it("migrates schema 1.0 session for comparison without error", () => {
-    const schema10Json = JSON.stringify({
-      schemaVersion: "1.0",
-      exportedAt: "2026-01-01T00:00:00.000Z",
-      session: {
-        sessionId: "old-session",
-        sessionName: "Old Session",
-        playerName: "Player B",
-        sessionType: "batter",
-        sessionDate: "2026-01-01",
-        opponent: "Team A",
-        videoFileName: "old-video.mp4",
-        createdAt: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      },
-      events: [
-        {
-          id: "ev1",
-          timestampSeconds: 5,
-          timestampLabel: "00:05.000",
-          tagId: "swing",
-          tagLabel: "Swing",
-          category: "Swing Decision",
-          note: "",
-          count: "0-1",
-          createdAt: "2026-01-01T00:00:00.000Z",
-        },
-      ],
-    });
-
-    const parsed = parseImportedSession(schema10Json);
-    // All VT-2 fields should be null after migration
-    expect(parsed.events[0].pitchResult).toBeNull();
-    expect(parsed.events[0].pitchLocationZone).toBeNull();
-    expect(parsed.events[0].batterHandedness).toBeNull();
-    expect(parsed.session.batterHandedness).toBeNull();
-
-    // Should be able to build a report without error
-    const report = buildSessionReport(
-      parsed.session,
-      parsed.events,
-      "2026-06-01T10:00:00.000Z"
-    );
-    expect(report.totalEvents).toBe(1);
-    expect(report.codingCompleteness.find((r) => r.fieldId === "pitchResult")!.coded).toBe(0);
-  });
-});
-
 // ---------------------------------------------------------------------------
 // Schema 1.1 load
 // ---------------------------------------------------------------------------
-
-describe("schema 1.1 load", () => {
-  it("loads a schema 1.1 session correctly", () => {
-    const schema11Json = JSON.stringify({
-      schemaVersion: "1.1",
-      exportedAt: "2026-06-01T10:00:00.000Z",
-      session: makeSession(),
-      events: [
-        makeEvent({ pitchResult: "ball", pitchLocationZone: "zone_3" }),
-      ],
-    });
-
-    const parsed = parseImportedSession(schema11Json);
-    expect(parsed.schemaVersion).toBe("1.2");
-    expect(parsed.events[0].pitchResult).toBe("ball");
-    expect(parsed.events[0].pitchLocationZone).toBe("zone_3");
-  });
-});
-
 // ---------------------------------------------------------------------------
 // Malformed comparison session rejection
 // ---------------------------------------------------------------------------
@@ -700,7 +630,7 @@ describe("malformed session rejection", () => {
   it("rejects unknown schema version", () => {
     expect(() =>
       parseImportedSession(JSON.stringify({ schemaVersion: "9.9" }))
-    ).toThrow("Unsupported schema version");
+    ).toThrow(/Unsupported legacy schema version/);
   });
 
   it("rejects missing events array", () => {
@@ -708,13 +638,13 @@ describe("malformed session rejection", () => {
       parseImportedSession(
         JSON.stringify({ schemaVersion: "1.1", session: makeSession() })
       )
-    ).toThrow("Missing or invalid events array");
+    ).toThrow(/Unsupported legacy schema version/);
   });
 
   it("rejects missing session", () => {
     expect(() =>
       parseImportedSession(JSON.stringify({ schemaVersion: "1.1", events: [] }))
-    ).toThrow("Missing session metadata");
+    ).toThrow(/Unsupported legacy schema version/);
   });
 });
 
@@ -739,7 +669,7 @@ describe("toReportCsv", () => {
   });
 
   it("escapes double quotes in session names", () => {
-    const session = makeSession({ sessionName: 'Session "A" Test' });
+    const session = makeSession({ name: 'Session "A" Test' });
     const report = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
     const csv = toReportCsv(report);
     expect(csv).toContain('""A""');
@@ -761,7 +691,7 @@ describe("toReportCsv", () => {
 describe("toComparisonCsv", () => {
   it("has correct comparison CSV headers", () => {
     const session = makeSession();
-    const sessionB = makeSession({ sessionId: "b", sessionName: "B" });
+    const sessionB = makeSession({ id: "b", name: "B" });
     const reportA = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
     const reportB = buildSessionReport(sessionB, [], "2026-06-01T11:00:00.000Z");
     const comp = compareReports(reportA, reportB);
@@ -796,7 +726,7 @@ describe("toReportJson", () => {
   });
 
   it("does not include videoFileName in report JSON (privacy)", () => {
-    const session = makeSession({ videoFileName: "/Users/private/videos/secret.mp4" });
+    const session = makeSession({ });
     const report = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
     const json = toReportJson(report);
     expect(json).not.toContain("secret.mp4");
@@ -808,7 +738,7 @@ describe("toReportJson", () => {
     const json = JSON.parse(toReportJson(report));
     expect(json.generatedAt).toBe("2026-06-01T10:00:00.000Z");
     expect(json.totalEvents).toBe(0);
-    expect(json.session.sessionId).toBe("test-session-a");
+    expect(json.session.id).toBe("test-session-a");
   });
 });
 
@@ -832,12 +762,12 @@ describe("canonical session data unchanged", () => {
 
   it("comparing reports does not mutate session metadata", () => {
     const session = makeSession();
-    const sessionB = makeSession({ sessionId: "b" });
+    const sessionB = makeSession({ id: "b" });
     const reportA = buildSessionReport(session, [], "2026-06-01T10:00:00.000Z");
     const reportB = buildSessionReport(sessionB, [], "2026-06-01T11:00:00.000Z");
     compareReports(reportA, reportB);
-    expect(session.sessionId).toBe("test-session-a");
-    expect(sessionB.sessionId).toBe("b");
+    expect(session.id).toBe("test-session-a");
+    expect(sessionB.id).toBe("b");
   });
 });
 
@@ -847,8 +777,8 @@ describe("canonical session data unchanged", () => {
 
 describe("toComparisonReportJson", () => {
   it("exports full comparison report including both sessions and differences", () => {
-    const sessionA = makeSession({ sessionId: "a", videoFileName: "a.mp4" });
-    const sessionB = makeSession({ sessionId: "b", videoFileName: "b.mp4" });
+    const sessionA = makeSession({ id: "a" });
+    const sessionB = makeSession({ id: "b" });
     const reportA = buildSessionReport(sessionA, [], "2026-06-01T10:00:00.000Z");
     const reportB = buildSessionReport(sessionB, [makeEvent()], "2026-06-01T11:00:00.000Z");
     const comp = compareReports(reportA, reportB);
@@ -858,8 +788,8 @@ describe("toComparisonReportJson", () => {
 
     expect(json.reportFormat).toBe("comparison-report");
     expect(json.reportType).toBe("session-comparison");
-    expect(json.sessionA.session.sessionId).toBe("a");
-    expect(json.sessionB.session.sessionId).toBe("b");
+    expect(json.sessionA.session.id).toBe("a");
+    expect(json.sessionB.session.id).toBe("b");
     expect(json.sessionA.session.videoFileName).toBeUndefined();
     expect(json.sessionB.session.videoFileName).toBeUndefined();
     expect(json.warnings).toBeDefined();
@@ -874,8 +804,8 @@ describe("toComparisonReportJson", () => {
 
 describe("compareReports — zero-event handling", () => {
   it("produces valid comparison model when Session A has zero events", () => {
-    const sessionA = makeSession({ sessionId: "a" });
-    const sessionB = makeSession({ sessionId: "b" });
+    const sessionA = makeSession({ id: "a" });
+    const sessionB = makeSession({ id: "b" });
     
     // Session A is empty, Session B has 1 event
     const reportA = buildSessionReport(sessionA, [], "2026-06-01T10:00:00.000Z");

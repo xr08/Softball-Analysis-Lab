@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnalysisEvent, ExportedSession, SessionMetadata } from "@/lib/analysis/types";
+import { TaggedEvent, ExportedSession, Session } from "@/lib/analysis/types";
 import {
   buildSessionReport,
   compareReports,
@@ -19,9 +19,9 @@ import { ComparisonSessionLoader } from "@/components/analysis/ComparisonSession
 type ReportScope = "all" | "filtered";
 
 type ReportsPanelProps = {
-  session: SessionMetadata;
-  allEvents: AnalysisEvent[];
-  filteredEvents: AnalysisEvent[];
+  session: Session;
+  allEvents: TaggedEvent[];
+  filteredEvents: TaggedEvent[];
   reviewFilters: ReviewFiltersType;
   comparisonSession: ExportedSession | null;
   onLoadComparisonSession: (s: ExportedSession) => void;
@@ -107,7 +107,7 @@ export function ReportsPanel({
     return compareReports(sessionReport, comparisonSessionReport);
   }, [sessionReport, comparisonSessionReport]);
 
-  const sessionLabel = session.sessionName.trim() || "session";
+  const sessionLabel = session.name.trim() || "session";
 
   function handleExportReportCsv() {
     if (view === "compare" && comparison) {
@@ -127,7 +127,7 @@ export function ReportsPanel({
 
   function handleExportReportJson() {
     if (view === "compare" && comparison) {
-      const bLabel = comparison.sessionB.session.sessionName.trim() || "session";
+      const bLabel = comparison.sessionB.session.name.trim() || "session";
       downloadFile(
         toComparisonReportJson(comparison),
         `${sessionLabel}-vs-${bLabel}.comparison-report.json`,
@@ -252,8 +252,8 @@ export function ReportsPanel({
       {/* ── Compare view: session loader ─────────────────────────────── */}
       {view === "compare" && (
         <ComparisonSessionLoader
-          activeSessionId={session.sessionId}
-          activeSessionName={session.sessionName}
+          activeSessionId={session.id}
+          activeSessionName={session.name}
           comparisonSession={comparisonSession}
           onLoad={onLoadComparisonSession}
           onClear={onClearComparisonSession}

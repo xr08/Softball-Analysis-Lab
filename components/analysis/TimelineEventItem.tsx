@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { AnalysisEvent } from "@/lib/analysis/types";
+import { TaggedEvent } from "@/lib/analysis/types";
 import { PitchResultSelector } from "./PitchResultSelector";
 import { PitchLocationSelector } from "./PitchLocationSelector";
 import { ContactContextSelector } from "./ContactContextSelector";
 
 type TimelineEventItemProps = {
-  event: AnalysisEvent;
+  event: TaggedEvent;
   onSeek: (timestampSeconds: number) => void;
-  onUpdateEvent: (updatedEvent: AnalysisEvent) => void;
+  onUpdateEvent: (updatedEvent: TaggedEvent) => void;
   onDeleteEvent: (id: string) => void;
   /** When true, renders a highlight ring to indicate this is the current review event */
   isSelected?: boolean;
@@ -16,16 +16,16 @@ type TimelineEventItemProps = {
 export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleUpdate = (updates: Partial<AnalysisEvent>) => {
+  const handleUpdate = (updates: Partial<TaggedEvent>) => {
     onUpdateEvent({ ...event, ...updates });
   };
 
   const handleCountChange = (val: string) => {
     // Validate simple format like "0-0"
     if (val === "") {
-      handleUpdate({ count: null });
+      handleUpdate({ pitchCount: null });
     } else if (/^[0-3]-[0-2]$/.test(val)) {
-      handleUpdate({ count: val });
+      handleUpdate({ pitchCount: val });
     }
   };
 
@@ -43,7 +43,7 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
         >
           {event.timestampLabel}
         </button>
-        <span className="text-sm font-medium text-slate-900">{event.tagLabel}</span>
+        <span className="text-sm font-medium text-slate-900">{event.tag}</span>
         <span className="text-xs text-slate-600">{event.category}</span>
         <div className="ml-auto flex gap-2">
           <button
@@ -65,12 +65,12 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
 
       {!isEditing ? (
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-2">
-          <div><span className="font-semibold">Count:</span> {event.count ?? "Unknown"}</div>
+          <div><span className="font-semibold">Count:</span> {event.pitchCount ?? "Unknown"}</div>
           {event.pitchResult && <div><span className="font-semibold">Pitch:</span> {event.pitchResult.replace("_", " ")}</div>}
-          {event.pitchLocationLabel && <div><span className="font-semibold">Location:</span> {event.pitchLocationLabel}</div>}
-          {event.contactDirection && <div><span className="font-semibold">Direction:</span> {event.contactDirection}</div>}
+          {event.pitchLocation && <div><span className="font-semibold">Location:</span> {event.pitchLocation}</div>}
+          {event.contactType && <div><span className="font-semibold">Direction:</span> {event.contactType}</div>}
           {event.contactQuality && <div><span className="font-semibold">Quality:</span> {event.contactQuality}</div>}
-          {event.result && <div><span className="font-semibold">Result:</span> {event.result.replace(/_/g, " ")}</div>}
+          {event.playResult && <div><span className="font-semibold">Result:</span> {event.playResult.replace(/_/g, " ")}</div>}
         </div>
       ) : (
         <div className="mb-3 rounded-md border border-slate-300 bg-white p-3 shadow-inner">
@@ -81,7 +81,7 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
               Count (e.g., 2-1)
               <input
                 type="text"
-                defaultValue={event.count || ""}
+                defaultValue={event.pitchCount || ""}
                 onBlur={(e) => handleCountChange(e.target.value)}
                 placeholder="Balls-Strikes (0-3)-(0-2)"
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
@@ -93,7 +93,7 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
                 value={event.pitchResult || ""}
                 onChange={(e) => {
                   const val = e.target.value;
-                  handleUpdate({ pitchResult: val === "" ? null : (val as AnalysisEvent["pitchResult"]) });
+                  handleUpdate({ pitchResult: val === "" ? null : (val as TaggedEvent["pitchResult"]) });
                 }}
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
               >
@@ -110,9 +110,9 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
 
           <div className="mb-3">
             <PitchLocationSelector
-              value={event.pitchLocationZone}
-              batterHandedness={event.batterHandedness}
-              onChange={(zoneId, label) => handleUpdate({ pitchLocationZone: zoneId, pitchLocationLabel: label })}
+              value={event.pitchLocation}
+
+              onChange={(zoneId, label) => handleUpdate({ pitchLocation: zoneId })}
             />
           </div>
 
@@ -120,10 +120,10 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
             <label className="flex flex-col gap-1 text-xs text-slate-700">
               Contact Direction
               <select
-                value={event.contactDirection || ""}
+                value={event.contactType || ""}
                 onChange={(e) => {
                   const val = e.target.value;
-                  handleUpdate({ contactDirection: val === "" ? null : (val as AnalysisEvent["contactDirection"]) });
+                  handleUpdate({ contactType: val === "" ? null : (val as TaggedEvent["contactType"]) });
                 }}
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
               >
@@ -139,7 +139,7 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
                 value={event.contactQuality || ""}
                 onChange={(e) => {
                   const val = e.target.value;
-                  handleUpdate({ contactQuality: val === "" ? null : (val as AnalysisEvent["contactQuality"]) });
+                  handleUpdate({ contactQuality: val === "" ? null : (val as TaggedEvent["contactQuality"]) });
                 }}
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
               >
@@ -152,10 +152,10 @@ export function TimelineEventItem({ event, onSeek, onUpdateEvent, onDeleteEvent,
             <label className="flex flex-col gap-1 text-xs text-slate-700">
               At-Bat Result
               <select
-                value={event.result || ""}
+                value={event.playResult || ""}
                 onChange={(e) => {
                   const val = e.target.value;
-                  handleUpdate({ result: val === "" ? null : (val as AnalysisEvent["result"]) });
+                  handleUpdate({ playResult: val === "" ? null : (val as TaggedEvent["playResult"]) });
                 }}
                 className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
               >

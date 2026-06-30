@@ -12,7 +12,7 @@
  * - Comparison differences use neutral language (no "improved" / "declined").
  */
 
-import { AnalysisEvent, SessionMetadata, TagCategory } from "./types";
+import {TaggedEvent, Session} from "./types";
 import { STAGE_1_TAGS } from "./tags";
 
 // ---------------------------------------------------------------------------
@@ -123,7 +123,7 @@ const AT_BAT_RESULT_ORDER = [
   NOT_SET_KEY,
 ];
 
-const TAG_CATEGORY_ORDER: TagCategory[] = [
+const TAG_CATEGORY_ORDER: string[] = [
   "Plate Appearance",
   "Pitch Tracking",
   "Swing Decision",
@@ -214,7 +214,7 @@ export type SessionReport = {
   reportFormat: "softball-analysis-report";
   reportVersion: "1.0";
   generatedAt: string;
-  session: SessionMetadata;
+  session: Session;
   totalEvents: number;
   filters: FilterInfo;
   pitchResults: MetricRow[];
@@ -269,8 +269,8 @@ export function safePercent(n: number, d: number): number | null {
  * NOT_SET_KEY uses `allTotal` as the denominator.
  */
 function groupByFieldOrdered<T extends string | null>(
-  events: AnalysisEvent[],
-  getter: (e: AnalysisEvent) => T,
+  events: TaggedEvent[],
+  getter: (e: TaggedEvent) => T,
   labelMap: Record<string, string>,
   orderKeys: string[]
 ): MetricRow[] {
@@ -312,7 +312,7 @@ function groupByFieldOrdered<T extends string | null>(
 // Section-level summarisers
 // ---------------------------------------------------------------------------
 
-export function summarisePitchResults(events: AnalysisEvent[]): MetricRow[] {
+export function summarisePitchResults(events: TaggedEvent[]): MetricRow[] {
   return groupByFieldOrdered(
     events,
     (e) => e.pitchResult,
@@ -321,25 +321,25 @@ export function summarisePitchResults(events: AnalysisEvent[]): MetricRow[] {
   );
 }
 
-export function summariseLocations(events: AnalysisEvent[]): MetricRow[] {
+export function summariseLocations(events: TaggedEvent[]): MetricRow[] {
   return groupByFieldOrdered(
     events,
-    (e) => e.pitchLocationZone,
+    (e) => e.pitchLocation,
     LOCATION_LABELS,
     LOCATION_ORDER
   );
 }
 
-export function summariseContactDirections(events: AnalysisEvent[]): MetricRow[] {
+export function summariseContactDirections(events: TaggedEvent[]): MetricRow[] {
   return groupByFieldOrdered(
     events,
-    (e) => e.contactDirection,
+    (e) => e.contactType,
     CONTACT_DIRECTION_LABELS,
     CONTACT_DIRECTION_ORDER
   );
 }
 
-export function summariseContactQuality(events: AnalysisEvent[]): MetricRow[] {
+export function summariseContactQuality(events: TaggedEvent[]): MetricRow[] {
   return groupByFieldOrdered(
     events,
     (e) => e.contactQuality,
@@ -348,16 +348,16 @@ export function summariseContactQuality(events: AnalysisEvent[]): MetricRow[] {
   );
 }
 
-export function summariseAtBatResults(events: AnalysisEvent[]): MetricRow[] {
+export function summariseAtBatResults(events: TaggedEvent[]): MetricRow[] {
   return groupByFieldOrdered(
     events,
-    (e) => e.result,
+    (e) => e.playResult,
     AT_BAT_RESULT_LABELS,
     AT_BAT_RESULT_ORDER
   );
 }
 
-export function summariseTagCategories(events: AnalysisEvent[]): MetricRow[] {
+export function summariseTagCategories(events: TaggedEvent[]): MetricRow[] {
   const counts: Record<string, number> = {};
   for (const e of events) {
     counts[e.category] = (counts[e.category] ?? 0) + 1;
@@ -389,7 +389,7 @@ function parseCountString(count: string | null): { balls: number; strikes: numbe
   return { balls, strikes };
 }
 
-export function summariseCounts(events: AnalysisEvent[]): CountSituationSummary {
+export function summariseCounts(events: TaggedEvent[]): CountSituationSummary {
   const countFreq: Record<string, number> = {};
   let twoStrike = 0;
   let threeBall = 0;
@@ -397,7 +397,7 @@ export function summariseCounts(events: AnalysisEvent[]): CountSituationSummary 
   let notSet = 0;
 
   for (const e of events) {
-    const parsed = parseCountString(e.count);
+    const parsed = parseCountString(e.pitchCount);
     if (!parsed) {
       notSet++;
       continue;
@@ -428,7 +428,7 @@ export function summariseCounts(events: AnalysisEvent[]): CountSituationSummary 
 // Swing/decision summary
 // ---------------------------------------------------------------------------
 
-export function summariseSwingDecision(events: AnalysisEvent[]): SwingDecisionSummary {
+export function summariseSwingDecision(events: TaggedEvent[]): SwingDecisionSummary {
   let swingEvents = 0;
   let swingAndMissEvents = 0;
   let takeEvents = 0;
@@ -436,10 +436,10 @@ export function summariseSwingDecision(events: AnalysisEvent[]): SwingDecisionSu
   let ballsInPlay = 0;
 
   for (const e of events) {
-    if (e.tagId === "swing") swingEvents++;
-    if (e.tagId === "swing_and_miss") swingAndMissEvents++;
-    if (e.tagId === "take") takeEvents++;
-    if (e.tagId === "foul") foulEvents++;
+    if (e.tag === "swing") swingEvents++;
+    if (e.tag === "swing_and_miss") swingAndMissEvents++;
+    if (e.tag === "take") takeEvents++;
+    if (e.tag === "foul") foulEvents++;
     if (e.pitchResult === "ball_in_play") ballsInPlay++;
   }
 
@@ -466,20 +466,20 @@ export function summariseSwingDecision(events: AnalysisEvent[]): SwingDecisionSu
 type CompletenessField = {
   id: string;
   label: string;
-  getter: (e: AnalysisEvent) => unknown;
+  getter: (e: TaggedEvent) => unknown;
 };
 
 const COMPLETENESS_FIELDS: CompletenessField[] = [
-  { id: "count", label: "Count", getter: (e) => e.count },
+  { id: "count", label: "Count", getter: (e) => e.pitchCount },
   { id: "pitchResult", label: "Pitch Result", getter: (e) => e.pitchResult },
-  { id: "pitchLocationZone", label: "Pitch Location", getter: (e) => e.pitchLocationZone },
-  { id: "batterHandedness", label: "Handedness", getter: (e) => e.batterHandedness },
-  { id: "contactDirection", label: "Contact Direction", getter: (e) => e.contactDirection },
+  { id: "pitchLocation", label: "Pitch Location", getter: (e) => e.pitchLocation },
+
+  { id: "contactType", label: "Contact Direction", getter: (e) => e.contactType },
   { id: "contactQuality", label: "Contact Quality", getter: (e) => e.contactQuality },
-  { id: "result", label: "At-Bat Result", getter: (e) => e.result },
+  { id: "result", label: "At-Bat Result", getter: (e) => e.playResult },
 ];
 
-export function summariseCodingCompleteness(events: AnalysisEvent[]): CompletenessRow[] {
+export function summariseCodingCompleteness(events: TaggedEvent[]): CompletenessRow[] {
   return COMPLETENESS_FIELDS.map(({ id, label, getter }) => {
     const total = events.length;
     const coded = events.filter((e) => getter(e) !== null).length;
@@ -499,7 +499,7 @@ export function summariseCodingCompleteness(events: AnalysisEvent[]): Completene
 // Event overview
 // ---------------------------------------------------------------------------
 
-function buildEventOverview(events: AnalysisEvent[]) {
+function buildEventOverview(events: TaggedEvent[]) {
   const categories = summariseTagCategories(events);
   return {
     total: events.length,
@@ -521,8 +521,8 @@ function buildEventOverview(events: AnalysisEvent[]) {
  * @param originalCount  Original count if filtered, or total if not filtered.
  */
 export function buildSessionReport(
-  session: SessionMetadata,
-  events: AnalysisEvent[],
+  session: Session,
+  events: TaggedEvent[],
   generatedAt: string,
   isFiltered = false,
   originalCount?: number
@@ -648,16 +648,13 @@ export function buildComparisonWarnings(
   }
 
   // Check if same session ID
-  if (reportA.session.sessionId === reportB.session.sessionId) {
+  if (reportA.session.id === reportB.session.id) {
     warnings.push({
       code: "same_session_id",
       message: "Session A and Session B have the same session ID. You may be comparing a session to itself.",
     });
   } else if (
-    reportA.session.sessionName === reportB.session.sessionName &&
-    reportA.session.playerName === reportB.session.playerName &&
-    reportA.session.sessionDate === reportB.session.sessionDate &&
-    reportA.session.videoFileName === reportB.session.videoFileName
+    reportA.session.date === reportB.session.date
   ) {
     warnings.push({
       code: "similar_session",
@@ -740,8 +737,8 @@ export function toReportCsv(report: SessionReport): string {
     "sessionName",
   ];
 
-  const sid = report.session.sessionId;
-  const sname = report.session.sessionName;
+  const sid = report.session.id;
+  const sname = report.session.name;
 
   const rows: string[] = [];
 
@@ -807,10 +804,10 @@ export function toComparisonCsv(comp: ComparisonReport): string {
     "sessionBName",
   ];
 
-  const aId = comp.sessionA.session.sessionId;
-  const bId = comp.sessionB.session.sessionId;
-  const aName = comp.sessionA.session.sessionName;
-  const bName = comp.sessionB.session.sessionName;
+  const aId = comp.sessionA.session.id;
+  const bId = comp.sessionB.session.id;
+  const aName = comp.sessionA.session.name;
+  const bName = comp.sessionB.session.name;
 
   const rows: string[] = [];
 
@@ -873,11 +870,11 @@ export function toReportJson(report: SessionReport): string {
     generatedAt: report.generatedAt,
     filters: report.filters,
     session: {
-      sessionId: report.session.sessionId,
-      sessionName: report.session.sessionName,
-      playerName: report.session.playerName,
-      sessionDate: report.session.sessionDate,
-      opponent: report.session.opponent,
+      id: report.session.id,
+      name: report.session.name,
+
+      date: report.session.date,
+      context: report.session.context,
       // Deliberately omit videoFileName to avoid exposing local file paths
     },
     totalEvents: report.totalEvents,
@@ -900,12 +897,12 @@ export function toReportJson(report: SessionReport): string {
  * This is NOT importable as a session.
  */
 export function toComparisonReportJson(comp: ComparisonReport): string {
-  const sanitizeSession = (session: SessionMetadata) => ({
-    sessionId: session.sessionId,
-    sessionName: session.sessionName,
-    playerName: session.playerName,
-    sessionDate: session.sessionDate,
-    opponent: session.opponent,
+  const sanitizeSession = (session: Session) => ({
+    id: session.id,
+    name: session.name,
+
+    date: session.date,
+    context: session.context,
   });
 
   const sanitizeReport = (report: SessionReport) => ({

@@ -15,42 +15,44 @@ import {
   getReviewSummary,
   REVIEW_PRESETS
 } from "../lib/analysis/review";
-import { AnalysisEvent } from "../lib/analysis/types";
+import { TaggedEvent } from "../lib/analysis/types";
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures
 // ---------------------------------------------------------------------------
 
-function makeEvent(overrides: Partial<AnalysisEvent>): AnalysisEvent {
+function makeEvent(overrides: Partial<TaggedEvent>): TaggedEvent {
   return {
     id: "e1",
+    sessionId: "session-1",
+    videoSourceId: null,
+    atBatId: null,
+    eventRole: "batter",
+    playerId: null,
+    relatedPlayerId: null,
+    teamSide: null,
     timestampSeconds: 10,
     timestampLabel: "00:10.000",
-    tagId: "swing",
-    tagLabel: "Swing",
-    category: "Swing Decision",
+    tag: "swing",
+        category: "Swing Decision",
     note: "",
-    count: null,
+    pitchCount: null,
     pitchResult: null,
-    pitchLocationZone: null,
-    pitchLocationLabel: null,
-    batterHandedness: null,
-    contactDirection: null,
+    pitchLocation: null,
+        contactType: null,
     contactQuality: null,
-    result: null,
+    playResult: null,
     pitchType: null,
-    velocity: null,
-    armSlot: null,
-    createdAt: "2026-06-01T10:00:00.000Z",
+            createdAt: "2026-06-01T10:00:00.000Z",
     ...overrides
   };
 }
 
-const eventA = makeEvent({ id: "a", timestampSeconds: 5, tagId: "swing", tagLabel: "Swing", pitchResult: "ball_in_play", contactQuality: "hard", result: "single", batterHandedness: "right", count: "3-2", note: "great contact", createdAt: "2026-06-23T00:00:01.000Z" });
-const eventB = makeEvent({ id: "b", timestampSeconds: 12, tagId: "take", tagLabel: "Take", pitchResult: "called_strike", contactQuality: null, result: null, batterHandedness: "left", count: "0-1", note: "", createdAt: "2026-06-23T00:00:02.000Z" });
-const eventC = makeEvent({ id: "c", timestampSeconds: 20, tagId: "swing_and_miss", tagLabel: "Swing and miss", pitchResult: "swinging_strike", contactQuality: null, result: "strikeout", batterHandedness: "right", count: "2-2", pitchLocationZone: "zone_5", note: "chased", createdAt: "2026-06-23T00:00:03.000Z" });
-const eventD = makeEvent({ id: "d", timestampSeconds: 30, tagId: "hit", tagLabel: "Hit", pitchResult: "ball_in_play", contactQuality: "hard", result: "home_run", batterHandedness: "left", count: "1-0", note: "", createdAt: "2026-06-23T00:00:04.000Z" });
-const eventE = makeEvent({ id: "e", timestampSeconds: 40, tagId: "out", tagLabel: "Out", pitchResult: "ball_in_play", contactQuality: "weak", result: "field_out", batterHandedness: null, count: null, note: "", createdAt: "2026-06-23T00:00:05.000Z" });
+const eventA = makeEvent({ id: "a", timestampSeconds: 5, tag: "swing", pitchResult: "ball_in_play", contactQuality: "hard", playResult: "single", pitchCount: "3-2", note: "great contact", createdAt: "2026-06-23T00:00:01.000Z" });
+const eventB = makeEvent({ id: "b", timestampSeconds: 12, tag: "take", pitchResult: "called_strike", contactQuality: null, playResult: null, pitchCount: "0-1", note: "", createdAt: "2026-06-23T00:00:02.000Z" });
+const eventC = makeEvent({ id: "c", timestampSeconds: 20, tag: "swing_and_miss", pitchResult: "swinging_strike", contactQuality: null, playResult: "strikeout", pitchCount: "2-2", pitchLocation: "zone_5", note: "chased", createdAt: "2026-06-23T00:00:03.000Z" });
+const eventD = makeEvent({ id: "d", timestampSeconds: 30, tag: "hit", pitchResult: "ball_in_play", contactQuality: "hard", playResult: "home_run", pitchCount: "1-0", note: "", createdAt: "2026-06-23T00:00:04.000Z" });
+const eventE = makeEvent({ id: "e", timestampSeconds: 40, tag: "out", pitchResult: "ball_in_play", contactQuality: "weak", playResult: "field_out", pitchCount: null, note: "", createdAt: "2026-06-23T00:00:05.000Z" });
 
 const ALL_EVENTS = [eventA, eventB, eventC, eventD, eventE];
 
@@ -137,7 +139,7 @@ describe("eventMatchesFilters", () => {
 
   it("contact direction filter", () => {
     const f: ReviewFilters = { ...emptyFilters(), contactDirections: ["pull"] };
-    expect(eventMatchesFilters(makeEvent({ id: "x", contactDirection: "pull" }), f)).toBe(true);
+    expect(eventMatchesFilters(makeEvent({ id: "x", contactType: "pull" }), f)).toBe(true);
     expect(eventMatchesFilters(eventA, f)).toBe(false);
   });
 
@@ -160,17 +162,9 @@ describe("eventMatchesFilters", () => {
     expect(eventMatchesFilters(eventC, f)).toBe(false);
   });
 
-  it("batter handedness filter — right", () => {
-    const f: ReviewFilters = { ...emptyFilters(), batterHandedness: ["right"] };
-    expect(eventMatchesFilters(eventA, f)).toBe(true);
-    expect(eventMatchesFilters(eventB, f)).toBe(false);
-  });
+  
 
-  it("batter handedness filter — null (unknown)", () => {
-    const f: ReviewFilters = { ...emptyFilters(), batterHandedness: [null] };
-    expect(eventMatchesFilters(eventE, f)).toBe(true);
-    expect(eventMatchesFilters(eventA, f)).toBe(false);
-  });
+  
 
   it("count filter — balls only", () => {
     const f: ReviewFilters = { ...emptyFilters(), ballsFilter: 3 };

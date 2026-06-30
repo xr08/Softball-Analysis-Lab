@@ -47,21 +47,11 @@ export function SessionReport({ report }: SessionReportProps) {
       {/* ── Session metadata ────────────────────────────────────────── */}
       <ReportSection title="Session Details">
         <div className="space-y-1.5">
-          <InfoRow label="Player" value={session.playerName} />
-          <InfoRow label="Session" value={session.sessionName} />
-          <InfoRow label="Date" value={session.sessionDate} />
-          <InfoRow label="Opponent / Context" value={session.opponent} />
-          <InfoRow label="Video file" value={session.videoFileName} />
-          <InfoRow
-            label="Handedness"
-            value={
-              session.batterHandedness === "right"
-                ? "Right"
-                : session.batterHandedness === "left"
-                ? "Left"
-                : null
-            }
-          />
+
+          <InfoRow label="Session" value={session.name} />
+          <InfoRow label="Date" value={session.date} />
+          <InfoRow label="Opponent / Context" value={session.context} />
+
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
