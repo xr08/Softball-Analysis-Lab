@@ -1,5 +1,12 @@
 import { AtBat, Player, Session } from "@/lib/analysis/types";
-import { getPlayerName, teamSideLabel } from "@/lib/analysis/workflow";
+import {
+  getPlayerName,
+  teamSideLabel,
+  UNKNOWN_BATTER_LABEL,
+  UNKNOWN_FIELDER_ID,
+  UNKNOWN_FIELDER_LABEL,
+  canEditAtBatParticipants
+} from "@/lib/analysis/workflow";
 
 type AtBatControlsProps = {
   session: Session;
@@ -45,6 +52,10 @@ export function AtBatControls({
   const activeStatus = activeAtBat
     ? `Active at-bat (${currentAtBatEventCount} event${currentAtBatEventCount === 1 ? "" : "s"})`
     : "No active at-bat";
+  const selectorsLocked = !canEditAtBatParticipants(activeAtBat?.id ?? null, currentAtBatEventCount);
+  const fielderLabel = selectedFielderId
+    ? getPlayerName(players, selectedFielderId)
+    : "No fielder selected";
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4">
@@ -61,7 +72,7 @@ export function AtBatControls({
           ) : (
             <button
               onClick={onStartAtBat}
-              disabled={!currentPitcherId || !currentBatterId}
+              disabled={!currentPitcherId}
               className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
             >
               Start At-Bat
@@ -89,11 +100,11 @@ export function AtBatControls({
         </div>
         <div>
           <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Batter</span>
-          {getPlayerName(players, currentBatterId)}
+          {currentBatterId ? getPlayerName(players, currentBatterId) : UNKNOWN_BATTER_LABEL}
         </div>
         <div>
           <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Fielder Target</span>
-          {getPlayerName(players, selectedFielderId)}
+          {fielderLabel}
         </div>
       </div>
 
@@ -103,7 +114,7 @@ export function AtBatControls({
           <select
             value={currentPitcherId || ""}
             onChange={(e) => onPitcherChange(e.target.value || null)}
-            disabled={hasActiveAtBat}
+            disabled={selectorsLocked}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500"
           >
             <option value="">Select Pitcher...</option>
@@ -120,10 +131,10 @@ export function AtBatControls({
           <select
             value={currentBatterId || ""}
             onChange={(e) => onBatterChange(e.target.value || null)}
-            disabled={hasActiveAtBat}
+            disabled={selectorsLocked}
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2 disabled:bg-slate-50 disabled:text-slate-500"
           >
-            <option value="">Select Batter...</option>
+            <option value="">{UNKNOWN_BATTER_LABEL}</option>
             {batters.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.teamSide === "teamA" ? "A" : p.teamSide === "teamB" ? "B" : "N"})
@@ -140,6 +151,7 @@ export function AtBatControls({
             className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
           >
             <option value="">Select fielder...</option>
+            <option value={UNKNOWN_FIELDER_ID}>{UNKNOWN_FIELDER_LABEL}</option>
             {players.map((player) => (
               <option key={player.id} value={player.id}>
                 {player.name} ({teamSideLabel(player.teamSide)})
@@ -153,14 +165,14 @@ export function AtBatControls({
         <button
           type="button"
           onClick={onNextPitch}
-          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700"
         >
-          Next Pitch
+          Next Pitch: reset pitch fields
         </button>
         <button
           type="button"
           onClick={onNextAtBat}
-          disabled={!currentPitcherId || !currentBatterId}
+          disabled={!currentPitcherId}
           className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
         >
           Next At-Bat
@@ -174,6 +186,14 @@ export function AtBatControls({
           Clear Fielder
         </button>
       </div>
+      <p className="mt-2 text-xs text-slate-500">
+        Next Pitch clears count, pitch result, location, contact, and pitch type only. It keeps the session, teams, current pitcher, current batter, and active at-bat.
+      </p>
+      {selectorsLocked ? (
+        <p className="mt-1 text-xs text-amber-700">
+          Pitcher and batter are locked for this at-bat because events have already been tagged. End it or use Next At-Bat to make a correction.
+        </p>
+      ) : null}
     </section>
   );
 }

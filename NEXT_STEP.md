@@ -49,6 +49,9 @@ Do not add:
 
 * **ESLint Configuration** — Adding `eslint` and `eslint-config-next` has been deferred because Next.js 15.5.19 deprecates `next lint` and transitioning to ESLint 9+ flat config natively creates a known circular dependency bug with the current `eslint-config-next` adapter. This is scheduled for the next major milestone after VT-5.
 
+* **Pitch Window Redesign** - Future UI workflow work should make pitch count, pitch result, contact, location, and outcome button-based instead of dropdown-heavy.
+* **Video Recall and Virtual Timeline** - Future video workflow work should support Google Drive video storage/recall, linking session JSON to stored Drive video files, multiple video files per session, sequential playback of multiple files end-to-end on one combined session timeline, and preserving original footage while treating combined playback as a virtual timeline.
+
 ## Testing Checklist
 
 This milestone is complete only when:

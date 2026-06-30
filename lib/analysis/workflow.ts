@@ -2,6 +2,11 @@ import { AtBat, EventRole, Player, TaggedEvent, TeamSide } from "./types";
 
 export type WorkflowTagRole = Extract<EventRole, "pitcher" | "batter" | "fielder" | "review">;
 
+export const UNKNOWN_FIELDER_ID = "__unknown_fielder__";
+export const UNKNOWN_PLAYER_LABEL = "Unknown Player";
+export const UNKNOWN_BATTER_LABEL = "Unknown Batter";
+export const UNKNOWN_FIELDER_LABEL = "Unknown Fielder";
+
 export type TagAssignmentInput = {
   role: WorkflowTagRole;
   players: Player[];
@@ -67,7 +72,8 @@ export function teamSideLabel(teamSide: TeamSide | null | undefined): string {
 }
 
 export function getPlayerName(players: Player[], playerId: string | null | undefined): string {
-  if (!playerId) return "Unassigned";
+  if (playerId === UNKNOWN_FIELDER_ID) return UNKNOWN_FIELDER_LABEL;
+  if (!playerId) return UNKNOWN_PLAYER_LABEL;
   return players.find((player) => player.id === playerId)?.name ?? "Unknown player";
 }
 
@@ -124,6 +130,10 @@ export function buildNextPitchSelection(input: {
   };
 }
 
+export function canEditAtBatParticipants(activeAtBatId: string | null, currentAtBatEventCount: number): boolean {
+  return !activeAtBatId || currentAtBatEventCount === 0;
+}
+
 export function closeAtBat(
   atBats: AtBat[],
   activeAtBatId: string | null,
@@ -145,7 +155,7 @@ export function buildNextAtBatState(input: NextAtBatInput): NextAtBatResult {
   const pitcher = input.players.find((player) => player.id === input.currentPitcherId);
   const batter = input.players.find((player) => player.id === nextBatterId);
 
-  if (!pitcher || !batter) {
+  if (!pitcher) {
     return {
       atBats: closedAtBats,
       currentPitcherId: input.currentPitcherId,
@@ -157,9 +167,9 @@ export function buildNextAtBatState(input: NextAtBatInput): NextAtBatResult {
   const nextAtBat: AtBat = {
     id: input.newAtBatId,
     sessionId: input.sessionId,
-    batterId: batter.id,
+    batterId: batter?.id ?? null,
     pitcherId: pitcher.id,
-    batterTeamSide: batter.teamSide,
+    batterTeamSide: batter?.teamSide ?? null,
     pitcherTeamSide: pitcher.teamSide,
     startTimestampSeconds: input.timestampSeconds,
     endTimestampSeconds: undefined
@@ -168,7 +178,7 @@ export function buildNextAtBatState(input: NextAtBatInput): NextAtBatResult {
   return {
     atBats: [...closedAtBats, nextAtBat],
     currentPitcherId: pitcher.id,
-    currentBatterId: batter.id,
+    currentBatterId: batter?.id ?? null,
     activeAtBatId: nextAtBat.id
   };
 }
@@ -191,19 +201,28 @@ export function resolveTagAssignment(input: TagAssignmentInput): TagAssignmentRe
   }
 
   if (input.role === "batter") {
-    if (!batter) return { ok: false, reason: "Select the current batter before adding batter tags." };
     return {
       ok: true,
       eventRole: "batter",
-      playerId: batter.id,
+      playerId: batter?.id ?? null,
       relatedPlayerId: pitcher?.id ?? null,
-      teamSide: batter.teamSide,
+      teamSide: batter?.teamSide ?? null,
       atBatId: input.activeAtBatId
     };
   }
 
   if (input.role === "fielder") {
-    if (!fielder) return { ok: false, reason: "Select a fielder before adding fielder tags." };
+    if (input.selectedFielderId === UNKNOWN_FIELDER_ID) {
+      return {
+        ok: true,
+        eventRole: "fielder",
+        playerId: null,
+        relatedPlayerId: batter?.id ?? pitcher?.id ?? null,
+        teamSide: null,
+        atBatId: input.activeAtBatId
+      };
+    }
+    if (!fielder) return { ok: false, reason: "Select a fielder or Unknown Fielder before adding fielder tags." };
     return {
       ok: true,
       eventRole: "fielder",

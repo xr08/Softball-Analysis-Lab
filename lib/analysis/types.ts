@@ -18,9 +18,9 @@ export interface Player {
 export interface AtBat {
   id: string;
   sessionId: string;
-  batterId: string;
+  batterId: string | null;
   pitcherId: string;
-  batterTeamSide: TeamSide;
+  batterTeamSide: TeamSide | null;
   pitcherTeamSide: TeamSide;
   startTimestampSeconds: number;
   endTimestampSeconds?: number;
@@ -31,7 +31,9 @@ export interface VideoSource {
   sessionId: string;
   fileName: string;
   filePath?: string; // local only
+  sourceType: "local_file";
   type: "main" | "angle2" | "angle3";
+  durationSeconds?: number;
   addedAt: string;
 }
 

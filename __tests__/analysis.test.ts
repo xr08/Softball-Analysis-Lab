@@ -74,7 +74,7 @@ describe("JSON Export and Import", () => {
     }
   ];
 
-  it("round trips JSON 1.1 successfully", () => {
+  it("round trips JSON 2.0 successfully", () => {
     const jsonStr = toJson(session, [], [], [], events);
     const parsed = parseImportedSession(jsonStr);
 
