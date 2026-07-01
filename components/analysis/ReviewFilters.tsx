@@ -15,12 +15,8 @@ type ReviewFiltersProps = {
   onChange: (updated: ReviewFiltersType) => void;
 };
 
-// ---------------------------------------------------------------------------
-// Multi-toggle helper
-// ---------------------------------------------------------------------------
-
 function toggleInArray<T>(arr: T[], value: T): T[] {
-  return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+  return arr.includes(value) ? arr.filter((candidate) => candidate !== value) : [...arr, value];
 }
 
 function ToggleButton({
@@ -36,10 +32,10 @@ function ToggleButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+      className={`rounded-full border px-3 py-1 text-xs font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
         active
-          ? "border-emerald-600 bg-emerald-600 text-white"
-          : "border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+          ? "border-orange-400 bg-orange-500 text-slate-950"
+          : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
       }`}
     >
       {children}
@@ -50,27 +46,21 @@ function ToggleButton({
 function FilterSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-slate-500">{label}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
   const active = hasActiveFilters(filters);
-
-  // --- Tag toggles (from registry, not hardcoded) ---
   const groupedTags = STAGE_1_TAGS.reduce<Record<string, typeof STAGE_1_TAGS>>((acc, tag) => {
     if (!acc[tag.category]) acc[tag.category] = [];
     acc[tag.category].push(tag);
     return acc;
   }, {});
 
-  const PITCH_RESULTS: Array<{ value: TaggedEvent["pitchResult"]; label: string }> = [
+  const pitchResults: Array<{ value: TaggedEvent["pitchResult"]; label: string }> = [
     { value: "called_strike", label: "Called Strike" },
     { value: "swinging_strike", label: "Swinging Strike" },
     { value: "foul", label: "Foul" },
@@ -80,27 +70,35 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
     { value: "wild_pitch", label: "Wild Pitch" }
   ];
 
-  const ZONES: Array<{ value: TaggedEvent["pitchLocation"]; label: string }> = [
-    { value: "zone_1", label: "Z1" }, { value: "zone_2", label: "Z2" }, { value: "zone_3", label: "Z3" },
-    { value: "zone_4", label: "Z4" }, { value: "zone_5", label: "Z5" }, { value: "zone_6", label: "Z6" },
-    { value: "zone_7", label: "Z7" }, { value: "zone_8", label: "Z8" }, { value: "zone_9", label: "Z9" },
-    { value: "high", label: "High" }, { value: "low", label: "Low" },
-    { value: "inside", label: "Inside" }, { value: "outside", label: "Outside" }
+  const zones: Array<{ value: TaggedEvent["pitchLocation"]; label: string }> = [
+    { value: "zone_1", label: "Z1" },
+    { value: "zone_2", label: "Z2" },
+    { value: "zone_3", label: "Z3" },
+    { value: "zone_4", label: "Z4" },
+    { value: "zone_5", label: "Z5" },
+    { value: "zone_6", label: "Z6" },
+    { value: "zone_7", label: "Z7" },
+    { value: "zone_8", label: "Z8" },
+    { value: "zone_9", label: "Z9" },
+    { value: "high", label: "High" },
+    { value: "low", label: "Low" },
+    { value: "inside", label: "Inside" },
+    { value: "outside", label: "Outside" }
   ];
 
-  const CONTACT_DIRECTIONS: Array<{ value: TaggedEvent["contactType"]; label: string }> = [
+  const contactDirections: Array<{ value: TaggedEvent["contactType"]; label: string }> = [
     { value: "pull", label: "Pull" },
     { value: "middle", label: "Middle" },
     { value: "opposite", label: "Opposite" }
   ];
 
-  const CONTACT_QUALITIES: Array<{ value: TaggedEvent["contactQuality"]; label: string }> = [
+  const contactQualities: Array<{ value: TaggedEvent["contactQuality"]; label: string }> = [
     { value: "hard", label: "Hard" },
     { value: "medium", label: "Medium" },
     { value: "weak", label: "Weak" }
   ];
 
-  const AT_BAT_RESULTS: Array<{ value: TaggedEvent["playResult"]; label: string }> = [
+  const atBatResults: Array<{ value: TaggedEvent["playResult"]; label: string }> = [
     { value: "single", label: "Single" },
     { value: "double", label: "Double" },
     { value: "triple", label: "Triple" },
@@ -115,38 +113,39 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
   ];
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      {/* Header */}
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Review Filters
-          {active && (
-            <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-              Active
-            </span>
-          )}
-        </h2>
-        {active && (
+    <section className="rounded-lg border border-slate-700 bg-[#101720] p-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Review Query</p>
+          <h2 className="mt-1 text-lg font-black text-white">
+            Review Filters
+            {active ? (
+              <span className="ml-2 rounded-full bg-orange-500 px-2 py-0.5 text-xs font-black text-slate-950">
+                Active
+              </span>
+            ) : null}
+          </h2>
+        </div>
+        {active ? (
           <button
             type="button"
             onClick={() => onChange(emptyFilters())}
-            className="rounded-md border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-slate-600 bg-slate-900 px-3 py-1 text-xs font-black uppercase tracking-wide text-slate-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
-            Clear all filters
+            Clear All
           </button>
-        )}
+        ) : null}
       </div>
 
-      {/* Presets */}
       <div className="mb-4">
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Quick Presets</p>
+        <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-slate-500">Quick Presets</p>
         <div className="flex flex-wrap gap-1.5">
           {REVIEW_PRESETS.map((preset) => (
             <button
               key={preset.id}
               type="button"
               onClick={() => onChange(applyPreset(preset))}
-              className="rounded-full border border-violet-300 bg-violet-50 px-3 py-1 text-xs font-medium text-violet-800 hover:bg-violet-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="rounded-full border border-sky-500/40 bg-sky-500/10 px-3 py-1 text-xs font-black text-sky-200 hover:bg-sky-500/20 focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               {preset.label}
             </button>
@@ -155,9 +154,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
       </div>
 
       <div className="space-y-4">
-        {/* Tags — grouped by category */}
         {Object.entries(groupedTags).map(([category, tags]) => (
-          <FilterSection key={category} label={`Tag — ${category}`}>
+          <FilterSection key={category} label={`Tag - ${category}`}>
             {tags.map((tag) => (
               <ToggleButton
                 key={tag.id}
@@ -170,9 +168,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           </FilterSection>
         ))}
 
-        {/* Pitch result */}
         <FilterSection label="Pitch Result">
-          {PITCH_RESULTS.map(({ value, label }) => (
+          {pitchResults.map(({ value, label }) => (
             <ToggleButton
               key={label}
               active={filters.pitchResults.includes(value)}
@@ -183,9 +180,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           ))}
         </FilterSection>
 
-        {/* Pitch location */}
         <FilterSection label="Pitch Location">
-          {ZONES.map(({ value, label }) => (
+          {zones.map(({ value, label }) => (
             <ToggleButton
               key={label}
               active={filters.pitchLocationZones.includes(value)}
@@ -196,33 +192,32 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           ))}
         </FilterSection>
 
-        {/* Count */}
         <div>
-          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Count</p>
+          <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-slate-500">Count</p>
           <div className="flex flex-wrap gap-3">
-            <label className="flex flex-col gap-0.5 text-xs text-slate-700">
-              Balls (0–3)
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+              Balls
               <select
                 value={filters.ballsFilter ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  onChange({ ...filters, ballsFilter: val === "" ? null : Number(val) });
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChange({ ...filters, ballsFilter: value === "" ? null : Number(value) });
                 }}
-                className="rounded border border-slate-300 bg-white px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Any</option>
                 {[0, 1, 2, 3].map((n) => <option key={n} value={n}>{n}</option>)}
               </select>
             </label>
-            <label className="flex flex-col gap-0.5 text-xs text-slate-700">
-              Strikes (0–2)
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+              Strikes
               <select
                 value={filters.strikesFilter ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  onChange({ ...filters, strikesFilter: val === "" ? null : Number(val) });
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChange({ ...filters, strikesFilter: value === "" ? null : Number(value) });
                 }}
-                className="rounded border border-slate-300 bg-white px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Any</option>
                 {[0, 1, 2].map((n) => <option key={n} value={n}>{n}</option>)}
@@ -231,11 +226,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           </div>
         </div>
 
-
-
-        {/* Contact direction */}
         <FilterSection label="Contact Direction">
-          {CONTACT_DIRECTIONS.map(({ value, label }) => (
+          {contactDirections.map(({ value, label }) => (
             <ToggleButton
               key={label}
               active={filters.contactDirections.includes(value)}
@@ -246,9 +238,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           ))}
         </FilterSection>
 
-        {/* Contact quality */}
         <FilterSection label="Contact Quality">
-          {CONTACT_QUALITIES.map(({ value, label }) => (
+          {contactQualities.map(({ value, label }) => (
             <ToggleButton
               key={label}
               active={filters.contactQualities.includes(value)}
@@ -259,9 +250,8 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           ))}
         </FilterSection>
 
-        {/* At-bat result */}
         <FilterSection label="At-Bat Result">
-          {AT_BAT_RESULTS.map(({ value, label }) => (
+          {atBatResults.map(({ value, label }) => (
             <ToggleButton
               key={label}
               active={filters.results.includes(value)}
@@ -272,18 +262,17 @@ export function ReviewFilters({ filters, onChange }: ReviewFiltersProps) {
           ))}
         </FilterSection>
 
-        {/* Text search */}
         <div>
-          <label htmlFor="review-text-search" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label htmlFor="review-text-search" className="mb-1.5 block text-xs font-black uppercase tracking-wide text-slate-500">
             Text Search
           </label>
           <input
             id="review-text-search"
             type="text"
             value={filters.textSearch}
-            onChange={(e) => onChange({ ...filters, textSearch: e.target.value })}
-            placeholder="Search tag label or note…"
-            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(event) => onChange({ ...filters, textSearch: event.target.value })}
+            placeholder="Search tag label or note..."
+            className="w-full rounded-md border border-slate-600 bg-[#0a0f16] px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
           />
         </div>
       </div>

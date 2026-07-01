@@ -26,13 +26,13 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
   const rightLabel = isLeftHanded ? "Inside" : "Outside";
 
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-2.5" : "p-4"}`}>
+    <section className={`rounded-lg border border-slate-700 bg-slate-950/50 ${compact ? "p-2.5" : "p-4"}`}>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className={`font-semibold text-slate-900 ${compact ? "text-base" : "text-lg"}`}>Pitch Location</h2>
+        <h2 className={`font-black text-slate-100 ${compact ? "text-base" : "text-lg"}`}>Pitch Location</h2>
         <button
           type="button"
           onClick={() => onChange(null, null)}
-          className="text-xs text-slate-500 hover:text-slate-900"
+          className="rounded px-2 py-1 text-xs font-black uppercase tracking-wide text-slate-500 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-400"
         >
           Clear
         </button>
@@ -47,8 +47,8 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
         <button
           type="button"
           onClick={() => onChange("high", "High")}
-          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-t-xl border border-slate-300 font-medium transition-colors ${
-            value === "high" ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-t-xl border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+            value === "high" ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
           }`}
         >
           High
@@ -58,23 +58,23 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
           {/* Left Chase Zone */}
           <button
             type="button"
-            onClick={() => onChange(leftId, leftLabel)}
-            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} rounded-l-xl border border-slate-300 font-medium transition-colors [writing-mode:vertical-lr] rotate-180 flex items-center justify-center ${
-              value === leftId ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+          onClick={() => onChange(leftId, leftLabel)}
+            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} flex rotate-180 items-center justify-center rounded-l-xl border font-black transition-colors [writing-mode:vertical-lr] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+              value === leftId ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
             }`}
           >
             <span className="rotate-180">{leftLabel}</span>
           </button>
 
           {/* 3x3 Grid */}
-          <div className={`grid grid-cols-3 grid-rows-3 gap-1 bg-slate-300 border-2 border-slate-800 p-1 flex-shrink-0 ${compact ? "h-24 w-24" : "h-32 w-32"}`}>
+          <div className={`grid flex-shrink-0 grid-cols-3 grid-rows-3 gap-1 border-2 border-slate-500 bg-slate-800 p-1 ${compact ? "h-24 w-24" : "h-32 w-32"}`}>
             {ZONES.map((zone) => (
               <button
                 key={zone.id}
                 type="button"
                 onClick={() => onChange(zone.id, zone.label)}
-                className={`flex items-center justify-center border font-medium transition-colors ${compact ? "text-[11px]" : "text-xs"} ${
-                  value === zone.id ? "bg-emerald-500 text-white border-emerald-600" : "bg-white text-slate-600 hover:bg-slate-100"
+                className={`flex items-center justify-center border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${compact ? "text-[11px]" : "text-xs"} ${
+                  value === zone.id ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-950 text-slate-300 hover:border-sky-400 hover:bg-slate-900"
                 }`}
               >
                 {zone.id.replace("zone_", "")}
@@ -85,9 +85,9 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
           {/* Right Chase Zone */}
           <button
             type="button"
-            onClick={() => onChange(rightId, rightLabel)}
-            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} rounded-r-xl border border-slate-300 font-medium transition-colors [writing-mode:vertical-rl] flex items-center justify-center ${
-              value === rightId ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+          onClick={() => onChange(rightId, rightLabel)}
+            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} flex items-center justify-center rounded-r-xl border font-black transition-colors [writing-mode:vertical-rl] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+              value === rightId ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
             }`}
           >
             {rightLabel}
@@ -98,8 +98,8 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
         <button
           type="button"
           onClick={() => onChange("low", "Low")}
-          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-b-xl border border-slate-300 font-medium transition-colors ${
-            value === "low" ? "bg-emerald-500 text-white border-emerald-600" : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-b-xl border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+            value === "low" ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
           }`}
         >
           Low

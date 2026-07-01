@@ -149,16 +149,16 @@ export function ReportsPanel({
   return (
     <div className="space-y-4">
       {/* ── Toolbar ──────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-700 bg-[#101720] p-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Scope toggle */}
-          <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+          <div className="flex rounded-lg border border-slate-700 bg-slate-950 p-0.5">
             <button
               onClick={() => setScope("all")}
               className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                 scope === "all"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-orange-500 text-slate-950 shadow-sm"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
               }`}
             >
               All events
@@ -169,15 +169,15 @@ export function ReportsPanel({
               title={!isFiltering ? "No active Review filters" : undefined}
               className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                 scope === "filtered"
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-orange-500 text-slate-950 shadow-sm"
                   : isFiltering
-                  ? "text-slate-500 hover:text-slate-700"
-                  : "cursor-not-allowed text-slate-300"
+                  ? "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                  : "cursor-not-allowed text-slate-600"
               }`}
             >
               Current filters
               {isFiltering && (
-                <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-800">
+                <span className="ml-1 rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[10px] text-sky-200">
                   active
                 </span>
               )}
@@ -185,13 +185,13 @@ export function ReportsPanel({
           </div>
 
           {/* View toggle */}
-          <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+          <div className="flex rounded-lg border border-slate-700 bg-slate-950 p-0.5">
             <button
               onClick={() => setView("single")}
               className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                 view === "single"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-orange-500 text-slate-950 shadow-sm"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
               }`}
             >
               Single session
@@ -200,8 +200,8 @@ export function ReportsPanel({
               onClick={() => setView("compare")}
               className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
                 view === "compare"
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-orange-500 text-slate-950 shadow-sm"
+                  : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
               }`}
             >
               Compare sessions
@@ -213,19 +213,19 @@ export function ReportsPanel({
         <div className="no-print flex flex-wrap gap-2">
           <button
             onClick={handleExportReportCsv}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
+            className="rounded-md border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 hover:bg-slate-800 shadow-sm"
           >
             Export CSV
           </button>
           <button
             onClick={handleExportReportJson}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
+            className="rounded-md border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 hover:bg-slate-800 shadow-sm"
           >
             Export Report JSON
           </button>
           <button
             onClick={handlePrint}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
+            className="rounded-md border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 hover:bg-slate-800 shadow-sm"
           >
             Print report
           </button>
@@ -234,7 +234,7 @@ export function ReportsPanel({
 
       {/* Filtered scope notice */}
       {scope === "filtered" && isFiltering && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <div className="rounded-md border border-amber-400/40 bg-amber-950/40 px-3 py-2 text-xs text-amber-100">
           <strong>Filtered report</strong> — applying current Review filters.
           {comparison ? (
             <div className="mt-1">
@@ -262,7 +262,7 @@ export function ReportsPanel({
 
       {/* ── Report content ───────────────────────────────────────────── */}
       {view === "single" && allEvents.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-slate-700 bg-[#101720] p-6 text-center text-sm text-slate-500">
           No events in this session yet. Add tagged events in Tagging mode to generate a report.
         </div>
       ) : view === "single" ? (
@@ -270,7 +270,7 @@ export function ReportsPanel({
       ) : comparison ? (
         <ComparisonReport comparison={comparison} />
       ) : (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-slate-700 bg-[#101720] p-6 text-center text-sm text-slate-500">
           Load a Session B above to see a side-by-side comparison.
         </div>
       )}

@@ -31,7 +31,7 @@ type PitchWindowProps = {
 
 function SummaryPill({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-900">
+    <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide text-sky-200">
       {label}: {value}
     </span>
   );
@@ -59,11 +59,12 @@ export function PitchWindow({
   const contactTone = isContactContextPrimary(pitchResult) ? "emphasized" : "muted";
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-3">
+    <section className="rounded-lg border border-orange-500/40 bg-[#101720] p-3 shadow-xl shadow-black/20">
       <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">Pitch Window</h2>
-          <p className="mt-0.5 max-w-3xl text-xs text-slate-600">{getPitchWindowGuidance(pitchResult)}</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-400">Pitch Command Strip</p>
+          <h2 className="mt-1 text-lg font-black text-white">Pitch Window</h2>
+          <p className="mt-0.5 max-w-3xl text-xs text-slate-400">{getPitchWindowGuidance(pitchResult)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <SummaryPill label="Result" value={getPitchResultLabel(pitchResult)} />

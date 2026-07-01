@@ -3,19 +3,12 @@
 import { TaggedEvent } from "@/lib/analysis/types";
 
 type ReviewControlsProps = {
-  /** All events that match the current filters */
   filteredEvents: TaggedEvent[];
-  /** Currently selected review event ID, or null */
   selectedEventId: string | null;
-  /** Whether a video is connected */
   hasVideo: boolean;
-  /** Pre-roll in seconds (0–10) */
   preRoll: number;
-  /** Post-roll in seconds (1–15) */
   postRoll: number;
-  /** Whether the playlist is currently running */
   isPlayingPlaylist: boolean;
-  /** 0-based index of the event currently being played in the playlist */
   playlistIndex: number | null;
   onSelectEvent: (event: TaggedEvent) => void;
   onPrev: () => void;
@@ -35,7 +28,6 @@ export function ReviewControls({
   postRoll,
   isPlayingPlaylist,
   playlistIndex,
-  onSelectEvent,
   onPrev,
   onNext,
   onPlayClip,
@@ -45,7 +37,7 @@ export function ReviewControls({
   onPostRollChange
 }: ReviewControlsProps) {
   const selectedIndex = selectedEventId
-    ? filteredEvents.findIndex((e) => e.id === selectedEventId)
+    ? filteredEvents.findIndex((event) => event.id === selectedEventId)
     : -1;
 
   const hasPrev = selectedIndex > 0;
@@ -57,53 +49,48 @@ export function ReviewControls({
     hasSelected
       ? `${selectedIndex + 1} of ${filteredEvents.length} matching event${filteredEvents.length === 1 ? "" : "s"}`
       : filteredEvents.length === 0
-      ? "No matching events"
-      : `${filteredEvents.length} matching event${filteredEvents.length === 1 ? "" : "s"} — select one to begin`;
+        ? "No matching events"
+        : `${filteredEvents.length} matching event${filteredEvents.length === 1 ? "" : "s"} - select one to begin`;
 
   return (
-    <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Review Controls</h2>
+    <section className="rounded-lg border border-slate-700 bg-[#101720] p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-400">Playback Review</p>
+      <h2 className="mt-1 text-lg font-black text-white">Review Controls</h2>
 
-      {/* Position indicator */}
-      <p className="mb-3 text-sm font-medium text-slate-700" role="status" aria-live="polite">
+      <p className="mt-3 text-sm font-semibold text-slate-300" role="status" aria-live="polite">
         {positionLabel}
       </p>
 
-      {/* Keyboard shortcut hint */}
-      {hasVideo && (
-        <p className="mb-3 text-xs text-slate-500">
-          Keyboard shortcuts (Review mode only): <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 text-xs">←</kbd> Previous &nbsp;
-          <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 text-xs">→</kbd> Next &nbsp;
-          <kbd className="rounded border border-slate-300 bg-white px-1 py-0.5 text-xs">Space</kbd> Play/Pause
+      {hasVideo ? (
+        <p className="mt-2 text-xs text-slate-500">
+          Keyboard: Left previous, Right next, Space play/pause.
         </p>
-      )}
+      ) : null}
 
-      {/* Navigation buttons */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onPrev}
           disabled={!hasPrev || !hasVideo || isPlayingPlaylist}
           aria-label="Previous matching event"
-          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm font-bold text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          ← Previous
+          Previous
         </button>
         <button
           type="button"
           onClick={onNext}
           disabled={!hasNext || !hasVideo || isPlayingPlaylist}
           aria-label="Next matching event"
-          className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-sm font-bold text-slate-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Next →
+          Next
         </button>
       </div>
 
-      {/* Pre/Post-roll settings */}
-      <div className="mb-4 flex flex-wrap gap-4">
-        <label className="flex flex-col gap-0.5 text-xs text-slate-700">
-          Pre-roll (seconds, 0–10)
+      <div className="mt-4 flex flex-wrap gap-4">
+        <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+          Pre-roll seconds
           <input
             id="review-preroll"
             type="number"
@@ -111,12 +98,12 @@ export function ReviewControls({
             max={10}
             step={0.5}
             value={preRoll}
-            onChange={(e) => onPreRollChange(Math.max(0, Math.min(10, Number(e.target.value))))}
-            className="w-20 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(event) => onPreRollChange(Math.max(0, Math.min(10, Number(event.target.value))))}
+            className="w-24 rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
           />
         </label>
-        <label className="flex flex-col gap-0.5 text-xs text-slate-700">
-          Post-roll (seconds, 1–15)
+        <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+          Post-roll seconds
           <input
             id="review-postroll"
             type="number"
@@ -124,14 +111,13 @@ export function ReviewControls({
             max={15}
             step={0.5}
             value={postRoll}
-            onChange={(e) => onPostRollChange(Math.max(1, Math.min(15, Number(e.target.value))))}
-            className="w-20 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+            onChange={(event) => onPostRollChange(Math.max(1, Math.min(15, Number(event.target.value))))}
+            className="w-24 rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
           />
         </label>
       </div>
 
-      {/* Playback buttons */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         {!isPlayingPlaylist ? (
           <>
             <button
@@ -139,49 +125,47 @@ export function ReviewControls({
               onClick={onPlayClip}
               disabled={!hasSelected || !hasVideo}
               aria-label="Play review clip for selected event"
-              className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-black uppercase tracking-wide text-slate-950 hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              ▶ Play clip
+              Play Clip
             </button>
             <button
               type="button"
               onClick={onPlayPlaylist}
               disabled={!hasEvents || !hasVideo}
               aria-label="Play all matching events"
-              className="rounded-md border border-emerald-600 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-md border border-sky-500/50 bg-sky-500/10 px-4 py-2 text-sm font-black uppercase tracking-wide text-sky-200 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              ▶▶ Play all matching
+              Play All Matching
             </button>
           </>
         ) : (
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-700" aria-live="polite">
+            <span className="text-sm text-slate-300" aria-live="polite">
               {playlistIndex !== null
                 ? `Playing ${playlistIndex + 1} of ${filteredEvents.length}`
-                : "Starting playback…"}
+                : "Starting playback..."}
             </span>
             <button
               type="button"
               onClick={onStopPlaylist}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+              className="rounded-md bg-red-600 px-4 py-2 text-sm font-black uppercase tracking-wide text-white hover:bg-red-500"
             >
-              ■ Stop review
+              Stop Review
             </button>
           </div>
         )}
       </div>
 
-      {/* No video warning */}
-      {!hasVideo && (
-        <p className="mt-3 text-xs text-amber-700">
+      {!hasVideo ? (
+        <p className="mt-3 text-xs text-amber-300">
           Connect a video file to enable review playback controls.
         </p>
-      )}
+      ) : null}
 
-      {/* Empty state */}
-      {hasVideo && filteredEvents.length === 0 && (
+      {hasVideo && filteredEvents.length === 0 ? (
         <p className="mt-3 text-sm text-slate-500">No events match the current filters.</p>
-      )}
+      ) : null}
     </section>
   );
 }

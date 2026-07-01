@@ -42,34 +42,34 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
   return (
     <li className={`rounded-md border p-3 transition-colors ${
       isSelected
-        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-400"
-        : "border-slate-200 bg-slate-50"
+        ? "border-orange-400 bg-orange-500/10 ring-2 ring-orange-400/50"
+        : "border-slate-700 bg-slate-950/50"
     }`}>
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={() => onSeek(event.timestampSeconds)}
-          className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
+          className="rounded-md bg-orange-500 px-2 py-1 text-xs font-black text-slate-950 hover:bg-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
         >
           {event.timestampLabel}
         </button>
-        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold capitalize text-slate-700">
+        <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-xs font-black capitalize text-sky-200">
           {event.eventRole}
         </span>
-        <span className="text-sm font-medium text-slate-900">{event.tag}</span>
-        <span className="text-xs text-slate-600">{event.category}</span>
+        <span className="text-sm font-bold text-slate-100">{event.tag}</span>
+        <span className="text-xs text-slate-500">{event.category}</span>
         <div className="ml-auto flex gap-2">
           <button
             type="button"
             onClick={() => setIsEditing(!isEditing)}
-            className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-200"
+            className="rounded px-2 py-1 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             {isEditing ? "Close Editor" : "Edit"}
           </button>
           <button
             type="button"
             onClick={() => onDeleteEvent(event.id)}
-            className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+            className="rounded px-2 py-1 text-xs font-bold text-red-300 hover:bg-red-950/50 focus:outline-none focus:ring-2 focus:ring-orange-400"
           >
             Delete
           </button>
@@ -77,7 +77,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
       </div>
 
       {!isEditing ? (
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-2">
+        <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
           <div><span className="font-semibold">Player:</span> {display.playerName}</div>
           <div><span className="font-semibold">Related:</span> {display.relatedPlayerName}</div>
           <div><span className="font-semibold">Team:</span> {display.teamLabel}</div>
@@ -90,21 +90,21 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
           {event.playResult && <div><span className="font-semibold">Result:</span> {event.playResult.replace(/_/g, " ")}</div>}
         </div>
       ) : (
-        <div className="mb-3 rounded-md border border-slate-300 bg-white p-3 shadow-inner">
-          <h3 className="mb-2 text-sm font-semibold text-slate-700">Edit Context Snapshot</h3>
+        <div className="mb-3 rounded-md border border-slate-700 bg-slate-950/80 p-3 shadow-inner">
+          <h3 className="mb-2 text-sm font-black uppercase tracking-wide text-slate-300">Edit Context Snapshot</h3>
           
           <div className="mb-3 grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 text-xs text-slate-700">
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
               Count (e.g., 2-1)
               <input
                 type="text"
                 defaultValue={event.pitchCount || ""}
                 onBlur={(e) => handleCountChange(e.target.value)}
                 placeholder="Balls-Strikes (0-3)-(0-2)"
-                className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 font-normal normal-case tracking-normal text-slate-100 outline-none placeholder:text-slate-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               />
             </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-700">
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
               Pitch Result
               <select
                 value={event.pitchResult || ""}
@@ -112,7 +112,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                   const val = e.target.value;
                   handleUpdate({ pitchResult: val === "" ? null : (val as TaggedEvent["pitchResult"]) });
                 }}
-                className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Unknown</option>
                 {pitchResultOptions.map((option) => (
@@ -133,7 +133,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <label className="flex flex-col gap-1 text-xs text-slate-700">
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
               Contact Direction
               <select
                 value={event.contactType || ""}
@@ -141,7 +141,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                   const val = e.target.value;
                   handleUpdate({ contactType: val === "" ? null : (val as TaggedEvent["contactType"]) });
                 }}
-                className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Unknown</option>
                 <option value="pull">Pull</option>
@@ -149,7 +149,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                 <option value="opposite">Opposite</option>
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-700">
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
               Contact Quality
               <select
                 value={event.contactQuality || ""}
@@ -157,7 +157,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                   const val = e.target.value;
                   handleUpdate({ contactQuality: val === "" ? null : (val as TaggedEvent["contactQuality"]) });
                 }}
-                className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Unknown</option>
                 <option value="hard">Hard</option>
@@ -165,7 +165,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                 <option value="weak">Weak</option>
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-700">
+            <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
               At-Bat Result
               <select
                 value={event.playResult || ""}
@@ -173,7 +173,7 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
                   const val = e.target.value;
                   handleUpdate({ playResult: val === "" ? null : (val as TaggedEvent["playResult"]) });
                 }}
-                className="rounded border border-slate-300 px-2 py-1 outline-none ring-emerald-500 focus:ring-2"
+                className="rounded border border-slate-600 bg-[#0a0f16] px-2 py-1 font-normal normal-case tracking-normal text-slate-100 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
               >
                 <option value="">Unknown</option>
                 <option value="single">Single</option>
@@ -193,14 +193,14 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
         </div>
       )}
 
-      <label className="flex flex-col gap-1 text-xs text-slate-700">
+      <label className="flex flex-col gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
         Note
         <input
           type="text"
           value={event.note}
           onChange={(e) => handleUpdate({ note: e.target.value })}
           placeholder="Add coaching note..."
-          className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none ring-emerald-500 focus:ring-2"
+          className="rounded-md border border-slate-600 bg-[#0a0f16] px-2 py-1 text-sm font-normal normal-case tracking-normal text-slate-100 outline-none placeholder:text-slate-600 focus:border-orange-400 focus:ring-2 focus:ring-orange-400/30"
         />
       </label>
     </li>

@@ -8,12 +8,17 @@ type TagPanelProps = {
 
 export function TagPanel({ onTagClick, disabled = false, message = "" }: TagPanelProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Tag Events</h2>
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-sm font-black uppercase tracking-[0.18em] text-slate-100">Tag Events</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Secondary coaching observations and bookmarks. Use the Pitch Window for structured pitch/play facts.
+        </p>
+      </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {WORKFLOW_TAG_GROUPS.map((group) => (
-          <div key={group.role} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-            <h3 className="mb-2 text-sm font-semibold text-slate-800">{group.title}</h3>
+          <div key={group.role} className="rounded-md border border-slate-700 bg-slate-950/50 p-3">
+            <h3 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">{group.title}</h3>
             <div className="grid gap-2 sm:grid-cols-2">
               {group.tags.map((tag) => (
                 <button
@@ -21,10 +26,10 @@ export function TagPanel({ onTagClick, disabled = false, message = "" }: TagPane
                   type="button"
                   disabled={disabled}
                   onClick={() => onTagClick(tag)}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-900 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-left text-sm text-slate-100 transition-colors hover:border-sky-400 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-orange-400"
                 >
-                  <div className="font-medium">{tag.label}</div>
-                  <div className="text-xs text-slate-600">{tag.category}</div>
+                  <div className="font-bold">{tag.label}</div>
+                  <div className="text-xs text-slate-500">{tag.category}</div>
                 </button>
               ))}
             </div>
@@ -32,12 +37,12 @@ export function TagPanel({ onTagClick, disabled = false, message = "" }: TagPane
         ))}
       </div>
       {disabled ? (
-        <p className="mt-3 text-sm text-amber-700">
+        <p className="text-sm text-amber-300">
           Select a video before adding timeline events.
         </p>
       ) : null}
       {message ? (
-        <p className="mt-3 text-sm font-medium text-slate-700">{message}</p>
+        <p className="text-sm font-semibold text-sky-200">{message}</p>
       ) : null}
     </section>
   );
