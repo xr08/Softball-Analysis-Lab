@@ -18,9 +18,6 @@ import { compareVideoFileNames } from "@/lib/analysis/video";
 import {
   buildNextAtBatState,
   buildNextPitchSelection,
-  getPlayerName,
-  teamSideLabel,
-  UNKNOWN_BATTER_LABEL,
   resolveTagAssignment
 } from "@/lib/analysis/workflow";
 import {
@@ -44,7 +41,7 @@ import {
   upsertLocalVideoSource,
   updateVideoSourceDuration
 } from "@/lib/analysis/session";
-import { createEmptyPitchWindowState } from "@/lib/analysis/pitch-window";
+import { applyPitchResultToCount, createEmptyPitchWindowState } from "@/lib/analysis/pitch-window";
 import { PlayersList } from "@/components/analysis/PlayersList";
 import { AtBatControls } from "@/components/analysis/AtBatControls";
 
@@ -737,6 +734,20 @@ export default function AnalysePage() {
     setTagMessage("Advanced to the next at-bat. Current pitcher was kept.");
   }
 
+  function handlePitchResultChange(nextPitchResult: TaggedEvent["pitchResult"]): void {
+    setCurrentPitchResult(nextPitchResult);
+
+    const nextCount = applyPitchResultToCount({
+      balls: countBalls,
+      strikes: countStrikes,
+      pitchResult: nextPitchResult,
+      hasActiveAtBat: Boolean(activeAtBatId)
+    });
+
+    setCountBalls(nextCount.countBalls);
+    setCountStrikes(nextCount.countStrikes);
+  }
+
   function handleSelectFile(file: File | null): void {
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl);
@@ -1000,18 +1011,12 @@ export default function AnalysePage() {
   const showReports = mode === "reports";
   const teamAPlayers = players.filter((player) => player.teamSide === "teamA");
   const teamBPlayers = players.filter((player) => player.teamSide === "teamB");
-  const currentPitcherName = getPlayerName(players, currentPitcherId);
-  const currentBatterName = currentBatterId ? getPlayerName(players, currentBatterId) : UNKNOWN_BATTER_LABEL;
-  const fielderName = selectedFielderId ? getPlayerName(players, selectedFielderId) : "No fielder";
-  const activeAtBatStatus = activeAtBat
-    ? `${currentAtBatEventCount} event${currentAtBatEventCount === 1 ? "" : "s"} tagged`
-    : "No active at-bat";
 
   return (
     <main className="min-h-screen bg-[#06080c] text-slate-100">
       <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-3 py-4 sm:px-4 lg:px-6">
         <header className="rounded-lg border border-slate-700 bg-[#101720] shadow-2xl shadow-black/30">
-          <div className="flex flex-col gap-4 border-b border-slate-700 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-400">CoachBoss Workspace</p>
               <h1 className="mt-1 text-2xl font-black tracking-wide text-white">Video Analysis Command</h1>
@@ -1073,40 +1078,21 @@ export default function AnalysePage() {
               </button>
             </div>
           </div>
-
-          <div className="grid gap-px bg-slate-700 text-xs sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-[#0d131b] px-4 py-3">
-              <span className="block font-black uppercase tracking-[0.18em] text-slate-500">Session</span>
-              <span className="mt-1 block truncate font-bold text-slate-100">{session.name.trim() || "Untitled session"}</span>
-            </div>
-            <div className="bg-[#0d131b] px-4 py-3">
-              <span className="block font-black uppercase tracking-[0.18em] text-slate-500">Context</span>
-              <span className="mt-1 block truncate font-bold text-slate-100">{session.context.trim() || "No game context"}</span>
-            </div>
-            <div className="bg-[#0d131b] px-4 py-3">
-              <span className="block font-black uppercase tracking-[0.18em] text-slate-500">Teams</span>
-              <span className="mt-1 block font-bold text-sky-200">Team A {teamAPlayers.length} / Team B {teamBPlayers.length}</span>
-            </div>
-            <div className="bg-[#0d131b] px-4 py-3">
-              <span className="block font-black uppercase tracking-[0.18em] text-slate-500">At-Bat</span>
-              <span className="mt-1 block truncate font-bold text-orange-300">{activeAtBatStatus}</span>
-            </div>
-          </div>
         </header>
 
         {!showReports ? (
-          <section className="grid gap-3 lg:grid-cols-4">
+          <section className="grid gap-2 lg:grid-cols-4">
             <details className="group rounded-lg border border-slate-700 bg-[#101720]">
-              <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
-                Session Details
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Session Details - {session.name.trim() || "Untitled"}
               </summary>
               <div className="p-4">
                 <SessionDetails session={session} onUpdateSession={updateSession} />
               </div>
             </details>
             <details className="group rounded-lg border border-slate-700 bg-[#101720]">
-              <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
-                Teams / Players
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Teams / Players - A {teamAPlayers.length} / B {teamBPlayers.length}
               </summary>
               <div className="p-4">
                 <PlayersList
@@ -1117,8 +1103,8 @@ export default function AnalysePage() {
               </div>
             </details>
             <details className="group rounded-lg border border-slate-700 bg-[#101720] lg:col-span-2">
-              <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
-                Settings / Export
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Settings / Export - {sortedEvents.length} event{sortedEvents.length === 1 ? "" : "s"}
               </summary>
               <div className="p-4">
                 <ExportButtons
@@ -1138,7 +1124,7 @@ export default function AnalysePage() {
           </section>
         ) : null}
 
-        <section className={showReports ? "hidden" : "grid gap-4 xl:grid-cols-[minmax(0,1fr)_390px]"}>
+        <section className={showReports ? "hidden" : "grid gap-4"}>
           <div className="flex min-w-0 flex-col gap-4">
             {importRestoreMessage ? (
               <div className="rounded-lg border border-amber-400/40 bg-amber-950/40 p-4 text-sm text-amber-100">
@@ -1154,13 +1140,6 @@ export default function AnalysePage() {
                 </div>
               </div>
             ) : null}
-            <VideoPlayer
-              videoRef={videoRef}
-              videoUrl={videoUrl}
-              selectedFileName={currentVideoSource?.fileName ?? null}
-              videoMessage={videoMessage}
-              onSelectFile={handleSelectFile}
-            />
 
             {mode === "tagging" ? (
               <PitchWindow
@@ -1174,7 +1153,7 @@ export default function AnalysePage() {
                 playResult={currentPlayResult}
                 onBallsChange={setCountBalls}
                 onStrikesChange={setCountStrikes}
-                onPitchResultChange={setCurrentPitchResult}
+                onPitchResultChange={handlePitchResultChange}
                 onPitchLocationChange={(zoneId, label) => {
                   setCurrentPitchLocation(zoneId);
                   setCurrentPitchLocationLabel(label);
@@ -1183,8 +1162,45 @@ export default function AnalysePage() {
                 onContactTypeChange={setCurrentContactType}
                 onContactQualityChange={setCurrentContactQuality}
                 onPlayResultChange={setCurrentPlayResult}
-              />
-            ) : null}
+              >
+                <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
+                  <VideoPlayer
+                    videoRef={videoRef}
+                    videoUrl={videoUrl}
+                    selectedFileName={currentVideoSource?.fileName ?? null}
+                    videoMessage={videoMessage}
+                    onSelectFile={handleSelectFile}
+                  />
+                  <AtBatControls
+                    players={players}
+                    activeAtBat={activeAtBat}
+                    currentAtBatEventCount={currentAtBatEventCount}
+                    currentPitcherId={currentPitcherId}
+                    currentBatterId={currentBatterId}
+                    selectedFielderId={selectedFielderId}
+                    onPitcherChange={handlePitcherChange}
+                    onBatterChange={handleBatterChange}
+                    onFielderChange={setSelectedFielderId}
+                    onClearFielder={() => setSelectedFielderId(null)}
+                    onStartAtBat={handleStartAtBat}
+                    hasActiveAtBat={!!activeAtBatId}
+                    onEndAtBat={handleEndAtBat}
+                    onNextPitch={handleNextPitch}
+                    onNextAtBat={handleNextAtBat}
+                  />
+                </div>
+              </PitchWindow>
+            ) : (
+              <div className="mx-auto w-full max-w-5xl">
+                <VideoPlayer
+                  videoRef={videoRef}
+                  videoUrl={videoUrl}
+                  selectedFileName={currentVideoSource?.fileName ?? null}
+                  videoMessage={videoMessage}
+                  onSelectFile={handleSelectFile}
+                />
+              </div>
+            )}
 
             {mode === "tagging" ? (
               <details className="group rounded-lg border border-slate-700 bg-[#101720]">
@@ -1197,63 +1213,6 @@ export default function AnalysePage() {
               </details>
             ) : null}
           </div>
-
-          <aside className="flex min-w-0 flex-col gap-4">
-            {mode === "tagging" ? (
-              <AtBatControls
-                session={session}
-                players={players}
-                activeAtBat={activeAtBat}
-                currentAtBatEventCount={currentAtBatEventCount}
-                currentPitcherId={currentPitcherId}
-                currentBatterId={currentBatterId}
-                selectedFielderId={selectedFielderId}
-                onPitcherChange={handlePitcherChange}
-                onBatterChange={handleBatterChange}
-                onFielderChange={setSelectedFielderId}
-                onClearFielder={() => setSelectedFielderId(null)}
-                onStartAtBat={handleStartAtBat}
-                hasActiveAtBat={!!activeAtBatId}
-                onEndAtBat={handleEndAtBat}
-                onNextPitch={handleNextPitch}
-                onNextAtBat={handleNextAtBat}
-              />
-            ) : null}
-
-            <div className="rounded-lg border border-slate-700 bg-[#101720] p-4">
-              <h2 className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Live Context</h2>
-              <div className="mt-3 grid gap-2 text-sm">
-                <div className="flex justify-between gap-3 border-b border-slate-800 pb-2">
-                  <span className="text-slate-500">Pitcher</span>
-                  <span className="truncate font-bold text-slate-100">{currentPitcherName}</span>
-                </div>
-                <div className="flex justify-between gap-3 border-b border-slate-800 pb-2">
-                  <span className="text-slate-500">Batter</span>
-                  <span className="truncate font-bold text-slate-100">{currentBatterName}</span>
-                </div>
-                <div className="flex justify-between gap-3 border-b border-slate-800 pb-2">
-                  <span className="text-slate-500">Fielder</span>
-                  <span className="truncate font-bold text-slate-100">{fielderName}</span>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <span className="text-slate-500">Pitcher Team</span>
-                  <span className="font-bold text-sky-200">{teamSideLabel(activeAtBat?.pitcherTeamSide ?? null)}</span>
-                </div>
-              </div>
-            </div>
-
-            <Timeline
-              events={showReview ? filteredReviewEvents : sortedEvents}
-              players={players}
-              atBats={atBats}
-              onSeek={handleSeek}
-              onUpdateEvent={handleUpdateEvent}
-              onDeleteEvent={handleDeleteEvent}
-              selectedReviewEventId={showReview ? selectedReviewEventId : null}
-              totalCount={sortedEvents.length}
-              filteredCount={showReview ? filteredReviewEvents.length : undefined}
-            />
-          </aside>
         </section>
 
         {showReview ? (
@@ -1281,6 +1240,20 @@ export default function AnalysePage() {
               totalSessionEvents={sortedEvents.length}
             />
           </section>
+        ) : null}
+
+        {!showReports ? (
+          <Timeline
+            events={showReview ? filteredReviewEvents : sortedEvents}
+            players={players}
+            atBats={atBats}
+            onSeek={handleSeek}
+            onUpdateEvent={handleUpdateEvent}
+            onDeleteEvent={handleDeleteEvent}
+            selectedReviewEventId={showReview ? selectedReviewEventId : null}
+            totalCount={sortedEvents.length}
+            filteredCount={showReview ? filteredReviewEvents.length : undefined}
+          />
         ) : null}
 
         {showReports ? (

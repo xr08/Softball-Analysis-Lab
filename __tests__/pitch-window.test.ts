@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyPitchResultToCount,
+  BATTER_ON_BASE_BUTTONS,
+  BATTER_OUT_BUTTONS,
   CONTACT_QUALITY_OPTIONS,
   CONTACT_TYPE_OPTIONS,
   createEmptyPitchWindowState,
@@ -50,6 +53,97 @@ describe("pitch window helpers", () => {
       contactQuality: null,
       playResult: null
     });
+  });
+
+  it("increments balls from an unknown count during an active at-bat", () => {
+    expect(
+      applyPitchResultToCount({
+        balls: null,
+        strikes: null,
+        pitchResult: "ball",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 1, countStrikes: 0 });
+  });
+
+  it("caps balls at four and strikes at three", () => {
+    expect(
+      applyPitchResultToCount({
+        balls: 4,
+        strikes: 2,
+        pitchResult: "ball",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 4, countStrikes: 2 });
+
+    expect(
+      applyPitchResultToCount({
+        balls: 2,
+        strikes: 3,
+        pitchResult: "called_strike",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 2, countStrikes: 3 });
+  });
+
+  it("handles foul strike rules without adding a strike at two strikes", () => {
+    expect(
+      applyPitchResultToCount({
+        balls: 1,
+        strikes: 1,
+        pitchResult: "foul",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 1, countStrikes: 2 });
+
+    expect(
+      applyPitchResultToCount({
+        balls: 1,
+        strikes: 2,
+        pitchResult: "foul",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 1, countStrikes: 2 });
+  });
+
+  it("does not infer count for terminal or non-count pitch results", () => {
+    expect(
+      applyPitchResultToCount({
+        balls: null,
+        strikes: null,
+        pitchResult: "ball_in_play",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: null, countStrikes: null });
+
+    expect(
+      applyPitchResultToCount({
+        balls: 2,
+        strikes: 1,
+        pitchResult: "hit_by_pitch",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 2, countStrikes: 1 });
+
+    expect(
+      applyPitchResultToCount({
+        balls: 2,
+        strikes: 1,
+        pitchResult: "wild_pitch",
+        hasActiveAtBat: true
+      })
+    ).toEqual({ countBalls: 2, countStrikes: 1 });
+  });
+
+  it("leaves count unchanged when no at-bat is active", () => {
+    expect(
+      applyPitchResultToCount({
+        balls: 1,
+        strikes: 1,
+        pitchResult: "swinging_strike",
+        hasActiveAtBat: false
+      })
+    ).toEqual({ countBalls: 1, countStrikes: 1 });
   });
 
   it("keeps pitcher, batter, and at-bat selection when moving to the next pitch", () => {
@@ -106,6 +200,51 @@ describe("pitch window helpers", () => {
   it("formats play result buttons with the same stored playResult values", () => {
     expect(getPlayResultLabel("fielders_choice")).toBe("Fielder's Choice");
     expect(getPlayResultLabel("hit_by_pitch")).toBe("Hit by Pitch");
+  });
+
+  it("exposes the requested Batter Box on-base labels with safe placeholders", () => {
+    expect(BATTER_ON_BASE_BUTTONS.map((button) => button.label)).toEqual([
+      "Single",
+      "Walk",
+      "Sac Bunt",
+      "Double",
+      "HBP",
+      "Sac Fly",
+      "Triple",
+      "Fielder Ch",
+      "Int Walk",
+      "Home Run",
+      "Error",
+      "Drop 3rd K"
+    ]);
+    expect(BATTER_ON_BASE_BUTTONS.filter((button) => button.kind === "placeholder").map((button) => button.label)).toEqual([
+      "Sac Bunt",
+      "Int Walk",
+      "Drop 3rd K"
+    ]);
+  });
+
+  it("exposes the requested Batter Box out labels with safe placeholders", () => {
+    expect(BATTER_OUT_BUTTONS.map((button) => button.label)).toEqual([
+      "K2",
+      "Out-Caught",
+      "Tag Play",
+      "KC",
+      "Out-on Throw",
+      "Double Play",
+      "Infield Fly",
+      "Leave Early",
+      "Triple Play"
+    ]);
+    expect(BATTER_OUT_BUTTONS.filter((button) => button.kind === "placeholder").map((button) => button.label)).toEqual([
+      "K2",
+      "Tag Play",
+      "Out-on Throw",
+      "Double Play",
+      "Infield Fly",
+      "Leave Early",
+      "Triple Play"
+    ]);
   });
 
   it("exposes HBP and Wild Pitch as pitcher Pitch Result tags", () => {

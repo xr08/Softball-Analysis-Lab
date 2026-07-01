@@ -64,6 +64,67 @@ export const PLAY_RESULT_OPTIONS: Array<{
   { value: "hit_by_pitch", label: "Hit by Pitch" }
 ];
 
+export type BatterContextButton =
+  | {
+      id: string;
+      label: string;
+      kind: "contactType";
+      value: NonNullable<TaggedEvent["contactType"]>;
+    }
+  | {
+      id: string;
+      label: string;
+      kind: "contactQuality";
+      value: NonNullable<TaggedEvent["contactQuality"]>;
+    }
+  | {
+      id: string;
+      label: string;
+      kind: "playResult";
+      value: NonNullable<TaggedEvent["playResult"]>;
+    }
+  | {
+      id: string;
+      label: string;
+      kind: "placeholder";
+    };
+
+export const BATTER_DIRECTION_POWER_BUTTONS: BatterContextButton[] = [
+  { id: "direction-pull", label: "Pull", kind: "contactType", value: "pull" },
+  { id: "direction-middle", label: "Middle", kind: "contactType", value: "middle" },
+  { id: "direction-opposite", label: "Opposite", kind: "contactType", value: "opposite" },
+  { id: "power-hard", label: "Hard", kind: "contactQuality", value: "hard" },
+  { id: "power-medium", label: "Medium", kind: "contactQuality", value: "medium" },
+  { id: "power-weak", label: "Weak", kind: "contactQuality", value: "weak" }
+];
+
+export const BATTER_ON_BASE_BUTTONS: BatterContextButton[] = [
+  { id: "onbase-single", label: "Single", kind: "playResult", value: "single" },
+  { id: "onbase-walk", label: "Walk", kind: "playResult", value: "walk" },
+  { id: "onbase-sac-bunt", label: "Sac Bunt", kind: "placeholder" },
+  { id: "onbase-double", label: "Double", kind: "playResult", value: "double" },
+  { id: "onbase-hbp", label: "HBP", kind: "playResult", value: "hit_by_pitch" },
+  { id: "onbase-sac-fly", label: "Sac Fly", kind: "playResult", value: "sacrifice" },
+  { id: "onbase-triple", label: "Triple", kind: "playResult", value: "triple" },
+  { id: "onbase-fielders-choice", label: "Fielder Ch", kind: "playResult", value: "fielders_choice" },
+  { id: "onbase-int-walk", label: "Int Walk", kind: "placeholder" },
+  { id: "onbase-home-run", label: "Home Run", kind: "playResult", value: "home_run" },
+  { id: "onbase-error", label: "Error", kind: "playResult", value: "reached_on_error" },
+  { id: "onbase-drop-third-k", label: "Drop 3rd K", kind: "placeholder" }
+];
+
+export const BATTER_OUT_BUTTONS: BatterContextButton[] = [
+  { id: "out-k2", label: "K2", kind: "placeholder" },
+  { id: "out-caught", label: "Out-Caught", kind: "playResult", value: "field_out" },
+  { id: "out-tag-play", label: "Tag Play", kind: "placeholder" },
+  { id: "out-kc", label: "KC", kind: "playResult", value: "strikeout" },
+  { id: "out-on-throw", label: "Out-on Throw", kind: "placeholder" },
+  { id: "out-double-play", label: "Double Play", kind: "placeholder" },
+  { id: "out-infield-fly", label: "Infield Fly", kind: "placeholder" },
+  { id: "out-leave-early", label: "Leave Early", kind: "placeholder" },
+  { id: "out-triple-play", label: "Triple Play", kind: "placeholder" }
+];
+
 export function createEmptyPitchWindowState(): PitchWindowState {
   return {
     countBalls: null,
@@ -75,6 +136,37 @@ export function createEmptyPitchWindowState(): PitchWindowState {
     contactQuality: null,
     playResult: null
   };
+}
+
+export function applyPitchResultToCount({
+  balls,
+  strikes,
+  pitchResult,
+  hasActiveAtBat
+}: {
+  balls: number | null;
+  strikes: number | null;
+  pitchResult: TaggedEvent["pitchResult"];
+  hasActiveAtBat: boolean;
+}): Pick<PitchWindowState, "countBalls" | "countStrikes"> {
+  if (!hasActiveAtBat) {
+    return { countBalls: balls, countStrikes: strikes };
+  }
+
+  if (pitchResult === "ball") {
+    return { countBalls: Math.min((balls ?? 0) + 1, 4), countStrikes: strikes ?? 0 };
+  }
+
+  if (pitchResult === "called_strike" || pitchResult === "swinging_strike") {
+    return { countBalls: balls ?? 0, countStrikes: Math.min((strikes ?? 0) + 1, 3) };
+  }
+
+  if (pitchResult === "foul") {
+    const nextStrikes = strikes === null ? 1 : strikes < 2 ? strikes + 1 : strikes;
+    return { countBalls: balls ?? 0, countStrikes: nextStrikes };
+  }
+
+  return { countBalls: balls, countStrikes: strikes };
 }
 
 export function getPitchResultLabel(value: TaggedEvent["pitchResult"]): string {

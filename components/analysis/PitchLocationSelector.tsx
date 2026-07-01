@@ -1,9 +1,11 @@
+import { ReactNode } from "react";
 import { TaggedEvent } from "@/lib/analysis/types";
 
 type PitchLocationSelectorProps = {
   value: TaggedEvent["pitchLocation"];
   onChange: (zoneId: TaggedEvent["pitchLocation"], label: string | null) => void;
   compact?: boolean;
+  countControl?: ReactNode;
 };
 
 const ZONES = [
@@ -18,7 +20,12 @@ const ZONES = [
   { id: "zone_9", label: "Zone 9" },
 ] as const;
 
-export function PitchLocationSelector({ value, onChange, compact = false }: PitchLocationSelectorProps) {
+export function PitchLocationSelector({
+  value,
+  onChange,
+  compact = false,
+  countControl
+}: PitchLocationSelectorProps) {
   const isLeftHanded = false;
   const leftId = isLeftHanded ? "outside" : "inside";
   const rightId = isLeftHanded ? "inside" : "outside";
@@ -38,28 +45,26 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
         </button>
       </div>
 
-      <p className={`text-xs text-slate-500 ${compact ? "mb-2" : "mb-4"}`}>
-        Inside and outside are shown from the selected batter's perspective.
-      </p>
+      {countControl ? <div className="mb-2">{countControl}</div> : null}
 
-      <div className={`mx-auto flex flex-col items-center ${compact ? "max-w-[236px] gap-1.5" : "max-w-[300px] gap-2"}`}>
+      <div className={`mx-auto flex flex-col items-center ${compact ? "max-w-[228px] gap-1" : "max-w-[300px] gap-2"}`}>
         {/* High Zone */}
         <button
           type="button"
           onClick={() => onChange("high", "High")}
-          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-t-xl border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+          className={`${compact ? "h-6 w-32 text-[10px]" : "h-10 w-32 text-sm"} rounded-t-md border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
             value === "high" ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
           }`}
         >
           High
         </button>
 
-        <div className={`flex w-full items-stretch justify-center ${compact ? "gap-1.5" : "gap-2"}`}>
+        <div className={`flex w-full items-stretch justify-center ${compact ? "gap-1" : "gap-2"}`}>
           {/* Left Chase Zone */}
           <button
             type="button"
-          onClick={() => onChange(leftId, leftLabel)}
-            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} flex rotate-180 items-center justify-center rounded-l-xl border font-black transition-colors [writing-mode:vertical-lr] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+            onClick={() => onChange(leftId, leftLabel)}
+            className={`${compact ? "w-8 text-[10px]" : "w-16 text-sm"} flex rotate-180 items-center justify-center rounded-l-md border font-black transition-colors [writing-mode:vertical-lr] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
               value === leftId ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
             }`}
           >
@@ -67,13 +72,13 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
           </button>
 
           {/* 3x3 Grid */}
-          <div className={`grid flex-shrink-0 grid-cols-3 grid-rows-3 gap-1 border-2 border-slate-500 bg-slate-800 p-1 ${compact ? "h-24 w-24" : "h-32 w-32"}`}>
+          <div className={`grid flex-shrink-0 grid-cols-3 grid-rows-3 gap-1 border-2 border-slate-500 bg-slate-800 p-1 ${compact ? "h-32 w-32" : "h-32 w-32"}`}>
             {ZONES.map((zone) => (
               <button
                 key={zone.id}
                 type="button"
                 onClick={() => onChange(zone.id, zone.label)}
-                className={`flex items-center justify-center border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${compact ? "text-[11px]" : "text-xs"} ${
+                className={`flex items-center justify-center rounded-sm border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${compact ? "text-sm" : "text-xs"} ${
                   value === zone.id ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-950 text-slate-300 hover:border-sky-400 hover:bg-slate-900"
                 }`}
               >
@@ -85,8 +90,8 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
           {/* Right Chase Zone */}
           <button
             type="button"
-          onClick={() => onChange(rightId, rightLabel)}
-            className={`${compact ? "w-12 text-xs" : "w-16 text-sm"} flex items-center justify-center rounded-r-xl border font-black transition-colors [writing-mode:vertical-rl] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+            onClick={() => onChange(rightId, rightLabel)}
+            className={`${compact ? "w-8 text-[10px]" : "w-16 text-sm"} flex items-center justify-center rounded-r-md border font-black transition-colors [writing-mode:vertical-rl] focus:outline-none focus:ring-2 focus:ring-orange-400 ${
               value === rightId ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
             }`}
           >
@@ -98,13 +103,17 @@ export function PitchLocationSelector({ value, onChange, compact = false }: Pitc
         <button
           type="button"
           onClick={() => onChange("low", "Low")}
-          className={`${compact ? "h-8 w-24 text-xs" : "h-10 w-32 text-sm"} rounded-b-xl border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+          className={`${compact ? "h-6 w-32 text-[10px]" : "h-10 w-32 text-sm"} rounded-b-md border font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
             value === "low" ? "border-orange-400 bg-orange-500 text-slate-950" : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
           }`}
         >
           Low
         </button>
       </div>
+
+      <p className="mt-2 text-[11px] leading-tight text-slate-500">
+        Inside and outside are shown from the selected batter&apos;s perspective.
+      </p>
     </section>
   );
 }

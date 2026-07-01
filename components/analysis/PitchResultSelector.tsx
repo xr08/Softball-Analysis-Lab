@@ -28,7 +28,7 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className={compact ? "grid grid-cols-3 gap-1" : "flex flex-wrap gap-1.5"}>
         {PITCH_RESULT_OPTIONS.map((option) => {
           const selected = value === option.value;
           return (
@@ -37,7 +37,7 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
               type="button"
               aria-pressed={selected}
               onClick={() => onChange(option.value)}
-              className={`rounded-full border px-2.5 py-1.5 text-xs font-black transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+              className={`min-h-8 rounded-md border px-1.5 py-1 text-[10px] font-black leading-tight transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
                 selected
                   ? "border-orange-400 bg-orange-500 text-slate-950"
                   : "border-slate-600 bg-slate-900 text-slate-200 hover:border-sky-400 hover:bg-slate-800"
@@ -49,9 +49,9 @@ export function PitchResultSelector({ value, onChange, compact = false }: PitchR
         })}
       </div>
 
-      <p className={`mt-2 text-slate-400 ${compact ? "text-xs" : "text-sm"}`}>
-        Selected result: {getPitchResultLabel(value)}
-      </p>
+      {compact ? null : (
+        <p className="mt-2 text-sm text-slate-400">Selected result: {getPitchResultLabel(value)}</p>
+      )}
       {hasCustomValue ? (
         <p className="mt-1 text-xs text-amber-300">
           This session contains a non-standard pitch result value: {getPitchResultLabel(value)}.
