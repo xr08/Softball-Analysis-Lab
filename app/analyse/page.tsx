@@ -41,7 +41,7 @@ import {
   upsertLocalVideoSource,
   updateVideoSourceDuration
 } from "@/lib/analysis/session";
-import { createEmptyPitchWindowState } from "@/lib/analysis/pitch-window";
+import { applyPitchResultToCount, createEmptyPitchWindowState } from "@/lib/analysis/pitch-window";
 import { PlayersList } from "@/components/analysis/PlayersList";
 import { AtBatControls } from "@/components/analysis/AtBatControls";
 
@@ -734,6 +734,20 @@ export default function AnalysePage() {
     setTagMessage("Advanced to the next at-bat. Current pitcher was kept.");
   }
 
+  function handlePitchResultChange(nextPitchResult: TaggedEvent["pitchResult"]): void {
+    setCurrentPitchResult(nextPitchResult);
+
+    const nextCount = applyPitchResultToCount({
+      balls: countBalls,
+      strikes: countStrikes,
+      pitchResult: nextPitchResult,
+      hasActiveAtBat: Boolean(activeAtBatId)
+    });
+
+    setCountBalls(nextCount.countBalls);
+    setCountStrikes(nextCount.countStrikes);
+  }
+
   function handleSelectFile(file: File | null): void {
     if (videoUrl) {
       URL.revokeObjectURL(videoUrl);
@@ -995,242 +1009,265 @@ export default function AnalysePage() {
 
   const showReview = mode === "review";
   const showReports = mode === "reports";
+  const teamAPlayers = players.filter((player) => player.teamSide === "teamA");
+  const teamBPlayers = players.filter((player) => player.teamSide === "teamB");
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 py-6 md:px-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">Batter Video Analysis</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Mode toggle */}
-          <div className="flex rounded-lg border border-slate-300 bg-white p-0.5 shadow-sm" role="tablist" aria-label="Application mode">
-            <button
-              id="tab-tagging"
-              role="tab"
-              aria-selected={mode === "tagging"}
-              onClick={() => switchMode("tagging")}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
-                mode === "tagging" ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              Tagging
-            </button>
-            <button
-              id="tab-review"
-              role="tab"
-              aria-selected={showReview}
-              onClick={() => switchMode("review")}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
-                showReview ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              Review
-              {hasActiveFilters(reviewFilters) && (
-                <span className="ml-1.5 rounded-full bg-emerald-200 px-1.5 py-0.5 text-xs text-emerald-900">
-                  Filtered
-                </span>
-              )}
-            </button>
-            <button
-              id="tab-reports"
-              role="tab"
-              aria-selected={showReports}
-              onClick={() => switchMode("reports")}
-              className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
-                showReports ? "bg-emerald-600 text-white" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              Reports
-            </button>
-          </div>
+    <main className="min-h-screen bg-[#06080c] text-slate-100">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-3 py-4 sm:px-4 lg:px-6">
+        <header className="rounded-lg border border-slate-700 bg-[#101720] shadow-2xl shadow-black/30">
+          <div className="flex flex-col gap-4 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-orange-400">CoachBoss Workspace</p>
+              <h1 className="mt-1 text-2xl font-black tracking-wide text-white">Video Analysis Command</h1>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-md border border-slate-600 bg-[#0a0f16] p-1" role="tablist" aria-label="Application mode">
+                <button
+                  id="tab-tagging"
+                  role="tab"
+                  aria-selected={mode === "tagging"}
+                  onClick={() => switchMode("tagging")}
+                  className={`rounded px-3 py-1.5 text-xs font-black uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                    mode === "tagging" ? "bg-orange-500 text-slate-950" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  Tagging
+                </button>
+                <button
+                  id="tab-review"
+                  role="tab"
+                  aria-selected={showReview}
+                  onClick={() => switchMode("review")}
+                  className={`rounded px-3 py-1.5 text-xs font-black uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                    showReview ? "bg-orange-500 text-slate-950" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  Review
+                  {hasActiveFilters(reviewFilters) ? (
+                    <span className="ml-1.5 rounded-full bg-sky-300 px-1.5 py-0.5 text-[10px] text-slate-950">
+                      Filtered
+                    </span>
+                  ) : null}
+                </button>
+                <button
+                  id="tab-reports"
+                  role="tab"
+                  aria-selected={showReports}
+                  onClick={() => switchMode("reports")}
+                  className={`rounded px-3 py-1.5 text-xs font-black uppercase tracking-wide transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400 ${
+                    showReports ? "bg-orange-500 text-slate-950" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  Reports
+                </button>
+              </div>
 
-          {/* Import */}
-          <input
-            type="file"
-            accept=".json"
-            ref={fileInputRef}
-            onChange={handleImportJson}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
-          >
-            Import JSON Session
-          </button>
-        </div>
-      </div>
-
-      {/* Session Details — always visible */}
-      <SessionDetails session={session} onUpdateSession={updateSession} />
-
-      {/* ================================================================ */}
-      {/* TAGGING MODE                                                     */}
-      {/* ================================================================ */}
-      {mode === "tagging" && (
-        <>
-          <div className="grid gap-4 md:grid-cols-2 mb-4">
-            <PlayersList
-              players={players}
-              onAddPlayer={handleAddPlayer}
-              onRemovePlayer={handleRemovePlayer}
-            />
-            <AtBatControls
-              session={session}
-              players={players}
-              activeAtBat={activeAtBat}
-              currentAtBatEventCount={currentAtBatEventCount}
-              currentPitcherId={currentPitcherId}
-              currentBatterId={currentBatterId}
-              selectedFielderId={selectedFielderId}
-              onPitcherChange={handlePitcherChange}
-              onBatterChange={handleBatterChange}
-              onFielderChange={setSelectedFielderId}
-              onClearFielder={() => setSelectedFielderId(null)}
-              onStartAtBat={handleStartAtBat}
-              hasActiveAtBat={!!activeAtBatId}
-              onEndAtBat={handleEndAtBat}
-              onNextPitch={handleNextPitch}
-              onNextAtBat={handleNextAtBat}
-            />
-          </div>
-
-          <PitchWindow
-            balls={countBalls}
-            strikes={countStrikes}
-            pitchResult={currentPitchResult}
-            pitchLocation={currentPitchLocation}
-            pitchType={currentPitchType}
-            contactType={currentContactType}
-            contactQuality={currentContactQuality}
-            playResult={currentPlayResult}
-            onBallsChange={setCountBalls}
-            onStrikesChange={setCountStrikes}
-            onPitchResultChange={setCurrentPitchResult}
-            onPitchLocationChange={(zoneId, label) => {
-              setCurrentPitchLocation(zoneId);
-              setCurrentPitchLocationLabel(label);
-            }}
-            onPitchTypeChange={setCurrentPitchType}
-            onContactTypeChange={setCurrentContactType}
-            onContactQualityChange={setCurrentContactQuality}
-            onPlayResultChange={setCurrentPlayResult}
-          />
-        </>
-      )}
-
-      {/* Video Player — preserved in DOM to maintain state, hidden in reports */}
-      <div className={showReports ? "hidden" : "block"}>
-        {importRestoreMessage ? (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <p className="font-medium">{importRestoreMessage}</p>
+              <input
+                type="file"
+                accept=".json"
+                ref={fileInputRef}
+                onChange={handleImportJson}
+                className="hidden"
+              />
               <button
-                type="button"
-                onClick={() => setImportRestoreMessage("")}
-                className="self-start rounded-md border border-amber-300 bg-white px-3 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-md border border-slate-600 bg-slate-900 px-3 py-2 text-xs font-black uppercase tracking-wide text-slate-100 shadow-sm transition-colors hover:border-sky-400 hover:text-sky-200 focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
-                Dismiss
+                Import JSON
               </button>
             </div>
           </div>
+        </header>
+
+        {!showReports ? (
+          <section className="grid gap-2 lg:grid-cols-4">
+            <details className="group rounded-lg border border-slate-700 bg-[#101720]">
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Session Details - {session.name.trim() || "Untitled"}
+              </summary>
+              <div className="p-4">
+                <SessionDetails session={session} onUpdateSession={updateSession} />
+              </div>
+            </details>
+            <details className="group rounded-lg border border-slate-700 bg-[#101720]">
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Teams / Players - A {teamAPlayers.length} / B {teamBPlayers.length}
+              </summary>
+              <div className="p-4">
+                <PlayersList
+                  players={players}
+                  onAddPlayer={handleAddPlayer}
+                  onRemovePlayer={handleRemovePlayer}
+                />
+              </div>
+            </details>
+            <details className="group rounded-lg border border-slate-700 bg-[#101720] lg:col-span-2">
+              <summary className="cursor-pointer list-none px-3 py-2 text-xs font-black uppercase tracking-[0.16em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                Settings / Export - {sortedEvents.length} event{sortedEvents.length === 1 ? "" : "s"}
+              </summary>
+              <div className="p-4">
+                <ExportButtons
+                  onExportCsv={() => void handleExportCsv()}
+                  onExportJson={() => void handleExportJson()}
+                  onOpenCsv={handleOpenCsv}
+                  onOpenJson={handleOpenJson}
+                  onCopyCsv={() => void handleCopyCsv()}
+                  onCopyJson={() => void handleCopyJson()}
+                  csvContent={csvContent}
+                  jsonContent={jsonContent}
+                  exportMessage={exportMessage}
+                  hasEvents={sortedEvents.length > 0}
+                />
+              </div>
+            </details>
+          </section>
         ) : null}
-        <VideoPlayer
-          videoRef={videoRef}
-          videoUrl={videoUrl}
-          selectedFileName={currentVideoSource?.fileName ?? null}
-          
-          videoMessage={videoMessage}
-          onSelectFile={handleSelectFile}
-        />
-      </div>
 
-      {/* ================================================================ */}
-      {/* TAGGING MODE — Tag panel                                         */}
-      {/* ================================================================ */}
-      {mode === "tagging" && (
-        <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} message={tagMessage} />
-      )}
+        <section className={showReports ? "hidden" : "grid gap-4"}>
+          <div className="flex min-w-0 flex-col gap-4">
+            {importRestoreMessage ? (
+              <div className="rounded-lg border border-amber-400/40 bg-amber-950/40 p-4 text-sm text-amber-100">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <p className="font-medium">{importRestoreMessage}</p>
+                  <button
+                    type="button"
+                    onClick={() => setImportRestoreMessage("")}
+                    className="self-start rounded-md border border-amber-300/60 bg-amber-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-100 hover:bg-amber-400/20 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
-      {/* ================================================================ */}
-      {/* REVIEW MODE — Filters + Controls + Summary                       */}
-      {/* ================================================================ */}
-      {showReview && (
-        <>
-          <ReviewFilters filters={reviewFilters} onChange={handleFilterChange} />
-          <ReviewControls
+            {mode === "tagging" ? (
+              <PitchWindow
+                balls={countBalls}
+                strikes={countStrikes}
+                pitchResult={currentPitchResult}
+                pitchLocation={currentPitchLocation}
+                pitchType={currentPitchType}
+                contactType={currentContactType}
+                contactQuality={currentContactQuality}
+                playResult={currentPlayResult}
+                onBallsChange={setCountBalls}
+                onStrikesChange={setCountStrikes}
+                onPitchResultChange={handlePitchResultChange}
+                onPitchLocationChange={(zoneId, label) => {
+                  setCurrentPitchLocation(zoneId);
+                  setCurrentPitchLocationLabel(label);
+                }}
+                onPitchTypeChange={setCurrentPitchType}
+                onContactTypeChange={setCurrentContactType}
+                onContactQualityChange={setCurrentContactQuality}
+                onPlayResultChange={setCurrentPlayResult}
+              >
+                <div className="mx-auto flex w-full max-w-6xl flex-col gap-3">
+                  <VideoPlayer
+                    videoRef={videoRef}
+                    videoUrl={videoUrl}
+                    selectedFileName={currentVideoSource?.fileName ?? null}
+                    videoMessage={videoMessage}
+                    onSelectFile={handleSelectFile}
+                  />
+                  <AtBatControls
+                    players={players}
+                    activeAtBat={activeAtBat}
+                    currentAtBatEventCount={currentAtBatEventCount}
+                    currentPitcherId={currentPitcherId}
+                    currentBatterId={currentBatterId}
+                    selectedFielderId={selectedFielderId}
+                    onPitcherChange={handlePitcherChange}
+                    onBatterChange={handleBatterChange}
+                    onFielderChange={setSelectedFielderId}
+                    onClearFielder={() => setSelectedFielderId(null)}
+                    onStartAtBat={handleStartAtBat}
+                    hasActiveAtBat={!!activeAtBatId}
+                    onEndAtBat={handleEndAtBat}
+                    onNextPitch={handleNextPitch}
+                    onNextAtBat={handleNextAtBat}
+                  />
+                </div>
+              </PitchWindow>
+            ) : (
+              <div className="mx-auto w-full max-w-5xl">
+                <VideoPlayer
+                  videoRef={videoRef}
+                  videoUrl={videoUrl}
+                  selectedFileName={currentVideoSource?.fileName ?? null}
+                  videoMessage={videoMessage}
+                  onSelectFile={handleSelectFile}
+                />
+              </div>
+            )}
+
+            {mode === "tagging" ? (
+              <details className="group rounded-lg border border-slate-700 bg-[#101720]">
+                <summary className="cursor-pointer list-none px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-200 outline-none transition-colors hover:bg-slate-800 focus:ring-2 focus:ring-orange-400 group-open:border-b group-open:border-slate-700">
+                  Secondary Tag Events
+                </summary>
+                <div className="p-4">
+                  <TagPanel onTagClick={handleTagClick} disabled={!videoUrl} message={tagMessage} />
+                </div>
+              </details>
+            ) : null}
+          </div>
+        </section>
+
+        {showReview ? (
+          <section className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <ReviewFilters filters={reviewFilters} onChange={handleFilterChange} />
+            <ReviewControls
+              filteredEvents={filteredReviewEvents}
+              selectedEventId={selectedReviewEventId}
+              hasVideo={!!videoUrl}
+              preRoll={preRoll}
+              postRoll={postRoll}
+              isPlayingPlaylist={isPlayingPlaylist}
+              playlistIndex={playlistIndex}
+              onSelectEvent={handleSelectReviewEvent}
+              onPrev={handleReviewPrev}
+              onNext={handleReviewNext}
+              onPlayClip={handlePlayClip}
+              onPlayPlaylist={handlePlayPlaylist}
+              onStopPlaylist={stopPlaylist}
+              onPreRollChange={setPreRoll}
+              onPostRollChange={setPostRoll}
+            />
+            <ReviewSummary
+              summary={reviewSummary}
+              totalSessionEvents={sortedEvents.length}
+            />
+          </section>
+        ) : null}
+
+        {!showReports ? (
+          <Timeline
+            events={showReview ? filteredReviewEvents : sortedEvents}
+            players={players}
+            atBats={atBats}
+            onSeek={handleSeek}
+            onUpdateEvent={handleUpdateEvent}
+            onDeleteEvent={handleDeleteEvent}
+            selectedReviewEventId={showReview ? selectedReviewEventId : null}
+            totalCount={sortedEvents.length}
+            filteredCount={showReview ? filteredReviewEvents.length : undefined}
+          />
+        ) : null}
+
+        {showReports ? (
+          <ReportsPanel
+            session={session}
+            allEvents={sortedEvents}
             filteredEvents={filteredReviewEvents}
-            selectedEventId={selectedReviewEventId}
-            hasVideo={!!videoUrl}
-            preRoll={preRoll}
-            postRoll={postRoll}
-            isPlayingPlaylist={isPlayingPlaylist}
-            playlistIndex={playlistIndex}
-            onSelectEvent={handleSelectReviewEvent}
-            onPrev={handleReviewPrev}
-            onNext={handleReviewNext}
-            onPlayClip={handlePlayClip}
-            onPlayPlaylist={handlePlayPlaylist}
-            onStopPlaylist={stopPlaylist}
-            onPreRollChange={setPreRoll}
-            onPostRollChange={setPostRoll}
+            reviewFilters={reviewFilters}
+            comparisonSession={comparisonSession}
+            onLoadComparisonSession={setComparisonSession}
+            onClearComparisonSession={() => setComparisonSession(null)}
           />
-          <ReviewSummary
-            summary={reviewSummary}
-            totalSessionEvents={sortedEvents.length}
-          />
-        </>
-      )}
-
-      {/* ================================================================ */}
-      {/* REPORTS MODE                                                     */}
-      {/* ================================================================ */}
-      {showReports && (
-        <ReportsPanel
-          session={session}
-          allEvents={sortedEvents}
-          filteredEvents={filteredReviewEvents}
-          reviewFilters={reviewFilters}
-          comparisonSession={comparisonSession}
-          onLoadComparisonSession={setComparisonSession}
-          onClearComparisonSession={() => setComparisonSession(null)}
-        />
-      )}
-
-      {/* ================================================================ */}
-      {/* TIMELINE — visible in tagging and review modes                   */}
-      {/* ================================================================ */}
-      {!showReports && (
-        <Timeline
-          events={showReview ? filteredReviewEvents : sortedEvents}
-          players={players}
-          atBats={atBats}
-          onSeek={handleSeek}
-          onUpdateEvent={handleUpdateEvent}
-          onDeleteEvent={handleDeleteEvent}
-          selectedReviewEventId={showReview ? selectedReviewEventId : null}
-          totalCount={sortedEvents.length}
-          filteredCount={showReview ? filteredReviewEvents.length : undefined}
-        />
-      )}
-
-      {/* ================================================================ */}
-      {/* EXPORT — visible in tagging and review modes                     */}
-      {/* ================================================================ */}
-      {!showReports && (
-        <ExportButtons
-          onExportCsv={() => void handleExportCsv()}
-          onExportJson={() => void handleExportJson()}
-          onOpenCsv={handleOpenCsv}
-          onOpenJson={handleOpenJson}
-          onCopyCsv={() => void handleCopyCsv()}
-          onCopyJson={() => void handleCopyJson()}
-          csvContent={csvContent}
-          jsonContent={jsonContent}
-          exportMessage={exportMessage}
-          hasEvents={sortedEvents.length > 0}
-        />
-      )}
+        ) : null}
+      </div>
     </main>
   );
 }

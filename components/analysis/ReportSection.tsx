@@ -16,8 +16,8 @@ type ReportSectionProps = {
  */
 export function ReportSection({ title, description, children, className = "" }: ReportSectionProps) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white p-5 ${className}`}>
-      <h3 className="mb-1 text-base font-semibold text-slate-900">{title}</h3>
+    <section className={`rounded-lg border border-slate-700 bg-[#101720] p-5 ${className}`}>
+      <h3 className="mb-1 text-base font-black text-slate-100">{title}</h3>
       {description && (
         <p className="mb-3 text-xs text-slate-500">{description}</p>
       )}
@@ -43,15 +43,15 @@ export function MetricBar({
   return (
     <li className="flex flex-col gap-0.5">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-700">{label}</span>
-        <span className="font-semibold text-slate-900">
+        <span className="text-slate-400">{label}</span>
+        <span className="font-semibold text-slate-100">
           {count}
           {percentage !== null && (
             <span className="ml-1 font-normal text-slate-500">({percentage}%)</span>
           )}
         </span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
         <div
           className={`h-full rounded-full ${barColor} transition-all`}
           style={{ width: `${Math.max(percentage ?? 0, 0)}%` }}

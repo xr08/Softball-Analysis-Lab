@@ -9,6 +9,7 @@ const PITCH_RESULT_LABELS: Record<string, string> = {
   ball: "Ball",
   ball_in_play: "Ball in Play",
   hit_by_pitch: "Hit by Pitch",
+  wild_pitch: "Wild Pitch",
   "Not set": "Not set"
 };
 
@@ -45,12 +46,12 @@ function BreakdownRow({ label, count, total }: { label: string; count: number; t
     <li className="flex items-center gap-2">
       <div className="flex-1">
         <div className="mb-0.5 flex justify-between text-xs">
-          <span className="text-slate-700">{label}</span>
-          <span className="font-semibold text-slate-900">{count} ({pct}%)</span>
+          <span className="text-slate-400">{label}</span>
+          <span className="font-black text-slate-100">{count} ({pct}%)</span>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
           <div
-            className="h-full rounded-full bg-emerald-500"
+            className="h-full rounded-full bg-orange-500"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -69,7 +70,7 @@ function BreakdownSection({ title, data, labelMap, total }: {
   if (entries.length === 0) return null;
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{title}</p>
+      <p className="mb-2 text-xs font-black uppercase tracking-wide text-slate-500">{title}</p>
       <ul className="space-y-2">
         {entries.map(([key, count]) => (
           <BreakdownRow
@@ -86,17 +87,20 @@ function BreakdownSection({ title, data, labelMap, total }: {
 
 export function ReviewSummary({ summary, totalSessionEvents }: ReviewSummaryProps) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="mb-3 text-lg font-semibold text-slate-900">Review Summary</h2>
+    <section className="rounded-lg border border-slate-700 bg-[#101720] p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Filtered Breakdown</p>
+      <h2 className="mt-1 text-lg font-black text-white">Review Summary</h2>
 
-      <p className="mb-4 text-sm text-slate-700">
-        <span className="font-bold text-emerald-700">{summary.totalCount}</span> matching event
+      <p className="my-4 text-sm text-slate-400">
+        <span className="font-black text-orange-300">{summary.totalCount}</span> matching event
         {summary.totalCount === 1 ? "" : "s"}{" "}
-        from <span className="font-semibold">{totalSessionEvents}</span> total
+        from <span className="font-black text-slate-100">{totalSessionEvents}</span> total
       </p>
 
       {summary.totalCount === 0 ? (
-        <p className="text-sm text-slate-500">No events match the current filters.</p>
+        <p className="rounded-md border border-dashed border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-500">
+          No events match the current filters.
+        </p>
       ) : (
         <div className="space-y-4">
           <BreakdownSection

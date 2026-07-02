@@ -35,13 +35,16 @@ export function Timeline({
     filteredCount !== totalCount;
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-lg border border-slate-700 bg-[#101720] p-4 shadow-xl shadow-black/20">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold text-slate-900">Timeline</h2>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Review Queue</p>
+          <h2 className="mt-1 text-lg font-black text-white">Timeline</h2>
+        </div>
         {showFilterBadge && (
-          <span className="text-sm text-slate-600">
-            <span className="font-semibold text-emerald-700">{filteredCount}</span> matching from{" "}
-            <span className="font-semibold">{totalCount}</span> total
+          <span className="text-sm text-slate-400">
+            <span className="font-black text-sky-200">{filteredCount}</span> matching from{" "}
+            <span className="font-black text-slate-100">{totalCount}</span> total
           </span>
         )}
         {!showFilterBadge && totalCount !== undefined && (
@@ -50,10 +53,10 @@ export function Timeline({
       </div>
 
       {events.length === 0 ? (
-        <p className="text-sm text-slate-600">
+        <p className="rounded-md border border-dashed border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-500">
           {filteredCount === 0
             ? "No events match the current filters."
-            : "No events yet. Play video and click a tag."}
+            : "No events yet. Work the video, use the Pitch Window, then add observations when needed."}
         </p>
       ) : (
         <ul className="space-y-3">
