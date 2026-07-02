@@ -35,12 +35,26 @@ export function CountSelector({
     return (
       <div className="grid gap-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wide text-slate-500">{label}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wide text-slate-500">{label}</span>
+            <button
+              type="button"
+              aria-label={`Set ${label.toLowerCase()} to 0`}
+              onClick={() => onChange(0)}
+              className={`rounded border border-slate-700 px-1.5 py-0.5 text-[9px] font-bold uppercase transition-colors focus:outline-none focus:ring-1 focus:ring-orange-400 ${
+                value === 0
+                  ? "bg-slate-700 text-slate-200"
+                  : "bg-slate-900 text-slate-500 hover:border-sky-400 hover:text-slate-300"
+              }`}
+            >
+              0
+            </button>
+          </div>
           <span className="font-mono text-xs font-black text-slate-200">{value ?? "-"}</span>
         </div>
-        <div className={`grid gap-1 ${total === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+        <div className={`grid gap-1 ${total === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
           {Array.from({ length: total }, (_, index) => {
-            const markerValue = index;
+            const markerValue = index + 1;
             const filled = isCountMarkerFilled(markerValue, value);
             return (
               <button
@@ -69,7 +83,7 @@ export function CountSelector({
       <div className={embedded ? "grid grid-cols-[1fr_auto_1fr] items-end gap-2" : compact ? "grid gap-2" : "grid gap-3 sm:grid-cols-2"}>
         {renderMarkers({
           label: "Balls",
-          total: 4,
+          total: 3,
           value: balls,
           onChange: onBallsChange,
           activeClass: "border-emerald-300 bg-emerald-400 text-slate-950"
@@ -81,7 +95,7 @@ export function CountSelector({
         ) : null}
         {renderMarkers({
           label: "Strikes",
-          total: 3,
+          total: 2,
           value: strikes,
           onChange: onStrikesChange,
           activeClass: "border-rose-300 bg-rose-400 text-slate-950"
