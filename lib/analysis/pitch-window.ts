@@ -153,20 +153,29 @@ export function applyPitchResultToCount({
     return { countBalls: balls, countStrikes: strikes };
   }
 
+  const currentBalls = balls ?? 0;
+  const currentStrikes = strikes ?? 0;
+
   if (pitchResult === "ball") {
-    return { countBalls: Math.min((balls ?? 0) + 1, 4), countStrikes: strikes ?? 0 };
+    return { countBalls: Math.min(currentBalls + 1, 3), countStrikes: currentStrikes };
   }
 
   if (pitchResult === "called_strike" || pitchResult === "swinging_strike") {
-    return { countBalls: balls ?? 0, countStrikes: Math.min((strikes ?? 0) + 1, 3) };
+    return { countBalls: currentBalls, countStrikes: Math.min(currentStrikes + 1, 2) };
   }
 
   if (pitchResult === "foul") {
-    const nextStrikes = strikes === null ? 1 : strikes < 2 ? strikes + 1 : strikes;
-    return { countBalls: balls ?? 0, countStrikes: nextStrikes };
+    const nextStrikes = currentStrikes < 2 ? currentStrikes + 1 : currentStrikes;
+    return { countBalls: currentBalls, countStrikes: nextStrikes };
   }
 
   return { countBalls: balls, countStrikes: strikes };
+}
+
+export function isCountMarkerFilled(markerValue: number, currentCount: number | null): boolean {
+  if (currentCount === null) return false;
+  if (markerValue === 0) return false;
+  return markerValue <= currentCount;
 }
 
 export function getPitchResultLabel(value: TaggedEvent["pitchResult"]): string {

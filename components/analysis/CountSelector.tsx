@@ -1,3 +1,5 @@
+import { isCountMarkerFilled } from "@/lib/analysis/pitch-window";
+
 type CountSelectorProps = {
   balls: number | null;
   strikes: number | null;
@@ -38,8 +40,8 @@ export function CountSelector({
         </div>
         <div className={`grid gap-1 ${total === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
           {Array.from({ length: total }, (_, index) => {
-            const markerValue = index + 1;
-            const filled = value !== null && markerValue <= value;
+            const markerValue = index;
+            const filled = isCountMarkerFilled(markerValue, value);
             return (
               <button
                 key={markerValue}

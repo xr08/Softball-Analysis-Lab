@@ -12,7 +12,8 @@ import {
   getPitchResultOptionsForValue,
   getPlayResultLabel,
   isKnownPitchResult,
-  PITCH_RESULT_OPTIONS
+  PITCH_RESULT_OPTIONS,
+  isCountMarkerFilled
 } from "../lib/analysis/pitch-window";
 import { buildNextPitchSelection } from "../lib/analysis/workflow";
 import { parseImportedSession, toJson } from "../lib/analysis/export";
@@ -55,6 +56,23 @@ describe("pitch window helpers", () => {
     });
   });
 
+  it("determines filled marker state correctly, excluding the zero control", () => {
+    expect(isCountMarkerFilled(0, 0)).toBe(false);
+    expect(isCountMarkerFilled(0, 1)).toBe(false);
+    expect(isCountMarkerFilled(0, 2)).toBe(false);
+
+    expect(isCountMarkerFilled(1, 0)).toBe(false);
+    expect(isCountMarkerFilled(2, 0)).toBe(false);
+    expect(isCountMarkerFilled(3, 0)).toBe(false);
+
+    expect(isCountMarkerFilled(1, 1)).toBe(true);
+    expect(isCountMarkerFilled(2, 1)).toBe(false);
+
+    expect(isCountMarkerFilled(1, 2)).toBe(true);
+    expect(isCountMarkerFilled(2, 2)).toBe(true);
+    expect(isCountMarkerFilled(3, 2)).toBe(false);
+  });
+
   it("increments balls from an unknown count during an active at-bat", () => {
     expect(
       applyPitchResultToCount({
@@ -66,24 +84,24 @@ describe("pitch window helpers", () => {
     ).toEqual({ countBalls: 1, countStrikes: 0 });
   });
 
-  it("caps balls at four and strikes at three", () => {
+  it("caps balls at three and strikes at two", () => {
     expect(
       applyPitchResultToCount({
-        balls: 4,
+        balls: 3,
         strikes: 2,
         pitchResult: "ball",
         hasActiveAtBat: true
       })
-    ).toEqual({ countBalls: 4, countStrikes: 2 });
+    ).toEqual({ countBalls: 3, countStrikes: 2 });
 
     expect(
       applyPitchResultToCount({
         balls: 2,
-        strikes: 3,
+        strikes: 2,
         pitchResult: "called_strike",
         hasActiveAtBat: true
       })
-    ).toEqual({ countBalls: 2, countStrikes: 3 });
+    ).toEqual({ countBalls: 2, countStrikes: 2 });
   });
 
   it("handles foul strike rules without adding a strike at two strikes", () => {
@@ -133,6 +151,46 @@ describe("pitch window helpers", () => {
         hasActiveAtBat: true
       })
     ).toEqual({ countBalls: 2, countStrikes: 1 });
+  });
+
+  it("calculates live count based on initial count rather than stacking duplicate clicks", () => {
+    const startCount = { balls: 0, strikes: 0 };
+    
+    const click1 = applyPitchResultToCount({
+      balls: startCount.balls,
+      strikes: startCount.strikes,
+      pitchResult: "ball",
+      hasActiveAtBat: true
+    });
+    expect(click1).toEqual({ countBalls: 1, countStrikes: 0 });
+
+    const click2 = applyPitchResultToCount({
+      balls: startCount.balls,
+      strikes: startCount.strikes,
+      pitchResult: "ball",
+      hasActiveAtBat: true
+    });
+    expect(click2).toEqual({ countBalls: 1, countStrikes: 0 });
+  });
+
+  it("calculates live count correctly when correcting a misclicked pitch result", () => {
+    const startCount = { balls: 1, strikes: 1 };
+    
+    const mistake = applyPitchResultToCount({
+      balls: startCount.balls,
+      strikes: startCount.strikes,
+      pitchResult: "ball",
+      hasActiveAtBat: true
+    });
+    expect(mistake).toEqual({ countBalls: 2, countStrikes: 1 });
+
+    const correction = applyPitchResultToCount({
+      balls: startCount.balls,
+      strikes: startCount.strikes,
+      pitchResult: "called_strike",
+      hasActiveAtBat: true
+    });
+    expect(correction).toEqual({ countBalls: 1, countStrikes: 2 });
   });
 
   it("leaves count unchanged when no at-bat is active", () => {
