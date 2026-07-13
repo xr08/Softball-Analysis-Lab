@@ -10,6 +10,8 @@ type TimelineEventItemProps = {
   player?: Player;
   relatedPlayer?: Player;
   atBat?: AtBat;
+  /** Compact segment label for grouped timeline display */
+  pitchLabel?: string;
   onSeek: (timestampSeconds: number) => void;
   onUpdateEvent: (updatedEvent: TaggedEvent) => void;
   onDeleteEvent: (id: string) => void;
@@ -17,7 +19,7 @@ type TimelineEventItemProps = {
   isSelected?: boolean;
 };
 
-export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
+export function TimelineEventItem({ event, player, relatedPlayer, atBat, pitchLabel, onSeek, onUpdateEvent, onDeleteEvent, isSelected = false }: TimelineEventItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const display = getTimelineEventDisplayData(
     event,
@@ -45,6 +47,9 @@ export function TimelineEventItem({ event, player, relatedPlayer, atBat, onSeek,
         ? "border-orange-400 bg-orange-500/10 ring-2 ring-orange-400/50"
         : "border-slate-700 bg-slate-950/50"
     }`}>
+      {pitchLabel ? (
+        <p className="mb-1 truncate text-xs font-semibold text-slate-300">{pitchLabel}</p>
+      ) : null}
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <button
           type="button"
