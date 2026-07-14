@@ -6,6 +6,8 @@ Softball Analysis Lab is a local-first, session-based, multi-player, manual-firs
 
 The app is session-based. The main modes are Game, Player, and Training. A session may contain multiple players and one or more videos. Tags must be linked to the correct role: pitcher, batter, fielder, team, or review. At-bats are important objects linking batter, pitcher, teams, and timestamps.
 
+Added integration to Notion
+
 ## Current Project Stage
 
 **Stage 5 — Pitcher Mode (VT-5)**
