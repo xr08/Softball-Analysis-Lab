@@ -1,23 +1,21 @@
 # Softball Analysis Lab
 
-# Softball Analysis Lab
-
 Softball Analysis Lab is a local-first, session-based, multi-player, manual-first softball/baseball video tagging system.
 
-The app is session-based. The main modes are Game, Player, and Training. A session may contain multiple players and one or more videos. Tags must be linked to the correct role: pitcher, batter, fielder, team, or review. At-bats are important objects linking batter, pitcher, teams, and timestamps.
-
-Added integration to Notion
+The app is session-based. The main modes are Game, Player, and Training. A session may contain multiple players, while the current tagging UI connects one local video at a time. Tags are linked to pitcher, batter, fielder, or review roles. At-bats link batters, pitchers, teams, and timestamps.
 
 ## Current Project Stage
 
-**Stage 5 — Pitcher Mode (VT-5)**
+**Stage 5 — Session-Based Multi-Player Tagging (VT-5 close-out)**
+
+The VT-5 foundation is implemented. The remaining milestone work is multi-video session playback and a complete team-role tagging workflow.
 
 The app now allows a coach or analyst to:
 
 * create a session (Game, Player, or Training mode)
-* add one or more local MP4 video files to a session
+* connect one local MP4 video file for tagging
 * for Game mode, assign Team A / Team B (not Home / Away)
-* link tags to roles (pitcher, batter, fielder, team, review) and at-bats
+* link tags to roles (pitcher, batter, fielder, review) and at-bats
 * view a timeline of coded moments and click to seek
 * capture structured context per pitch (count, pitch result, location, handedness, contact direction/quality, at-bat result)
 * add or edit notes inline
@@ -70,7 +68,7 @@ The video remains local. The tagged analysis data can be exported separately.
 
 ## What We Are Not Building Yet
 
-Do not add these features in VT-3:
+Do not add these features during VT-5 close-out:
 
 * Supabase
 * user login
@@ -84,7 +82,7 @@ Do not add these features in VT-3:
 * public sharing
 * payment/subscription features
 
-These may be added later, but only after the local batter tagging MVP works.
+These may be added later, after the local manual tagging workflow is proven.
 
 ## Review Mode
 
@@ -127,6 +125,8 @@ Set the **Pre-roll** (0–10 seconds, default 2) and **Post-roll** (1–15 secon
 ### Current Limitations
 
 * Clips are played from the locally connected video file — no clip is exported.
+* Only one local video can be connected and played at a time; multi-video metadata is not yet a complete playback workflow.
+* Team and runner roles exist in the event schema, but the manual tag palette currently exposes pitcher, batter, fielder, and review roles only.
 * Filter results depend entirely on manually tagged data.
 * Missing structured values (null) are shown as "Not set" in summaries.
 * Video must be reconnected after a page refresh or JSON import.

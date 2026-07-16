@@ -1,33 +1,47 @@
-# Restart Audit (Updated)
+# Restart Audit
+
+Updated: 16 July 2026
 
 ## Current State
-The project has a Next.js App Router foundation. It is currently at **Stage 5 (VT-5)**. The goal is to provide a local-first batter and pitcher analysis tool without cloud video upload. 
 
-## What Already Works
-- **VT-1 (Durable Manual Batter Tagging Foundation):** Completed. Includes session identity, schema versioning, JSON import, local recovery (localStorage), debounced autosaving, event deletion, and 150+ tests.
-- **VT-2 (Structured Batter Context):** Completed. Includes count, pitch location, contact direction, contact quality, and hit results tracking.
-- **VT-3 (Review Mode):** Completed. Includes Tagging/Review toggle, Review Filters panel (AND across, OR within), playlist playback, and keyboard navigation.
-- **VT-4 (Reports):** Completed. Includes Session Report, Comparison Mode, and data exports.
-- **VT-5 (Pitcher Mode):** In progress. Initial schema changes (sessionType) have been laid down.
+Softball Analysis Lab is a local-first Next.js App Router application at VT-5 close-out. The core session-based coaching workflow works without a database or cloud video upload.
 
-## Technical Debt Resolved
-- **Tag Identity:** Tags now use stable IDs rather than display labels.
-- **Testing:** 150 unit tests cover core review and reporting logic.
+## Implemented
 
-## Known Technical Debt
-- **Linting:** ESLint is not currently configured. Next.js 15.5.19 deprecates `next lint` and attempting to use ESLint 9 flat config manually results in a circular structure bug with the `eslint-config-next` adapter. Lint configuration is deferred to a future maintenance milestone to avoid disproportionate setup scope.
+* Game, Player, and Training session modes
+* multiple players with Team A / Team B assignments
+* one actively connected local MP4, with video-source metadata in the session schema
+* pitcher, batter, fielder, and review tag palettes
+* structured pitch, count, location, contact, and outcome coding
+* at-bat creation, closure, participant links, and grouped timeline display
+* local recovery, versioned JSON import/export, CSV export, and event editing/deletion
+* Review Mode filters, navigation, clips, and playlist playback
+* session reports, comparisons, heatmaps, completeness warnings, and report exports
+* 233 passing unit tests as of this audit
 
-## Privacy Concerns
-- Local footage MUST NOT be committed to git.
-- Strict `.gitignore` rules for video formats, exported sessions, and temporary files remain enforced.
+## VT-5 Gaps
 
-## Recommended Next Milestone
-**VT-5: Pitcher Mode.**
-Complete the Pitcher Mode UI toggle and specific tags.
+* The UI replaces the active main video rather than retaining and switching among multiple local videos.
+* Events do not yet carry a complete source-video playback workflow.
+* `EventRole` reserves `team`, but team tags cannot yet be created and assigned to Team A or Team B through the manual tagging UI.
+* `runner` is a reserved schema role, not an implemented workflow.
 
-## What Should Not Be Built Yet
-- Supabase integration, login, or cloud authentication.
-- Google Drive API or direct integration.
-- Full video uploads.
-- AI analysis, tracking, or automated clip generation.
-- Club dashboard, team mode, drawing tools.
+See `NEXT_STEP.md` for the acceptance criteria.
+
+## Repository Health
+
+* `npm test`: passing, 233 tests
+* `npm run typecheck`: passing
+* `npm run build`: passing
+* ESLint and formatting checks are not configured
+* the analysis-page controller remains large and should continue to be split into focused hooks/components
+
+## Privacy Rules
+
+* Local footage must never be committed to Git.
+* Exported player/session data and real names must remain private unless sharing is explicitly approved.
+* Video paths must not be persisted; reconnect local files by safe metadata such as filename.
+
+## Next Milestone Boundary
+
+Finish multi-video source playback and team-role tagging before beginning the Player Library or any cloud platform work. Supabase, authentication, Google Drive integration, AI tagging, computer vision, overlays, and club dashboards remain deferred.

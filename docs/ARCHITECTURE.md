@@ -2,13 +2,20 @@
 
 We are following a staged architectural progression.
 
-## Stage 1 — Local manual analysis (Current)
+## Local manual analysis (Current architecture)
 - Video remains on local disk, selected via browser file input.
 - No video is uploaded or committed to Git.
 - Manual timestamp tagging with structured batter observations.
 - Local crash recovery via `localStorage`.
 - Durable session storage via CSV and versioned JSON exports.
 - No required database. No AI calls.
+
+## VT-5 session architecture
+
+- Sessions support Game, Player, and Training modes, multiple players, Team A / Team B assignments, video-source metadata, and explicit at-bat objects.
+- Manual tag assignment currently supports pitcher, batter, fielder, and review roles.
+- The event schema also reserves team and runner roles, but those roles are not yet complete UI workflows.
+- The active player connects one local video at a time. Multi-video playback needs an explicit mapping between each event and its source video before a combined or segmented timeline can be canonical.
 
 ## Stage 2 — Reliable session persistence (Future consideration)
 - Although `localStorage` is used in Stage 1 for basic recovery, we may evaluate IndexedDB if we later need to store many saved sessions, thumbnails, or complex searchable local records in-browser.

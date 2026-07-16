@@ -5,7 +5,7 @@ export default function HomePage() {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col items-start justify-center gap-6 px-6 py-16">
       <h1 className="text-3xl font-bold text-slate-900">Softball Analysis Lab</h1>
       <p className="text-base text-slate-700">
-        Stage 1 MVP: local video batter tagging with timeline and export.
+        Local-first session analysis for pitchers, batters, fielders, at-bats, review, and reports.
       </p>
       <Link
         href="/analyse"

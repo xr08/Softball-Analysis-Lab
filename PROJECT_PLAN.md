@@ -36,9 +36,9 @@ The app should save lightweight metadata against the video, such as:
 
 ## Current Stage
 
-Current stage: **Session-based multi-player manual tagging foundation**
+Current stage: **VT-5 close-out — multi-video playback and team-role tagging**
 
-VT-4 (Reports and Comparison) is now complete.
+VT-1 through VT-4 are complete. The VT-5 session, player, pitcher/batter/fielder tagging, pitch-window, and at-bat timeline foundations are implemented.
 
 The project must stay local-first.
 
@@ -182,7 +182,21 @@ Delivered:
 
 ### Stage 5 — Session-Based Multi-Player Tagging
 
-Currently in progress.
+Foundation implemented:
+
+* Game, Player, and Training session modes
+* multiple players with Team A / Team B assignments
+* pitcher, batter, fielder, and review tag assignment
+* at-bat creation, closure, participant links, and grouped timeline display
+* manual-first pitch and contact coding
+* versioned local recovery and export support
+
+Remaining before VT-5 is complete:
+
+* connect, retain, select, and play multiple local videos within one session
+* define timeline behavior when events span multiple video files
+* add team-role tag definitions, selection, assignment, timeline display, export, and tests
+* keep existing single-video exports backward compatible
 
 ### Stage 6 — Player Library and Database
 

@@ -2,72 +2,59 @@
 
 ## Current Stage
 
-Session-based multi-player manual tagging foundation.
+VT-5 close-out: complete the multi-video and team-role workflows.
 
-VT-4 (Reports and Comparison) is complete.
+The session-based foundation is working: Game, Player, and Training modes; multiple players; Team A / Team B assignments; pitcher, batter, fielder, and review tags; pitch coding; at-bats; grouped timeline; review; reports; recovery; and exports.
 
-## Build This Next
+## Build Next
 
-Update the core architecture to support a session-based workflow instead of the old one-video/one-player model.
+### 1. Multi-video session workflow
 
-### Required outputs
+The schema can retain video-source metadata, but the UI currently connects and plays one `main` MP4 at a time.
 
-* **Session Modes** — Support Game, Player, and Training modes.
-* **Team Tracking** — Support Team A / Team B (not Home / Away) in Game mode.
-* **Multiple Videos & Players** — Allow a session to contain multiple players and one or more videos.
-* **Role-Based Tagging** — Tags must be linked to the correct role: pitcher, batter, fielder, team, or review.
-* **At-Bat Grouping** — At-bats must become important objects linking batter, pitcher, teams, and timestamps.
-* **Manual-First MVP** — Ensure manual tagging remains the primary workflow. AI, automatic detection, cloud storage, and overlays remain future work.
+Required behavior:
 
-### Expected pages and components
+* add and retain more than one local video source in a session
+* select the active source without replacing other sources
+* link every new event to the active video source
+* reconnect imported video sources by filename without storing local paths
+* define deterministic ordering for events across video sources
+* make review playback select the correct source before seeking
+* preserve compatibility with existing single-video exports
 
-* Update session and event schema to support multiple videos, multiple players, roles, and at-bats.
-* Update UI forms to support Game, Player, and Training mode creation.
-* Update tagging interface to link tags to specific roles and at-bats.
+Do not create a combined virtual timeline until source-specific event playback is reliable.
 
-### Notes
+### 2. Team-role tagging
 
-* This is still local-first. No database, no Supabase, no cloud storage, no AI tagging.
-* Data schema must be backward compatible with existing single-player/single-video exports.
-* All new pure functions must be unit-tested.
+`EventRole` includes `team`, but the manual workflow currently supports pitcher, batter, fielder, and review roles only.
 
-## Do Not Build Now
+Required behavior:
 
-Do not add:
+* add intentional team tag definitions rather than reusing player tags
+* select Team A or Team B when applying a team tag
+* store the selected team without inventing a player ID
+* show the team clearly in timeline and review displays
+* include team attribution in CSV/JSON export and import
+* cover assignment, validation, rendering data, and backward compatibility with pure-function tests
 
-* Supabase
-* login
-* Google Drive API
-* cloud upload / storage
-* Google Drive integration
-* AI, automatic detection, or computer vision tracking
-* overlays and drawing tools
-* full historical reports
-* club dashboard
+Runner-role tagging remains out of scope unless it is separately designed.
 
-## Deferred Maintenance Tasks
+## Completion Checklist
 
-* **ESLint Configuration** — Adding `eslint` and `eslint-config-next` has been deferred because Next.js 15.5.19 deprecates `next lint` and transitioning to ESLint 9+ flat config natively creates a known circular dependency bug with the current `eslint-config-next` adapter. This is scheduled for the next major milestone after VT-5.
+VT-5 is complete when:
 
-* **Pitch Window Redesign** - Future UI workflow work should make pitch count, pitch result, contact, location, and outcome button-based instead of dropdown-heavy.
-* **Video Recall and Virtual Timeline** - Future video workflow work should support Google Drive video storage/recall, linking session JSON to stored Drive video files, multiple video files per session, sequential playback of multiple files end-to-end on one combined session timeline, and preserving original footage while treating combined playback as a virtual timeline.
-
-## Testing Checklist
-
-This milestone is complete only when:
-
-* Sessions can be created as Game, Player, or Training modes.
-* A session can contain multiple players and multiple videos.
-* Tags are properly linked to roles (pitcher, batter, fielder, team, review) and grouped by at-bats.
-* The workflow remains manual-first and local-first.
+* sessions can retain and reconnect multiple local video files
+* events play against their correct source video
+* team tags can be assigned to Team A or Team B and survive export/import
+* existing single-video exports remain compatible
+* the workflow remains manual-first and local-first
 * `npm run typecheck` passes
 * `npm run test` passes
 * `npm run build` passes
+* the app receives a manual browser smoke test
 
-## After This Is Complete
+## Deferred
 
-Commit in GitHub Desktop with this message:
+Do not add Supabase, login, cloud storage, Google Drive integration, AI tagging, computer vision, overlays, historical club dashboards, or public sharing during this milestone.
 
-`feat: add session-based multi-player manual tagging foundation`
-
-Then update this file to the next task.
+After VT-5, schedule lint/format tooling and further decomposition of the analysis-page controller before starting the Player Library milestone.
